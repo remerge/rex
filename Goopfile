@@ -1,0 +1,6 @@
+github.com/Shopify/sarama #438a1215fb853b2ffa9b43dc4278c7ea3aa6f35f
+github.com/getsentry/raven-go
+github.com/juju/loggo
+github.com/julienschmidt/httprouter
+github.com/rcrowley/go-metrics !https://github.com/remerge/go-metrics
+golang.org/x/net/publicsuffix

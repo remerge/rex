@@ -1,0 +1,15 @@
+language: go
+go:
+- 1.3.1
+- tip
+env:
+- PATH=$HOME/gopath/bin:$PATH
+script:
+- git config --global url.git@github.com:.insteadof https://github.com/
+- make dep
+- make build
+- make test
+notifications:
+  email: false
+  slack:
+    secure: oqsn3JRtNE4H4GrdkqGQ8FrZeL1gkr0xd6z6OiJLDYblu7HV5IvRtW0PH71NatHPM6FJ/tIBnI6ZqZfY0zwkiFdyCrQLzkQHAGJ0GqCA8+gfRhPc9+Wg60CWj1in3iFDx+ObTF9zW1j87e7QhxkT8EunTzf4+PD1XZWmUBqL7P8=
