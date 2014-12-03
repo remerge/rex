@@ -1,5 +1,5 @@
 code.google.com/p/snappy-go #12e4b4183793ac4b061921e7980845e750679fd0
-github.com/Shopify/sarama #438a1215fb853b2ffa9b43dc4278c7ea3aa6f35f
+github.com/Shopify/sarama #b099e0411d461a52fb1429953503eab1f859e9ac
 github.com/getsentry/raven-go #1ae8a89da90a71ca1bb7648919bb30928acaab46
 github.com/juju/loggo #dc8e19f7c70a62a59c69c40f85b8df09ff20742c
 github.com/julienschmidt/httprouter #46807412fe50aaceb73bb57061c2230fd26a1640

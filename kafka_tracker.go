@@ -22,13 +22,7 @@ func NewKafkaTracker(config *Config) Tracker {
 	client, err := NewKafkaClient(self.Service, config.KafkaBroker, nil)
 	MayPanic(err)
 
-	pconfig := sarama.NewProducerConfig()
-
-	if self.Environment != "production" {
-		pconfig.RequiredAcks = sarama.WaitForAll
-	}
-
-	producer, err := NewKafkaProducer(client, pconfig)
+	producer, err := NewKafkaProducer(client, nil)
 	if err != nil {
 		client.Close()
 		MayPanic(err)
@@ -43,7 +37,8 @@ func NewKafkaTracker(config *Config) Tracker {
 
 func (self *KafkaTracker) Close() {
 	self.Log.Infof("shutting down tracker")
-	self.Client.Close()
+	CaptureError(self.Producer.Close())
+	CaptureError(self.Client.Close())
 }
 
 func (self *KafkaTracker) Message(topic string, message []byte) error {
@@ -51,10 +46,11 @@ func (self *KafkaTracker) Message(topic string, message []byte) error {
 	if message == nil {
 		return errors.New("empty message")
 	}
-	if self.Environment != "production" {
-		return self.Producer.SendMessage(topic, nil, sarama.ByteEncoder(message))
+	self.Producer.Input() <- &sarama.MessageToSend{
+		Topic: topic,
+		Value: sarama.ByteEncoder(message),
 	}
-	return self.Producer.QueueMessage(topic, nil, sarama.ByteEncoder(message))
+	return nil
 }
 
 func (self *KafkaTracker) Event(topic string, e EventBase, full bool) error {

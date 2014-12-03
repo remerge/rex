@@ -40,18 +40,18 @@ func NewKafkaProducer(client *sarama.Client, config *sarama.ProducerConfig) (*sa
 	if config == nil {
 		log.Infof("using default producer config")
 		config = sarama.NewProducerConfig()
-		config.MaxBufferTime = 1 * time.Second
-		config.MaxBufferedBytes = 1280
+		config.FlushFrequency = 1 * time.Second
+		config.FlushByteCount = 1280
 	}
 
-	if config.MaxBufferTime < 10*time.Millisecond {
-		log.Warningf("increasing MaxBufferTime to 10ms to prevent busy looping")
-		config.MaxBufferTime = 10 * time.Millisecond
+	if config.FlushFrequency < 10*time.Millisecond {
+		log.Warningf("increasing FlushFrequency to 10ms to prevent busy looping")
+		config.FlushFrequency = 10 * time.Millisecond
 	}
 
-	if config.MaxBufferedBytes < 576 {
-		log.Warningf("increasing MaxBufferedBytes to 576 to prevent poor network utilization")
-		config.MaxBufferedBytes = 576 // minimum IPv4 MTU
+	if config.FlushByteCount < 576 {
+		log.Warningf("increasing FlushByteCount to 576 to prevent poor network utilization")
+		config.FlushByteCount = 576 // minimum IPv4 MTU
 	}
 
 	producer, err := sarama.NewProducer(client, config)
@@ -61,10 +61,10 @@ func NewKafkaProducer(client *sarama.Client, config *sarama.ProducerConfig) (*sa
 	}
 
 	// we need to collect errors to prevent producer from blocking
-	go func(errchan chan error) {
+	go func(errchan <-chan *sarama.ProduceError) {
 		for {
 			if err := <-errchan; err != nil {
-				log.Errorf("%s", err)
+				CaptureErrorNew("failed to send message to kafka: %s (msg=%#v)", err.Err, err.Msg)
 			}
 		}
 	}(producer.Errors())

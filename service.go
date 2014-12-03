@@ -120,7 +120,7 @@ func (service *Service) Run() {
 }
 
 func (service *Service) Shutdown() {
-	MayPanic(service.Listener.Close())
+	CaptureError(service.Listener.Close())
 	service.Tracker.Close()
 }
 
