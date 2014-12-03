@@ -135,6 +135,12 @@ func (ds DebugServer) Start() {
 		}
 	})
 
-	ds.log.Infof("listening on port=%d", ds.Port)
-	MayPanic(http.ListenAndServe(fmt.Sprintf(":%d", ds.Port), nil))
+	for {
+		ds.log.Infof("starting debug server on port=%d", ds.Port)
+		err := http.ListenAndServe(fmt.Sprintf(":%d", ds.Port), nil)
+		if err != nil {
+			ds.log.Errorf("failed to start debug server on port=%d", ds.Port)
+			time.Sleep(10 * time.Second)
+		}
+	}
 }

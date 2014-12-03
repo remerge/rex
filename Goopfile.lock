@@ -4,5 +4,5 @@ github.com/getsentry/raven-go #1ae8a89da90a71ca1bb7648919bb30928acaab46
 github.com/juju/loggo #dc8e19f7c70a62a59c69c40f85b8df09ff20742c
 github.com/julienschmidt/httprouter #46807412fe50aaceb73bb57061c2230fd26a1640
 github.com/rcrowley/go-metrics #fd8b7fef80f45b516e40702cb1fcf64dacf336e8 !https://github.com/remerge/go-metrics
-golang.org/x/net/publicsuffix #5dedbdc181629d2f3557caf2667e60eb82c5e6d7
-golang.org/x/text #2f707e0ad64637ca1318279be7201f5ed19c4050
+golang.org/x/net/publicsuffix #ff3b47fbfca01acfa052297ae28a270172236d42
+golang.org/x/text #5b2527008a4c8988ca9dc6f010ebfb9dae67150b

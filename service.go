@@ -3,10 +3,14 @@ package rex
 import (
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"net"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"syscall"
@@ -36,10 +40,20 @@ func NewConfig(name string, port int) *Config {
 	return config
 }
 
+const (
+	SIGHUP  = syscall.SIGHUP
+	SIGINT  = syscall.SIGINT
+	SIGQUIT = syscall.SIGQUIT
+	SIGTERM = syscall.SIGTERM
+	SIGUSR1 = syscall.SIGUSR1
+	SIGUSR2 = syscall.SIGUSR2
+)
+
 type Service struct {
 	Log        loggo.Logger
 	Flags      flag.FlagSet
 	Tracker    Tracker
+	Listener   net.Listener
 	BaseConfig *Config
 }
 
@@ -92,16 +106,181 @@ func (service *Service) Run() {
 		ds := DebugServer{Port: service.BaseConfig.Port + 9}
 		go ds.Start()
 	}
-}
 
-func (service *Service) Wait() {
-	ch := make(chan os.Signal)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch // will trigger defer from main()
+	listener, err := newListener()
+	if err != nil {
+		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", service.BaseConfig.Port))
+		MayPanic(err)
+		service.Log.Infof("start listen=:%d", service.BaseConfig.Port)
+	} else {
+		service.Log.Infof("resume listen=%s", listener.Addr())
+	}
+
+	service.Listener = listener
 }
 
 func (service *Service) Shutdown() {
+	MayPanic(service.Listener.Close())
 	service.Tracker.Close()
+}
+
+func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
+	ch := make(chan os.Signal, 2)
+	signal.Notify(
+		ch,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGQUIT,
+		syscall.SIGTERM,
+		syscall.SIGUSR1,
+		syscall.SIGUSR2,
+	)
+	forked := false
+	for {
+		sig := <-ch
+		service.Log.Infof("caught signal %s", sig.String())
+		switch sig {
+
+		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM:
+			service.Log.Infof("shutting down")
+			shutdownCallback()
+			return sig.(syscall.Signal), nil
+
+		case syscall.SIGUSR2:
+			service.Log.Infof("re-executing binary")
+			if forked {
+				return syscall.SIGUSR2, nil
+			}
+			forked = true
+			if err := service.ForkExec(); err != nil {
+				MayPanic(err)
+			}
+		}
+	}
+}
+
+func (service *Service) ForkExec() error {
+	argv0, err := lookPath()
+	if err != nil {
+		return err
+	}
+	wd, err := os.Getwd()
+	if err != nil {
+		return err
+	}
+	fd, err := setEnvs(service.Listener)
+	if err != nil {
+		return err
+	}
+	if err := os.Setenv("GOAGAIN_PID", ""); err != nil {
+		return err
+	}
+	if err := os.Setenv("GOAGAIN_PPID", fmt.Sprint(syscall.Getpid())); err != nil {
+		return err
+	}
+	var sig syscall.Signal
+	sig = syscall.SIGQUIT
+	if err := os.Setenv("GOAGAIN_SIGNAL", fmt.Sprintf("%d", sig)); err != nil {
+		return err
+	}
+	files := make([]*os.File, fd+1)
+	files[syscall.Stdin] = os.Stdin
+	files[syscall.Stdout] = os.Stdout
+	files[syscall.Stderr] = os.Stderr
+	addr := service.Listener.Addr()
+	files[fd] = os.NewFile(
+		fd,
+		fmt.Sprintf("%s:%s->", addr.Network(), addr.String()),
+	)
+	p, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
+		Dir:   wd,
+		Env:   os.Environ(),
+		Files: files,
+		Sys:   &syscall.SysProcAttr{},
+	})
+	if err != nil {
+		return err
+	}
+	service.Log.Infof("spawned child %d", p.Pid)
+	if err = os.Setenv("GOAGAIN_PID", fmt.Sprint(p.Pid)); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (service *Service) KillOld() error {
+	var (
+		pid int
+		sig syscall.Signal
+	)
+	_, err := fmt.Sscan(os.Getenv("GOAGAIN_PID"), &pid)
+	if io.EOF == err {
+		_, err = fmt.Sscan(os.Getenv("GOAGAIN_PPID"), &pid)
+	}
+	if nil != err {
+		return err
+	}
+	if _, err := fmt.Sscan(os.Getenv("GOAGAIN_SIGNAL"), &sig); nil != err {
+		sig = syscall.SIGQUIT
+	}
+	service.Log.Infof("sending signal %d to process %d", sig, pid)
+	return syscall.Kill(pid, sig)
+}
+
+func newListener() (l net.Listener, err error) {
+	var fd uintptr
+	if _, err = fmt.Sscan(os.Getenv("GOAGAIN_FD"), &fd); nil != err {
+		return
+	}
+	l, err = net.FileListener(os.NewFile(fd, os.Getenv("GOAGAIN_NAME")))
+	if nil != err {
+		return
+	}
+	switch l.(type) {
+	case *net.TCPListener, *net.UnixListener:
+	default:
+		err = fmt.Errorf(
+			"file descriptor is %T not *net.TCPListener or *net.UnixListener",
+			l,
+		)
+		return
+	}
+	if err = syscall.Close(int(fd)); nil != err {
+		return
+	}
+	return
+}
+
+func lookPath() (argv0 string, err error) {
+	argv0, err = exec.LookPath(os.Args[0])
+	if err != nil {
+		return
+	}
+	if _, err = os.Stat(argv0); err != nil {
+		return
+	}
+	return
+}
+
+func setEnvs(l net.Listener) (fd uintptr, err error) {
+	v := reflect.ValueOf(l).Elem().FieldByName("fd").Elem()
+	fd = uintptr(v.FieldByName("sysfd").Int())
+	_, _, e1 := syscall.Syscall(syscall.SYS_FCNTL, fd, syscall.F_SETFD, 0)
+	if 0 != e1 {
+		err = e1
+		return
+	}
+	if err = os.Setenv("GOAGAIN_FD", fmt.Sprint(fd)); err != nil {
+		return
+	}
+	addr := l.Addr()
+	if err = os.Setenv(
+		"GOAGAIN_NAME",
+		fmt.Sprintf("%s:%s->", addr.Network(), addr.String()),
+	); err != nil {
+		return
+	}
+	return
 }
 
 func readArgs() []string {
