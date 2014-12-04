@@ -36,9 +36,10 @@ func NewKafkaTracker(config *Config) Tracker {
 }
 
 func (self *KafkaTracker) Close() {
-	self.Log.Infof("shutting down tracker")
+	self.Log.Debugf("shutting down tracker")
 	CaptureError(self.Producer.Close())
 	CaptureError(self.Client.Close())
+	self.Log.Debugf("shutdown done")
 }
 
 func (self *KafkaTracker) Message(topic string, message []byte) error {

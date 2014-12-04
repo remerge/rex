@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/getsentry/raven-go"
 	"github.com/juju/loggo"
+	"github.com/mailgun/manners"
 )
 
 type Config struct {
@@ -50,11 +52,13 @@ const (
 )
 
 type Service struct {
-	Log        loggo.Logger
-	Flags      flag.FlagSet
-	Tracker    Tracker
-	Listener   net.Listener
-	BaseConfig *Config
+	Log         loggo.Logger
+	Flags       flag.FlagSet
+	Tracker     Tracker
+	Listener    net.Listener
+	Server      *manners.GracefulServer
+	DebugServer *manners.GracefulServer
+	BaseConfig  *Config
 }
 
 func (service *Service) Init() {
@@ -103,25 +107,51 @@ func (service *Service) Run() {
 	go TrackMetrics(service.Tracker)
 
 	if service.BaseConfig.Port > 0 {
-		ds := DebugServer{Port: service.BaseConfig.Port + 9}
-		go ds.Start()
-	}
+		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
 
-	listener, err := newListener()
-	if err != nil {
-		listener, err = net.Listen("tcp", fmt.Sprintf(":%d", service.BaseConfig.Port))
-		MayPanic(err)
-		service.Log.Infof("start listen=:%d", service.BaseConfig.Port)
-	} else {
-		service.Log.Infof("resume listen=%s", listener.Addr())
-	}
+		listener, err := newListener()
+		if err != nil {
+			listener, err = net.Listen("tcp", fmt.Sprintf(":%d", service.BaseConfig.Port))
+			MayPanic(err)
+			service.Log.Infof("start listen=:%d", service.BaseConfig.Port)
+		} else {
+			service.Log.Infof("resume listen=%s", listener.Addr())
+		}
 
-	service.Listener = listener
+		service.Listener = listener
+	}
+}
+
+func (service *Service) Serve(handler http.Handler) {
+	service.Server = manners.NewWithServer(&http.Server{
+		Handler: handler,
+	})
+
+	service.Log.Debugf("now serving requests on listener")
+	MayPanic(service.Server.Serve(service.Listener))
+	service.Log.Debugf("stopped serving on listener")
+}
+
+func (service *Service) CloseWait() {
+	if service.Server != nil {
+		service.Log.Debugf("shutting down http server")
+		service.Server.Close()
+		service.Listener = nil
+		service.Log.Debugf("waiting for requests to finish")
+		service.Server.Wait()
+		service.Server = nil
+		service.Log.Debugf("all request handlers done")
+	}
+	if service.Listener != nil {
+		CaptureError(service.Listener.Close())
+	}
 }
 
 func (service *Service) Shutdown() {
-	CaptureError(service.Listener.Close())
+	service.Log.Debugf("service shutdown")
+	service.CloseWait()
 	service.Tracker.Close()
+	service.Log.Debugf("service shutdown done")
 }
 
 func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
@@ -192,6 +222,7 @@ func (service *Service) ForkExec() error {
 		fd,
 		fmt.Sprintf("%s:%s->", addr.Network(), addr.String()),
 	)
+	service.DebugServer.Close()
 	p, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
 		Dir:   wd,
 		Env:   os.Environ(),
