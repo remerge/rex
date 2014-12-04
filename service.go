@@ -52,13 +52,14 @@ const (
 )
 
 type Service struct {
-	Log         loggo.Logger
-	Flags       flag.FlagSet
-	Tracker     Tracker
-	Listener    net.Listener
-	Server      *manners.GracefulServer
-	DebugServer *manners.GracefulServer
-	BaseConfig  *Config
+	Log           loggo.Logger
+	Flags         flag.FlagSet
+	Tracker       Tracker
+	MetricsTicker *MetricsTicker
+	Listener      net.Listener
+	Server        *manners.GracefulServer
+	DebugServer   *manners.GracefulServer
+	BaseConfig    *Config
 }
 
 func (service *Service) Init() {
@@ -104,7 +105,7 @@ func (service *Service) Run() {
 	loggo.ConfigureLoggers(service.BaseConfig.LogSpec)
 
 	service.Tracker = NewKafkaTracker(service.BaseConfig)
-	go TrackMetrics(service.Tracker)
+	service.MetricsTicker = StartMetricsTicker(service.Tracker)
 
 	if service.BaseConfig.Port > 0 {
 		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
@@ -150,6 +151,7 @@ func (service *Service) CloseWait() {
 func (service *Service) Shutdown() {
 	service.Log.Debugf("service shutdown")
 	service.CloseWait()
+	service.MetricsTicker.Stop()
 	service.Tracker.Close()
 	service.Log.Debugf("service shutdown done")
 }

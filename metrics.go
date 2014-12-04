@@ -3,6 +3,7 @@ package rex
 import (
 	"time"
 
+	"github.com/juju/loggo"
 	"github.com/rcrowley/go-metrics"
 )
 
@@ -34,71 +35,109 @@ func UpdateTimer(timer metrics.Timer, start time.Time) {
 	timer.Update(time.Since(start))
 }
 
-func TrackMetrics(t Tracker) {
-	for {
-		time.Sleep(10e9)
-		metrics.DefaultRegistry.Each(func(name string, i interface{}) {
+type MetricsTicker struct {
+	ticker  *time.Ticker
+	closer  chan bool
+	done    chan bool
+	tracker Tracker
+}
 
-			event := make(map[string]interface{})
-			event["name"] = name
-
-			switch metric := i.(type) {
-			case metrics.Counter:
-				event["type"] = "counter"
-				event["count"] = metric.Count()
-			case metrics.Gauge:
-				event["type"] = "gauge"
-				event["value"] = metric.Value()
-			case metrics.GaugeFloat64:
-				event["type"] = "gauge"
-				event["value"] = metric.Value()
-			case metrics.Histogram:
-				event["type"] = "histogram"
-				h := metric.Snapshot()
-				ps := h.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})
-				event["count"] = h.Count()
-				event["min"] = h.Min()
-				event["max"] = h.Max()
-				event["mean"] = h.Mean()
-				event["stddev"] = h.StdDev()
-				event["p50"] = ps[0]
-				event["p75"] = ps[1]
-				event["p95"] = ps[2]
-				event["p99"] = ps[3]
-				event["p999"] = ps[4]
-			case metrics.Meter:
-				event["type"] = "meter"
-				m := metric.Snapshot()
-				event["count"] = m.Count()
-				event["m1"] = m.Rate1()
-				event["m5"] = m.Rate5()
-				event["m15"] = m.Rate15()
-			case Derive:
-				event["type"] = "meter"
-				m := metric.Snapshot()
-				event["count"] = m.Count()
-				event["m1"] = m.Rate1()
-				event["m5"] = m.Rate5()
-				event["m15"] = m.Rate15()
-			case metrics.Timer:
-				event["type"] = "timer"
-				t := metric.Snapshot()
-				ps := t.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})
-				event["count"] = t.Count()
-				event["min"] = time.Duration(t.Min()) / time.Millisecond
-				event["max"] = time.Duration(t.Max()) / time.Millisecond
-				event["mean"] = time.Duration(t.Mean()) / time.Millisecond
-				event["stddev"] = time.Duration(t.StdDev()) / time.Millisecond
-				event["median"] = time.Duration(ps[0]) / time.Millisecond
-				event["p75"] = time.Duration(ps[1]) / time.Millisecond
-				event["p95"] = time.Duration(ps[2]) / time.Millisecond
-				event["p99"] = time.Duration(ps[3]) / time.Millisecond
-				event["p999"] = time.Duration(ps[4]) / time.Millisecond
-				event["m1"] = t.Rate1()
-				event["m5"] = t.Rate5()
-				event["m15"] = t.Rate15()
-			}
-			t.EventMap("metrics", event, true)
-		})
+func StartMetricsTicker(t Tracker) *MetricsTicker {
+	self := &MetricsTicker{
+		ticker:  time.NewTicker(10 * time.Second),
+		closer:  make(chan bool, 1),
+		done:    make(chan bool, 1),
+		tracker: t,
 	}
+
+	go self.Start()
+
+	return self
+}
+
+func (self *MetricsTicker) Start() {
+	for {
+		select {
+		case <-self.ticker.C:
+			self.Track()
+		case <-self.closer:
+			self.ticker.Stop()
+			close(self.closer)
+			close(self.done)
+			return
+		}
+	}
+}
+
+func (self *MetricsTicker) Stop() {
+	loggo.GetLogger("rex.metrics").Debugf("stopping metrics ticker")
+	self.closer <- true
+	<-self.done
+	loggo.GetLogger("rex.metrics").Debugf("stopped metrics ticker")
+}
+
+func (self *MetricsTicker) Track() {
+	metrics.DefaultRegistry.Each(func(name string, i interface{}) {
+
+		event := make(map[string]interface{})
+		event["name"] = name
+
+		switch metric := i.(type) {
+		case metrics.Counter:
+			event["type"] = "counter"
+			event["count"] = metric.Count()
+		case metrics.Gauge:
+			event["type"] = "gauge"
+			event["value"] = metric.Value()
+		case metrics.GaugeFloat64:
+			event["type"] = "gauge"
+			event["value"] = metric.Value()
+		case metrics.Histogram:
+			event["type"] = "histogram"
+			h := metric.Snapshot()
+			ps := h.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})
+			event["count"] = h.Count()
+			event["min"] = h.Min()
+			event["max"] = h.Max()
+			event["mean"] = h.Mean()
+			event["stddev"] = h.StdDev()
+			event["p50"] = ps[0]
+			event["p75"] = ps[1]
+			event["p95"] = ps[2]
+			event["p99"] = ps[3]
+			event["p999"] = ps[4]
+		case metrics.Meter:
+			event["type"] = "meter"
+			m := metric.Snapshot()
+			event["count"] = m.Count()
+			event["m1"] = m.Rate1()
+			event["m5"] = m.Rate5()
+			event["m15"] = m.Rate15()
+		case Derive:
+			event["type"] = "meter"
+			m := metric.Snapshot()
+			event["count"] = m.Count()
+			event["m1"] = m.Rate1()
+			event["m5"] = m.Rate5()
+			event["m15"] = m.Rate15()
+		case metrics.Timer:
+			event["type"] = "timer"
+			t := metric.Snapshot()
+			ps := t.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})
+			event["count"] = t.Count()
+			event["min"] = time.Duration(t.Min()) / time.Millisecond
+			event["max"] = time.Duration(t.Max()) / time.Millisecond
+			event["mean"] = time.Duration(t.Mean()) / time.Millisecond
+			event["stddev"] = time.Duration(t.StdDev()) / time.Millisecond
+			event["median"] = time.Duration(ps[0]) / time.Millisecond
+			event["p75"] = time.Duration(ps[1]) / time.Millisecond
+			event["p95"] = time.Duration(ps[2]) / time.Millisecond
+			event["p99"] = time.Duration(ps[3]) / time.Millisecond
+			event["p999"] = time.Duration(ps[4]) / time.Millisecond
+			event["m1"] = t.Rate1()
+			event["m5"] = t.Rate5()
+			event["m15"] = t.Rate15()
+		}
+		self.tracker.EventMap("metrics", event, true)
+	})
 }
