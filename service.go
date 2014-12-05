@@ -52,14 +52,15 @@ const (
 )
 
 type Service struct {
-	Log           loggo.Logger
-	Flags         flag.FlagSet
-	Tracker       Tracker
-	MetricsTicker *MetricsTicker
-	Listener      net.Listener
-	Server        *manners.GracefulServer
-	DebugServer   *manners.GracefulServer
-	BaseConfig    *Config
+	Log            loggo.Logger
+	Flags          flag.FlagSet
+	Tracker        Tracker
+	MetricsTicker  *MetricsTicker
+	Listener       net.Listener
+	Server         *manners.GracefulServer
+	DebugServer    *manners.GracefulServer
+	BaseConfig     *Config
+	ReloadCallback func()
 }
 
 func (service *Service) Init() {
@@ -184,6 +185,9 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 				return syscall.SIGUSR2, nil
 			}
 			forked = true
+			if service.ReloadCallback != nil {
+				service.ReloadCallback()
+			}
 			if err := service.ForkExec(); err != nil {
 				MayPanic(err)
 			}
