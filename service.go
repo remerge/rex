@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"runtime/pprof"
 	"strings"
 	"syscall"
 	"time"
@@ -166,7 +167,13 @@ func (service *Service) Shutdown() {
 	service.MetricsTicker.Stop()
 	service.Tracker.Close()
 	Raven.Close()
-	service.Log.Debugf("service shutdown done")
+
+	// unfortunately sarama does not expose a sync close
+	service.Log.Debugf("give sarama some time to shut down brokers")
+	time.Sleep(1 * time.Second)
+
+	service.Log.Infof("service shutdown done, dumping dangling go routines")
+	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 }
 
 func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
@@ -241,6 +248,7 @@ func (service *Service) ForkExec() error {
 		fmt.Sprintf("%s:%s->", addr.Network(), addr.String()),
 	)
 	service.DebugServer.Close()
+	service.DebugServer = nil
 	p, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
 		Dir:   wd,
 		Env:   os.Environ(),
