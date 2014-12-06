@@ -20,6 +20,7 @@ import (
 	"github.com/getsentry/raven-go"
 	"github.com/juju/loggo"
 	"github.com/mailgun/manners"
+	"github.com/rcrowley/go-metrics"
 )
 
 type Config struct {
@@ -145,15 +146,26 @@ func (service *Service) CloseWait() {
 		service.Log.Debugf("all request handlers done")
 	}
 	if service.Listener != nil {
+		service.Log.Debugf("closing dangling listener")
 		CaptureError(service.Listener.Close())
+	}
+	if service.DebugServer != nil {
+		service.Log.Debugf("shutting down debug server")
+		service.DebugServer.Close()
+		service.Log.Debugf("waiting for requests to finish")
+		service.DebugServer.Wait()
+		service.DebugServer = nil
+		service.Log.Debugf("all request handlers done")
 	}
 }
 
 func (service *Service) Shutdown() {
 	service.Log.Debugf("service shutdown")
 	service.CloseWait()
+	metrics.Shutdown()
 	service.MetricsTicker.Stop()
 	service.Tracker.Close()
+	Raven.Close()
 	service.Log.Debugf("service shutdown done")
 }
 

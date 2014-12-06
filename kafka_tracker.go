@@ -1,8 +1,6 @@
 package rex
 
 import (
-	"errors"
-
 	"github.com/Shopify/sarama"
 	"github.com/juju/loggo"
 )
@@ -39,27 +37,36 @@ func (self *KafkaTracker) Close() {
 	self.Log.Debugf("shutting down tracker")
 	CaptureError(self.Producer.Close())
 	CaptureError(self.Client.Close())
-	self.Log.Debugf("shutdown done")
+	self.Log.Debugf("tracker is stopped")
 }
 
-func (self *KafkaTracker) Message(topic string, message []byte) error {
-	self.Log.Tracef("event %s", string(message))
-	if message == nil {
-		return errors.New("empty message")
+func (self *KafkaTracker) Message(topic string, message []byte) {
+	self.Log.Tracef("trying to send message: %s", string(message))
+	if message == nil || len(message) < 1 {
+		CaptureErrorNew("empty message")
+		return
 	}
+
 	self.Producer.Input() <- &sarama.MessageToSend{
 		Topic: topic,
 		Value: sarama.ByteEncoder(message),
 	}
-	return nil
+
+	select {
+	case msg := <-self.Producer.Errors():
+		CaptureError(msg.Err)
+	case msg := <-self.Producer.Successes():
+		value, _ := msg.Value.Encode()
+		self.Log.Tracef("successfully sent message %s", string(value))
+	}
 }
 
-func (self *KafkaTracker) Event(topic string, e EventBase, full bool) error {
+func (self *KafkaTracker) Event(topic string, e EventBase, full bool) {
 	self.AddMetadata(e, full)
-	return self.Message(topic, self.Encode(e))
+	go self.Message(topic, self.Encode(e))
 }
 
-func (self *KafkaTracker) EventMap(topic string, event map[string]interface{}, full bool) error {
+func (self *KafkaTracker) EventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	return self.Message(topic, self.Encode(event))
+	go self.Message(topic, self.Encode(event))
 }

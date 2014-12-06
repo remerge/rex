@@ -1,6 +1,7 @@
 package rex
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
@@ -14,8 +15,25 @@ type BrokerTopicGroup struct {
 	Group   string
 }
 
+type loggerWrapper struct {
+	loggo.Logger
+}
+
+func (self loggerWrapper) Print(v ...interface{}) {
+	self.Infof(fmt.Sprint(v...))
+}
+
+func (self loggerWrapper) Println(v ...interface{}) {
+	self.Infof(fmt.Sprintln(v...))
+}
+
+func (self loggerWrapper) Printf(format string, v ...interface{}) {
+	self.Infof(format, v...)
+}
+
 func NewKafkaClient(service string, brokers string, config *sarama.ClientConfig) (*sarama.Client, error) {
 	log := loggo.GetLogger("rex.kafka.client[" + service + "]")
+	sarama.Logger = loggerWrapper{loggo.GetLogger("sarama")}
 
 	broker_list := strings.Split(brokers, ",")
 	log.Infof("connecting to brokers=%v", broker_list)
@@ -42,6 +60,7 @@ func NewKafkaProducer(client *sarama.Client, config *sarama.ProducerConfig) (*sa
 		config = sarama.NewProducerConfig()
 		config.FlushFrequency = 1 * time.Second
 		config.FlushByteCount = 1280
+		config.AckSuccesses = true
 	}
 
 	if config.FlushFrequency < 10*time.Millisecond {
@@ -59,15 +78,6 @@ func NewKafkaProducer(client *sarama.Client, config *sarama.ProducerConfig) (*sa
 		log.Errorf("failed to create producer: %s", err)
 		return nil, err
 	}
-
-	// we need to collect errors to prevent producer from blocking
-	go func(errchan <-chan *sarama.ProduceError) {
-		for {
-			if err := <-errchan; err != nil {
-				CaptureErrorNew("failed to send message to kafka: %s (msg=%#v)", err.Err, err.Msg)
-			}
-		}
-	}(producer.Errors())
 
 	return producer, nil
 }

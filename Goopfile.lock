@@ -1,10 +1,10 @@
 code.google.com/p/snappy-go #12e4b4183793ac4b061921e7980845e750679fd0
 github.com/Shopify/sarama #b099e0411d461a52fb1429953503eab1f859e9ac
-github.com/getsentry/raven-go #1ae8a89da90a71ca1bb7648919bb30928acaab46
+github.com/getsentry/raven-go #3fd636ed242c26c0f55bc9ee1fe47e1d6d2d77f7
 github.com/gin-gonic/gin #dcad0df8f777757a9a5eefb5fb0f2bd1a3a932f5
 github.com/juju/loggo #dc8e19f7c70a62a59c69c40f85b8df09ff20742c
-github.com/julienschmidt/httprouter #46807412fe50aaceb73bb57061c2230fd26a1640
+github.com/julienschmidt/httprouter #925b09e25bea4ccff77c6eaab40794dd75351705
 github.com/mailgun/manners #38e66a3e3e920713163484c7ab57ffc39c35e257 !https://github.com/remerge/manners
-github.com/rcrowley/go-metrics #fd8b7fef80f45b516e40702cb1fcf64dacf336e8 !https://github.com/remerge/go-metrics
-golang.org/x/net/publicsuffix #ca2dc8b9e7d3d628834da99ea4a24dfe970537f1
+github.com/rcrowley/go-metrics #7a617885145facfdd5b022a9ef84e5bf73f3fe0a !https://github.com/remerge/go-metrics
+golang.org/x/net/publicsuffix #937a34c9de13c766c814510f76bca091dee06028
 golang.org/x/text #5b2527008a4c8988ca9dc6f010ebfb9dae67150b

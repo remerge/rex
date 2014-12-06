@@ -36,16 +36,16 @@ func UpdateTimer(timer metrics.Timer, start time.Time) {
 }
 
 type MetricsTicker struct {
-	ticker  *time.Ticker
-	closer  chan bool
-	done    chan bool
 	tracker Tracker
+	ticker  *time.Ticker
+	quit    chan bool
+	done    chan bool
 }
 
 func StartMetricsTicker(t Tracker) *MetricsTicker {
 	self := &MetricsTicker{
 		ticker:  time.NewTicker(10 * time.Second),
-		closer:  make(chan bool, 1),
+		quit:    make(chan bool, 1),
 		done:    make(chan bool, 1),
 		tracker: t,
 	}
@@ -60,9 +60,9 @@ func (self *MetricsTicker) Start() {
 		select {
 		case <-self.ticker.C:
 			self.Track()
-		case <-self.closer:
+		case <-self.quit:
 			self.ticker.Stop()
-			close(self.closer)
+			close(self.quit)
 			close(self.done)
 			return
 		}
@@ -71,7 +71,7 @@ func (self *MetricsTicker) Start() {
 
 func (self *MetricsTicker) Stop() {
 	loggo.GetLogger("rex.metrics").Debugf("stopping metrics ticker")
-	self.closer <- true
+	self.quit <- true
 	<-self.done
 	loggo.GetLogger("rex.metrics").Debugf("stopped metrics ticker")
 }
