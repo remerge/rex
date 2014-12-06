@@ -11,4 +11,4 @@ script:
 notifications:
   email: false
   slack:
-    secure: oqsn3JRtNE4H4GrdkqGQ8FrZeL1gkr0xd6z6OiJLDYblu7HV5IvRtW0PH71NatHPM6FJ/tIBnI6ZqZfY0zwkiFdyCrQLzkQHAGJ0GqCA8+gfRhPc9+Wg60CWj1in3iFDx+ObTF9zW1j87e7QhxkT8EunTzf4+PD1XZWmUBqL7P8=
+    secure: ErSz9HRyhznsKHtMUYl7gfwoweW7/Zao7EQVoXF68rme5bQYr/+94hHtRkHIAh75vLftBETQGuaaPnX4jF8pftOp3eZQilbJZ+F0FrNuTehA2cirw5C4tjQks49Cm9HxZLj8xeD8SnKE92x2cMycZizyItMHORJCXjzAS96MZDU=
