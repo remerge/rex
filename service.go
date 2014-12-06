@@ -163,9 +163,13 @@ func (service *Service) CloseWait() {
 func (service *Service) Shutdown() {
 	service.Log.Debugf("service shutdown")
 	service.CloseWait()
+	service.Log.Debugf("shutting down metrics")
 	metrics.Shutdown()
+	service.Log.Debugf("shutting down metrics ticker")
 	service.MetricsTicker.Stop()
+	service.Log.Debugf("shutting down tracker")
 	service.Tracker.Close()
+	service.Log.Debugf("closing raven client")
 	Raven.Close()
 
 	// unfortunately sarama does not expose a sync close

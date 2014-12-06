@@ -57,7 +57,7 @@ func (self *KafkaTracker) Message(topic string, message []byte) {
 		CaptureError(msg.Err)
 	case msg := <-self.Producer.Successes():
 		value, _ := msg.Value.Encode()
-		self.Log.Tracef("successfully sent message %s", string(value))
+		self.Log.Tracef("successfully sent message: %s", string(value))
 	}
 }
 
