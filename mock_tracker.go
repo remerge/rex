@@ -15,17 +15,16 @@ func NewMockTracker(config *Config) *MockTracker {
 func (self *MockTracker) Close() {
 }
 
-func (self *MockTracker) Message(topic string, message []byte) error {
+func (self *MockTracker) Message(topic string, message []byte) {
 	self.Messages[topic] = append(self.Messages[topic], message)
-	return nil
 }
 
-func (self *MockTracker) Event(topic string, e EventBase, full bool) error {
+func (self *MockTracker) Event(topic string, e EventBase, full bool) {
 	self.AddMetadata(e, full)
-	return self.Message(topic, self.Encode(e))
+	self.Message(topic, self.Encode(e))
 }
 
-func (self *MockTracker) EventMap(topic string, event map[string]interface{}, full bool) error {
+func (self *MockTracker) EventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	return self.Message(topic, self.Encode(event))
+	self.Message(topic, self.Encode(event))
 }
