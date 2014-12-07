@@ -2,6 +2,7 @@ package rex
 
 import (
 	"fmt"
+
 	"strings"
 	"time"
 
@@ -97,26 +98,67 @@ func KafkaOffset(client *sarama.Client, group string, topic string, partition in
 	return block.Offsets[0], nil
 }
 
-func KafkaConsumerGroup(client *sarama.Client, group string, topic string, offsets map[int32]int64, config *sarama.ConsumerConfig) (chan *sarama.ConsumerEvent, error) {
+type kafkaConsumer struct {
+	*sarama.Consumer
+	quit chan bool
+	done chan bool
+	log  loggo.Logger
+}
+
+func (self *kafkaConsumer) Start(events chan *sarama.ConsumerEvent) {
+	for {
+		select {
+		case event := <-self.Events():
+			events <- event
+		case <-self.quit:
+			close(self.done)
+			return
+		}
+	}
+}
+
+func (self *kafkaConsumer) Shutdown() {
+	self.log.Debugf("shutting down consumer run loop")
+	close(self.quit)
+	self.log.Debugf("waiting for run loop to finish")
+	<-self.done
+	self.log.Debugf("closing consumer")
+	self.Consumer.Close()
+	self.log.Debugf("shutdown done")
+}
+
+type KafkaConsumerGroup struct {
+	Events    chan *sarama.ConsumerEvent
+	consumers []*kafkaConsumer
+	log       loggo.Logger
+}
+
+func NewKafkaConsumerGroup(client *sarama.Client, group string, topic string, offsets map[int32]int64, config *sarama.ConsumerConfig) (*KafkaConsumerGroup, error) {
+	self := &KafkaConsumerGroup{
+		Events:    make(chan *sarama.ConsumerEvent),
+		consumers: make([]*kafkaConsumer, 0),
+		log:       loggo.GetLogger("rex.kafka.consumer.group[" + group + "]"),
+	}
+
 	partitions, err := client.Partitions(topic)
 	if err != nil {
 		return nil, err
 	}
 
-	events := make(chan *sarama.ConsumerEvent)
-
 	for _, p := range partitions {
-		resumeFrom := offsets[p] + 1
 		earliest, err := KafkaOffset(client, group, topic, p, sarama.EarliestOffset)
 		if err != nil {
+			self.Shutdown()
 			return nil, err
 		}
 
 		latest, err := KafkaOffset(client, group, topic, p, sarama.LatestOffsets)
 		if err != nil {
+			self.Shutdown()
 			return nil, err
 		}
 
+		resumeFrom := offsets[p] + 1
 		if earliest == latest && earliest == 0 {
 			resumeFrom = 0
 		}
@@ -137,19 +179,34 @@ func KafkaConsumerGroup(client *sarama.Client, group string, topic string, offse
 		config.OffsetValue = resumeFrom
 		config.MaxWaitTime = 1 * time.Second
 
+		self.log.Infof("new consumer for topic=%v partition=%v earliest=%v latest=%v offset=%v",
+			topic, p, earliest, latest, resumeFrom)
+
 		consumer, err := sarama.NewConsumer(client, topic, p, group, config)
 		if err != nil {
+			self.Shutdown()
 			return nil, err
 		}
 
-		// TODO: consumer.Close()
+		kc := &kafkaConsumer{
+			Consumer: consumer,
+			quit:     make(chan bool),
+			done:     make(chan bool),
+			log:      self.log,
+		}
 
-		go func(c <-chan *sarama.ConsumerEvent) {
-			for {
-				events <- <-c
-			}
-		}(consumer.Events())
+		self.consumers = append(self.consumers, kc)
+
+		go kc.Start(self.Events)
 	}
 
-	return events, nil
+	return self, nil
+}
+
+func (self *KafkaConsumerGroup) Shutdown() {
+	self.log.Debugf("shutting down consumer group")
+	for _, consumer := range self.consumers {
+		self.log.Debugf("shutting down consumer %#v", consumer)
+		consumer.Shutdown()
+	}
 }
