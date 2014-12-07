@@ -42,17 +42,13 @@ type MetricsTicker struct {
 	done    chan bool
 }
 
-func StartMetricsTicker(t Tracker) *MetricsTicker {
-	self := &MetricsTicker{
+func NewMetricsTicker(t Tracker) *MetricsTicker {
+	return &MetricsTicker{
 		ticker:  time.NewTicker(10 * time.Second),
 		quit:    make(chan bool, 1),
 		done:    make(chan bool, 1),
 		tracker: t,
 	}
-
-	go self.Start()
-
-	return self
 }
 
 func (self *MetricsTicker) Start() {

@@ -68,7 +68,7 @@ type Service struct {
 func (service *Service) Init() {
 	config := service.BaseConfig
 
-	loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, &LogFormat{}))
+	loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, &LogFormat{Service: config.Service}))
 	rootLogger := loggo.GetLogger("")
 	rootLogger.SetLogLevel(loggo.INFO)
 	service.Log = loggo.GetLogger(config.Service)
@@ -108,7 +108,8 @@ func (service *Service) Run() {
 	loggo.ConfigureLoggers(service.BaseConfig.LogSpec)
 
 	service.Tracker = NewKafkaTracker(service.BaseConfig)
-	service.MetricsTicker = StartMetricsTicker(service.Tracker)
+	service.MetricsTicker = NewMetricsTicker(service.Tracker)
+	go service.MetricsTicker.Start()
 
 	if service.BaseConfig.Port > 0 {
 		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
@@ -170,11 +171,13 @@ func (service *Service) Shutdown() {
 	service.Log.Debugf("shutting down tracker")
 	service.Tracker.Close()
 	service.Log.Debugf("closing raven client")
-	Raven.Close()
 
 	// unfortunately sarama does not expose a sync close
 	service.Log.Debugf("give sarama some time to shut down brokers")
 	time.Sleep(1 * time.Second)
+
+	// finally close raven and shut down
+	Raven.Close()
 
 	service.Log.Infof("service shutdown done, dumping dangling go routines")
 	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
@@ -361,11 +364,11 @@ func readArgs() []string {
 }
 
 type LogFormat struct {
-	Full bool
+	Service string
 }
 
-func (*LogFormat) Format(level loggo.Level, module, filename string, line int, timestamp time.Time, message string) string {
+func (self *LogFormat) Format(level loggo.Level, module, filename string, line int, timestamp time.Time, message string) string {
 	// Just get the basename from the filename
 	filename = filepath.Base(filename)
-	return fmt.Sprintf("[%s] %s (at %s:%d)", module, message, filename, line)
+	return fmt.Sprintf("%s[%d] [%s] %s (at %s:%d)", self.Service, os.Getpid(), module, message, filename, line)
 }

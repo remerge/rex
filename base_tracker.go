@@ -17,25 +17,30 @@ func (self *BaseTracker) Encode(message interface{}) []byte {
 
 func (self *BaseTracker) AddMetadata(e EventBase, full bool) {
 	event := e.Base()
-	event.Ts = time.Now().UTC().Format("2006-01-02T15:04:05Z")
 
-	if full == true {
-		event.Service = self.Service
-		event.Environment = self.Environment
-		event.Cluster = self.Cluster
-		event.Host = self.Host
-		event.Release = self.Release
+	if event.Ts == "" {
+		event.Ts = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+
+		if full == true {
+			event.Service = self.Service
+			event.Environment = self.Environment
+			event.Cluster = self.Cluster
+			event.Host = self.Host
+			event.Release = self.Release
+		}
 	}
 }
 
 func (self *BaseTracker) AddMetadataMap(event map[string]interface{}, full bool) {
-	event["ts"] = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	if event["ts"] == nil {
+		event["ts"] = time.Now().UTC().Format("2006-01-02T15:04:05Z")
 
-	if full == true {
-		event["service"] = self.Service
-		event["env"] = self.Environment
-		event["cluster"] = self.Cluster
-		event["host"] = self.Host
-		event["release"] = self.Release
+		if full == true {
+			event["service"] = self.Service
+			event["env"] = self.Environment
+			event["cluster"] = self.Cluster
+			event["host"] = self.Host
+			event["release"] = self.Release
+		}
 	}
 }
