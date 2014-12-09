@@ -42,6 +42,12 @@ func NewKafkaClient(service string, brokers string, config *sarama.ClientConfig)
 	if config == nil {
 		log.Infof("using default client config")
 		config = sarama.NewClientConfig()
+		config.DefaultBrokerConf = &sarama.BrokerConfig{
+			MaxOpenRequests: 4,
+			DialTimeout:     5 * time.Second,
+			ReadTimeout:     5 * time.Second,
+			WriteTimeout:    5 * time.Second,
+		}
 	}
 
 	client, err := sarama.NewClient(service, broker_list, config)
