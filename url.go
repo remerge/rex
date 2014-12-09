@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"strings"
 
-	"golang.org/x/net/publicsuffix"
+	"github.com/remerge/rex/publicsuffix"
 )
 
 func ParseUrlOrDomain(value string) (*url.URL, error) {
