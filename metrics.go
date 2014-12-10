@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/juju/loggo"
+	"github.com/rcrowley/go-metrics"
 )
 
 func NewGauge(name string) metrics.Gauge {
@@ -134,7 +135,7 @@ func (self *MetricsTicker) Track() {
 			event["m15"] = t.Rate15()
 		}
 		go func() {
-			rex.CaptureError(self.tracker.EventMap("metrics", event, true))
+			CaptureError(self.tracker.EventMap("metrics", event, true))
 		}()
 	})
 }
