@@ -132,48 +132,48 @@ func (service *Service) Serve(handler http.Handler) {
 		Handler: handler,
 	})
 
-	service.Log.Debugf("now serving requests on listener")
+	service.Log.Infof("now serving requests on listener")
 	MayPanic(service.Server.Serve(service.Listener))
-	service.Log.Debugf("stopped serving on listener")
+	service.Log.Infof("stopped serving on listener")
 }
 
 func (service *Service) CloseWait() {
 	if service.Server != nil {
-		service.Log.Debugf("shutting down http server")
+		service.Log.Infof("shutting down http server")
 		service.Server.Close()
 		service.Listener = nil
-		service.Log.Debugf("waiting for requests to finish")
+		service.Log.Infof("waiting for requests to finish")
 		service.Server.Wait()
 		service.Server = nil
-		service.Log.Debugf("all request handlers done")
+		service.Log.Infof("all request handlers done")
 	}
 	if service.Listener != nil {
-		service.Log.Debugf("closing dangling listener")
+		service.Log.Infof("closing dangling listener")
 		CaptureError(service.Listener.Close())
 	}
 	if service.DebugServer != nil {
-		service.Log.Debugf("shutting down debug server")
+		service.Log.Infof("shutting down debug server")
 		service.DebugServer.Close()
-		service.Log.Debugf("waiting for requests to finish")
+		service.Log.Infof("waiting for requests to finish")
 		service.DebugServer.Wait()
 		service.DebugServer = nil
-		service.Log.Debugf("all request handlers done")
+		service.Log.Infof("all request handlers done")
 	}
 }
 
 func (service *Service) Shutdown() {
-	service.Log.Debugf("service shutdown")
+	service.Log.Infof("service shutdown")
 	service.CloseWait()
-	service.Log.Debugf("shutting down metrics")
+	service.Log.Infof("shutting down metrics")
 	metrics.Shutdown()
-	service.Log.Debugf("shutting down metrics ticker")
+	service.Log.Infof("shutting down metrics ticker")
 	service.MetricsTicker.Stop()
-	service.Log.Debugf("shutting down tracker")
+	service.Log.Infof("shutting down tracker")
 	service.Tracker.Close()
-	service.Log.Debugf("closing raven client")
+	service.Log.Infof("closing raven client")
 
 	// unfortunately sarama does not expose a sync close
-	service.Log.Debugf("give sarama some time to shut down brokers")
+	service.Log.Infof("give sarama some time to shut down brokers")
 	time.Sleep(1 * time.Second)
 
 	// finally close raven and shut down

@@ -66,10 +66,10 @@ func (self *MetricsTicker) Start() {
 }
 
 func (self *MetricsTicker) Stop() {
-	loggo.GetLogger("rex.metrics").Debugf("stopping metrics ticker")
+	loggo.GetLogger("rex.metrics").Infof("stopping metrics ticker")
 	self.quit <- true
 	<-self.done
-	loggo.GetLogger("rex.metrics").Debugf("stopped metrics ticker")
+	loggo.GetLogger("rex.metrics").Infof("stopped metrics ticker")
 }
 
 func (self *MetricsTicker) Track() {

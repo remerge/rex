@@ -124,13 +124,13 @@ func (self *kafkaConsumer) Start(events chan *sarama.ConsumerEvent) {
 }
 
 func (self *kafkaConsumer) Shutdown() {
-	self.log.Debugf("shutting down consumer run loop")
+	self.log.Infof("shutting down consumer run loop")
 	close(self.quit)
-	self.log.Debugf("waiting for run loop to finish")
+	self.log.Infof("waiting for run loop to finish")
 	<-self.done
-	self.log.Debugf("closing consumer")
+	self.log.Infof("closing consumer")
 	self.Consumer.Close()
-	self.log.Debugf("shutdown done")
+	self.log.Infof("shutdown done")
 }
 
 type KafkaConsumerGroup struct {
@@ -210,9 +210,9 @@ func NewKafkaConsumerGroup(client *sarama.Client, group string, topic string, of
 }
 
 func (self *KafkaConsumerGroup) Shutdown() {
-	self.log.Debugf("shutting down consumer group")
+	self.log.Infof("shutting down consumer group")
 	for _, consumer := range self.consumers {
-		self.log.Debugf("shutting down consumer %#v", consumer)
+		self.log.Infof("shutting down consumer %#v", consumer)
 		consumer.Shutdown()
 	}
 }
