@@ -202,6 +202,16 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 
 		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM:
 			service.Log.Infof("shutting down")
+			go func() {
+				time.Sleep(30 * time.Second)
+				service.Log.Infof("still not dead. trying to exit")
+				go func() {
+					time.Sleep(30 * time.Second)
+					service.Log.Infof("still not dead. killing myself")
+					syscall.Kill(os.Getpid(), syscall.SIGKILL)
+				}()
+				os.Exit(-1)
+			}()
 			shutdownCallback()
 			return sig.(syscall.Signal), nil
 
