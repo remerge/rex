@@ -43,3 +43,26 @@ func CaptureError(err error) chan error {
 func CaptureErrorNew(format string, v ...interface{}) chan error {
 	return CaptureError(errors.New(fmt.Sprintf(format, v...)))
 }
+
+func WithRecover(fn func() error) error {
+	var panicValue interface{}
+	result := func() error {
+		defer func() { panicValue = recover() }()
+		return fn()
+	}()
+
+	if result == nil && panicValue == nil {
+		return nil
+	}
+
+	if panicValue != nil {
+		switch panicValue.(type) {
+		case error:
+			return panicValue.(error)
+		default:
+			return errors.New(fmt.Sprintf("caught non-error panic: %#v", panicValue))
+		}
+	}
+
+	return result
+}
