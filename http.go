@@ -58,13 +58,12 @@ func (h *Handler) BadRequest(format string, v ...interface{}) {
 
 func (h *Handler) ServerError(format string, v ...interface{}) {
 	h.Debug(format, v...)
-	h.Log.Errorf(format, v...)
 	h.Response(http.StatusInternalServerError, nil)
 }
 
 func (h *Handler) Response(status int, body []byte) (int, error) {
 	h.Header().Set("Content-Length", strconv.Itoa(len(body)))
-	h.Log.Debugf("<<< HTTP/1.1 %d %s", status, h.Header().Get("X-Debug"))
+	h.Log.Tracef("<<< HTTP/1.1 %d %s", status, h.Header().Get("X-Debug"))
 	for key, value := range h.ResponseWriter.Header() {
 		h.Log.Tracef("%s: %s", key, value)
 	}
@@ -85,7 +84,7 @@ func LogRequest(l loggo.Logger, r *http.Request) {
 	if r == nil {
 		return
 	}
-	l.Debugf(">>> %s %s %s from %s", r.Method, r.RequestURI, r.Proto, r.RemoteAddr)
+	l.Tracef(">>> %s %s %s from %s", r.Method, r.RequestURI, r.Proto, r.RemoteAddr)
 	for key, value := range r.Header {
 		l.Tracef("%s: %s", key, value)
 	}
@@ -95,7 +94,7 @@ func LogResponse(l loggo.Logger, r *http.Response) {
 	if r == nil {
 		return
 	}
-	l.Debugf("<<< %s %d %s", r.Proto, r.StatusCode, r.Header.Get("X-Debug"))
+	l.Tracef("<<< %s %d %s", r.Proto, r.StatusCode, r.Header.Get("X-Debug"))
 	for key, value := range r.Header {
 		l.Tracef("%s: %s", key, value)
 	}
