@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
@@ -27,7 +28,8 @@ func StartDebugServer(port int) *manners.GracefulServer {
 	r.GET("/loggo", getLoggoSpec)
 	r.POST("/loggo", setLoggoSpec)
 
-	server := manners.NewWithServer(&http.Server{Handler: r})
+	http.Handle("/", r)
+	server := manners.NewWithServer(&http.Server{Handler: http.DefaultServeMux})
 
 	log.Infof("starting debug server on port=%d", port)
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
