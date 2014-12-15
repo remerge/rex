@@ -98,16 +98,20 @@ func (service *Service) Init() {
 }
 
 func (service *Service) Run() {
+	config := service.BaseConfig
+
 	service.Log.Infof("command line arguments=%q", readArgs())
 	service.Flags.Parse(readArgs())
 
 	var err error
-	Raven, err = raven.NewClient(service.BaseConfig.SentryDSN, nil)
+	Raven, err = raven.NewClient(config.SentryDSN, nil)
 	MayPanic(err)
 
-	loggo.ConfigureLoggers(service.BaseConfig.LogSpec)
+	loggo.ConfigureLoggers(config.LogSpec)
 
-	service.Tracker = NewKafkaTracker(service.BaseConfig)
+	service.Tracker, err = NewKafkaTracker(config.Service, config.KafkaBroker, &config.EventMetadata)
+	MayPanic(err)
+
 	service.MetricsTicker = NewMetricsTicker(service.Tracker)
 	go service.MetricsTicker.Start()
 

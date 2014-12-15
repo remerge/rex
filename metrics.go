@@ -134,8 +134,6 @@ func (self *MetricsTicker) Track() {
 			event["m5"] = t.Rate5()
 			event["m15"] = t.Rate15()
 		}
-		go func() {
-			CaptureError(self.tracker.EventMap("metrics", event, true))
-		}()
+		self.tracker.EventMap("metrics", event, true)
 	})
 }

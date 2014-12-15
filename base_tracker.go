@@ -10,6 +10,12 @@ type BaseTracker struct {
 	*EventMetadata
 }
 
+func NewBaseTracker(metadata *EventMetadata) *BaseTracker {
+	return &BaseTracker{
+		EventMetadata: metadata,
+	}
+}
+
 func (self *BaseTracker) Encode(message interface{}) []byte {
 	bytes, _ := json.Marshal(message)
 	return bytes

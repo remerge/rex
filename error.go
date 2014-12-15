@@ -3,6 +3,7 @@ package rex
 import (
 	"errors"
 	"fmt"
+	"runtime/debug"
 
 	"github.com/getsentry/raven-go"
 	"github.com/juju/loggo"
@@ -34,6 +35,7 @@ func CaptureError(err error) chan error {
 	}
 
 	loggo.GetLogger("rex.error").Errorf(err.Error())
+	debug.PrintStack()
 
 	packet := raven.NewPacket(err.Error(), raven.NewException(err, raven.NewStacktrace(1, 3, nil)))
 	_, ch := Raven.Capture(packet, nil)

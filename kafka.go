@@ -115,7 +115,11 @@ func (self *kafkaConsumer) Start(events chan *sarama.ConsumerEvent) {
 	for {
 		select {
 		case event := <-self.Events():
-			events <- event
+			if event.Err != nil {
+				CaptureError(event.Err)
+			} else {
+				events <- event
+			}
 		case <-self.quit:
 			close(self.done)
 			return
@@ -143,7 +147,7 @@ func NewKafkaConsumerGroup(client *sarama.Client, group string, topic string, of
 	self := &KafkaConsumerGroup{
 		Events:    make(chan *sarama.ConsumerEvent),
 		consumers: make([]*kafkaConsumer, 0),
-		log:       loggo.GetLogger("rex.kafka.consumer.group[" + group + "]"),
+		log:       loggo.GetLogger("rex.kafka.consumer.group." + group),
 	}
 
 	partitions, err := client.Partitions(topic)
