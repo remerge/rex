@@ -60,8 +60,8 @@ func TestDiskQueueRoll(t *testing.T) {
 		equal(t, dq.Depth(), int64(i+1))
 	}
 
-	equal(t, dq.(*DiskQueue).writeFileNum, int64(1))
-	equal(t, dq.(*DiskQueue).writePos, int64(28))
+	equal(t, dq.writeFileNum, int64(1))
+	equal(t, dq.writePos, int64(28))
 }
 
 func assertFileNotExist(t *testing.T, fn string) {
@@ -96,18 +96,18 @@ func TestDiskQueueEmpty(t *testing.T) {
 	}
 	equal(t, dq.Depth(), int64(97))
 
-	numFiles := dq.(*DiskQueue).writeFileNum
+	numFiles := dq.writeFileNum
 	dq.Empty()
 
-	assertFileNotExist(t, dq.(*DiskQueue).metaDataFileName())
+	assertFileNotExist(t, dq.metaDataFileName())
 	for i := int64(0); i <= numFiles; i++ {
-		assertFileNotExist(t, dq.(*DiskQueue).fileName(i))
+		assertFileNotExist(t, dq.fileName(i))
 	}
 	equal(t, dq.Depth(), int64(0))
-	equal(t, dq.(*DiskQueue).readFileNum, dq.(*DiskQueue).writeFileNum)
-	equal(t, dq.(*DiskQueue).readPos, dq.(*DiskQueue).writePos)
-	equal(t, dq.(*DiskQueue).nextReadPos, dq.(*DiskQueue).readPos)
-	equal(t, dq.(*DiskQueue).nextReadFileNum, dq.(*DiskQueue).readFileNum)
+	equal(t, dq.readFileNum, dq.writeFileNum)
+	equal(t, dq.readPos, dq.writePos)
+	equal(t, dq.nextReadPos, dq.readPos)
+	equal(t, dq.nextReadFileNum, dq.readFileNum)
 
 	for i := 0; i < 100; i++ {
 		err := dq.Put(msg)
@@ -127,9 +127,9 @@ func TestDiskQueueEmpty(t *testing.T) {
 	}
 
 	equal(t, dq.Depth(), int64(0))
-	equal(t, dq.(*DiskQueue).readFileNum, dq.(*DiskQueue).writeFileNum)
-	equal(t, dq.(*DiskQueue).readPos, dq.(*DiskQueue).writePos)
-	equal(t, dq.(*DiskQueue).nextReadPos, dq.(*DiskQueue).readPos)
+	equal(t, dq.readFileNum, dq.writeFileNum)
+	equal(t, dq.readPos, dq.writePos)
+	equal(t, dq.nextReadPos, dq.readPos)
 }
 
 func TestDiskQueueCorruption(t *testing.T) {
@@ -144,7 +144,7 @@ func TestDiskQueueCorruption(t *testing.T) {
 	equal(t, dq.Depth(), int64(25))
 
 	// corrupt the 2nd file
-	dqFn := dq.(*DiskQueue).fileName(1)
+	dqFn := dq.fileName(1)
 	os.Truncate(dqFn, 500)
 
 	for i := 0; i < 19; i++ {
@@ -152,7 +152,7 @@ func TestDiskQueueCorruption(t *testing.T) {
 	}
 
 	// corrupt the 4th (current) file
-	dqFn = dq.(*DiskQueue).fileName(3)
+	dqFn = dq.fileName(3)
 	os.Truncate(dqFn, 100)
 
 	dq.Put(msg)
