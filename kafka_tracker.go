@@ -70,13 +70,14 @@ func (self *KafkaTracker) Message(topic string, message []byte) error {
 		MayPanicNew("empty message")
 	}
 
-	err := self.enqueue(&sarama.MessageToSend{
-		Topic: topic,
-		Value: sarama.ByteEncoder(message),
-	})
+	go func() {
+		CaptureError(self.enqueue(&sarama.MessageToSend{
+			Topic: topic,
+			Value: sarama.ByteEncoder(message),
+		}))
+	}()
 
-	CaptureError(err)
-	return err
+	return nil
 }
 
 func (self *KafkaTracker) enqueue(msg *sarama.MessageToSend) error {
@@ -112,13 +113,13 @@ func (self *KafkaTracker) start() {
 				self.log.Tracef("producer input would block message (backoff=%v): %s", self.backoff, string(value))
 				time.Sleep(self.backoff)
 				self.backoff = 2 * self.backoff
-				self.enqueue(&msg)
+				CaptureError(self.enqueue(&msg))
 			}
 		case err := <-self.producer.Errors():
 			value, _ := err.Msg.Value.Encode()
 			self.log.Tracef("failed to send message: %s", string(value))
 			CaptureError(err.Err)
-			self.enqueue(err.Msg)
+			CaptureError(self.enqueue(err.Msg))
 		case msg := <-self.producer.Successes():
 			value, _ := msg.Value.Encode()
 			self.log.Tracef("successfully sent message: %s", string(value))
