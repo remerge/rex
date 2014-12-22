@@ -209,9 +209,11 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 			go func() {
 				time.Sleep(30 * time.Second)
 				service.Log.Infof("still not dead. trying to exit")
+				pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 				go func() {
 					time.Sleep(30 * time.Second)
 					service.Log.Infof("still not dead. killing myself")
+					pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 					syscall.Kill(os.Getpid(), syscall.SIGKILL)
 				}()
 				os.Exit(-1)
