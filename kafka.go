@@ -65,9 +65,10 @@ func NewKafkaProducer(client *sarama.Client, config *sarama.ProducerConfig) (*sa
 	if config == nil {
 		log.Infof("using default producer config")
 		config = sarama.NewProducerConfig()
+		config.FlushMsgCount = 10000
 		config.FlushFrequency = 1 * time.Second
-		config.FlushByteCount = 1280
 		config.AckSuccesses = true
+		config.RequiredAcks = sarama.WaitForLocal
 	}
 
 	if config.FlushFrequency < 10*time.Millisecond {

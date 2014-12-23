@@ -35,7 +35,13 @@ func NewKafkaTracker(name string, broker string, metadata *EventMetadata) (_ Tra
 		return nil, err
 	}
 
-	self.producer, err = NewKafkaProducer(self.Client, nil)
+	config := sarama.NewProducerConfig()
+	config.FlushMsgCount = 10000
+	config.FlushFrequency = 1 * time.Second
+	config.RequiredAcks = sarama.NoResponse
+	config.AckSuccesses = false
+
+	self.producer, err = NewKafkaProducer(self.Client, config)
 	if err != nil {
 		self.Client.Close()
 		CaptureError(err)
@@ -104,25 +110,17 @@ func (self *KafkaTracker) start() {
 				continue
 			}
 			msg := i.(sarama.MessageToSend)
-			value, _ := msg.Value.Encode()
-			self.log.Tracef("trying to send message: %s", string(value))
 			select {
 			case self.producer.Input() <- &msg:
 				self.backoff = 10 * time.Millisecond
 			default:
-				self.log.Tracef("producer input would block message (backoff=%v): %s", self.backoff, string(value))
 				time.Sleep(self.backoff)
 				self.backoff = 2 * self.backoff
 				CaptureError(self.enqueue(&msg))
 			}
 		case err := <-self.producer.Errors():
-			value, _ := err.Msg.Value.Encode()
-			self.log.Tracef("failed to send message: %s", string(value))
 			CaptureError(err.Err)
 			CaptureError(self.enqueue(err.Msg))
-		case msg := <-self.producer.Successes():
-			value, _ := msg.Value.Encode()
-			self.log.Tracef("successfully sent message: %s", string(value))
 		case <-self.quit:
 			close(self.done)
 			return
