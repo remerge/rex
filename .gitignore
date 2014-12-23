@@ -1,1 +1,5 @@
+.args
 .vendor/
+cache/
+main/
+rex

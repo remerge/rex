@@ -121,19 +121,19 @@ func (self *MetricsTicker) Track() {
 			t := metric.Snapshot()
 			ps := t.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})
 			event["count"] = t.Count()
-			event["min"] = time.Duration(t.Min()) / time.Millisecond
-			event["max"] = time.Duration(t.Max()) / time.Millisecond
-			event["mean"] = time.Duration(t.Mean()) / time.Millisecond
-			event["stddev"] = time.Duration(t.StdDev()) / time.Millisecond
-			event["median"] = time.Duration(ps[0]) / time.Millisecond
-			event["p75"] = time.Duration(ps[1]) / time.Millisecond
-			event["p95"] = time.Duration(ps[2]) / time.Millisecond
-			event["p99"] = time.Duration(ps[3]) / time.Millisecond
-			event["p999"] = time.Duration(ps[4]) / time.Millisecond
+			event["min"] = float32(time.Duration(t.Min())) / float32(time.Millisecond)
+			event["max"] = float32(time.Duration(t.Max())) / float32(time.Millisecond)
+			event["mean"] = float32(time.Duration(t.Mean())) / float32(time.Millisecond)
+			event["stddev"] = float32(time.Duration(t.StdDev())) / float32(time.Millisecond)
+			event["median"] = float32(time.Duration(ps[0])) / float32(time.Millisecond)
+			event["p75"] = float32(time.Duration(ps[1])) / float32(time.Millisecond)
+			event["p95"] = float32(time.Duration(ps[2])) / float32(time.Millisecond)
+			event["p99"] = float32(time.Duration(ps[3])) / float32(time.Millisecond)
+			event["p999"] = float32(time.Duration(ps[4])) / float32(time.Millisecond)
 			event["m1"] = t.Rate1()
 			event["m5"] = t.Rate5()
 			event["m15"] = t.Rate15()
 		}
-		self.tracker.EventMap("metrics", event, true)
+		self.tracker.FastEventMap("metrics", event, true)
 	})
 }
