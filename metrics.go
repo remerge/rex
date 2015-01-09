@@ -134,6 +134,6 @@ func (self *MetricsTicker) Track() {
 			event["m5"] = t.Rate5()
 			event["m15"] = t.Rate15()
 		}
-		self.tracker.FastEventMap("metrics", event, true)
+		self.tracker.SafeEventMap("metrics", event, true)
 	})
 }

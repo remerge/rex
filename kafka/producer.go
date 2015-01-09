@@ -62,19 +62,11 @@ func (client *Client) NewFastProducer(cb ProduceErrorCallback) (*Producer, error
 	return client.NewProducer("fast", config, cb)
 }
 
-func (client *Client) NewSyncProducer() (*Producer, error) {
-	config := sarama.NewProducerConfig()
-	config.AckSuccesses = true
-	config.RequiredAcks = sarama.WaitForLocal
-	config.Timeout = 1 * time.Second
-	return client.NewProducer("sync", config, nil)
-}
-
 func (client *Client) NewSafeProducer() (*Producer, error) {
 	config := sarama.NewProducerConfig()
 	config.AckSuccesses = true
 	config.RequiredAcks = sarama.WaitForAll
-	config.Timeout = 1 * time.Minute
+	config.Timeout = 20 * time.Millisecond
 	return client.NewProducer("safe", config, nil)
 }
 
@@ -108,15 +100,15 @@ func (self *Producer) Shutdown() {
 	self.log.Infof("shutdown done")
 }
 
-func (self *Producer) Message(topic string, value []byte, timeout time.Duration) (err error) {
+func (self *Producer) Message(topic string, value []byte, timeout time.Duration) (msg *sarama.MessageToSend, err error) {
 	start := time.Now()
 
 	if value == nil || len(value) < 1 {
 		self.errors.Update(time.Since(start))
-		return errors.New("empty message")
+		return msg, errors.New("empty message")
 	}
 
-	msg := &sarama.MessageToSend{
+	msg = &sarama.MessageToSend{
 		Topic: string(topic),
 		Value: sarama.ByteEncoder(value),
 	}
@@ -139,23 +131,24 @@ func (self *Producer) Message(topic string, value []byte, timeout time.Duration)
 		// fall through
 	case <-time.After(timeout):
 		self.errors.Update(time.Since(start))
-		return errors.New("input timed out")
+		return msg, errors.New("input timed out")
 	}
 
 	if self.config.AckSuccesses == false {
 		self.messages.Update(time.Since(start))
-		return nil
+		return msg, nil
 	}
 
 	select {
 	case err := <-self.Errors():
 		self.errors.Update(time.Since(start))
-		return err.Err
+		return msg, err.Err
 	case <-self.Successes():
 		self.messages.Update(time.Since(start))
-		return nil
 	case <-time.After(self.config.Timeout):
 		self.errors.Update(time.Since(start))
-		return errors.New("ack timed out")
+		return msg, errors.New("ack timed out")
 	}
+
+	return msg, nil
 }

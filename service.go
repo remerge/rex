@@ -109,7 +109,7 @@ func (service *Service) Run() {
 
 	loggo.ConfigureLoggers(config.LogSpec)
 
-	service.Tracker, err = NewKafkaTracker(config.Service, config.KafkaBroker, &config.EventMetadata)
+	service.Tracker, err = NewKafkaTracker(config.KafkaBroker, &config.EventMetadata)
 	MayPanic(err)
 
 	service.MetricsTicker = NewMetricsTicker(service.Tracker)
