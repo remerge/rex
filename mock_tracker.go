@@ -17,30 +17,28 @@ func (self *MockTracker) Close() {
 
 func (self *MockTracker) FastMessage(topic string, message []byte) {
 	self.Messages[topic] = append(self.Messages[topic], message)
-	return nil
 }
 
 func (self *MockTracker) FastEvent(topic string, e EventBase, full bool) {
 	self.AddMetadata(e, full)
-	return self.FastMessage(topic, self.Encode(e))
+	self.FastMessage(topic, self.Encode(e))
 }
 
 func (self *MockTracker) FastEventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	return self.FastMessage(topic, self.Encode(event))
+	self.FastMessage(topic, self.Encode(event))
 }
 
 func (self *MockTracker) SafeMessage(topic string, message []byte) {
 	self.Messages[topic] = append(self.Messages[topic], message)
-	return nil
 }
 
 func (self *MockTracker) SafeEvent(topic string, e EventBase, full bool) {
 	self.AddMetadata(e, full)
-	return self.SafeMessage(topic, self.Encode(e))
+	self.SafeMessage(topic, self.Encode(e))
 }
 
 func (self *MockTracker) SafeEventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	return self.SafeMessage(topic, self.Encode(event))
+	self.SafeMessage(topic, self.Encode(event))
 }
