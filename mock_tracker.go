@@ -15,17 +15,32 @@ func NewMockTracker(config *Config) *MockTracker {
 func (self *MockTracker) Close() {
 }
 
-func (self *MockTracker) Message(topic string, message []byte) error {
+func (self *MockTracker) FastMessage(topic string, message []byte) error {
 	self.Messages[topic] = append(self.Messages[topic], message)
 	return nil
 }
 
-func (self *MockTracker) Event(topic string, e EventBase, full bool) error {
+func (self *MockTracker) FastEvent(topic string, e EventBase, full bool) error {
 	self.AddMetadata(e, full)
-	return self.Message(topic, self.Encode(e))
+	return self.FastMessage(topic, self.Encode(e))
 }
 
-func (self *MockTracker) EventMap(topic string, event map[string]interface{}, full bool) error {
+func (self *MockTracker) FastEventMap(topic string, event map[string]interface{}, full bool) error {
 	self.AddMetadataMap(event, full)
-	return self.Message(topic, self.Encode(event))
+	return self.FastMessage(topic, self.Encode(event))
+}
+
+func (self *MockTracker) SafeMessage(topic string, message []byte) error {
+	self.Messages[topic] = append(self.Messages[topic], message)
+	return nil
+}
+
+func (self *MockTracker) SafeEvent(topic string, e EventBase, full bool) error {
+	self.AddMetadata(e, full)
+	return self.SafeMessage(topic, self.Encode(e))
+}
+
+func (self *MockTracker) SafeEventMap(topic string, event map[string]interface{}, full bool) error {
+	self.AddMetadataMap(event, full)
+	return self.SafeMessage(topic, self.Encode(event))
 }
