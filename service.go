@@ -26,10 +26,12 @@ import (
 
 type Config struct {
 	EventMetadata
-	SentryDSN   string
-	LogSpec     string
-	KafkaBroker string
-	Port        int
+	SentryDSN    string
+	LogSpec      string
+	KafkaBroker  string
+	Port         int
+	ReadTimeout  time.Duration
+	WriteTimeout time.Duration
 }
 
 func NewConfig(name string, port int) *Config {
@@ -41,6 +43,8 @@ func NewConfig(name string, port int) *Config {
 	config.LogSpec = "<root>=INFO"
 	config.KafkaBroker = "0.0.0.0:9092"
 	config.Port = port
+	config.ReadTimeout = 10 * time.Second
+	config.WriteTimeout = 10 * time.Second
 	return config
 }
 
@@ -133,12 +137,30 @@ func (service *Service) Run() {
 
 func (service *Service) Serve(handler http.Handler) {
 	service.Server = manners.NewWithServer(&http.Server{
-		Handler: handler,
+		Handler:      handler,
+		ReadTimeout:  service.BaseConfig.ReadTimeout,
+		WriteTimeout: service.BaseConfig.WriteTimeout,
+		ConnState:    service.ConnStateHandler,
 	})
 
 	service.Log.Infof("now serving requests on listener")
 	MayPanic(service.Server.Serve(service.Listener))
 	service.Log.Infof("stopped serving on listener")
+}
+
+var newConnections = NewMeter("listener.connections.new")
+var activeConnections = NewMeter("listener.connections.active")
+var closedConnections = NewMeter("listener.connections.closed")
+
+func (service *Service) ConnStateHandler(conn net.Conn, state http.ConnState) {
+	switch state {
+	case http.StateNew:
+		newConnections.Mark(1)
+	case http.StateActive:
+		activeConnections.Mark(1)
+	case http.StateClosed:
+		closedConnections.Mark(1)
+	}
 }
 
 func (service *Service) CloseWait() {
