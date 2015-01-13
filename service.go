@@ -43,8 +43,8 @@ func NewConfig(name string, port int) *Config {
 	config.LogSpec = "<root>=INFO"
 	config.KafkaBroker = "0.0.0.0:9092"
 	config.Port = port
-	config.ReadTimeout = 10 * time.Second
-	config.WriteTimeout = 10 * time.Second
+	config.ReadTimeout = 120 * time.Second
+	config.WriteTimeout = 120 * time.Second
 	return config
 }
 
