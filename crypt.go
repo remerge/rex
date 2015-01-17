@@ -16,8 +16,8 @@ func DecryptHmacXorWithIntegrity(message, encrypt_key, integrity_key []byte) ([]
 	mac.Write(initialization_vector)
 	pad := mac.Sum(nil)
 
-	unciphered := make([]byte, 8)
-	for i := 0; i < 8; i++ {
+	unciphered := make([]byte, size-20)
+	for i := 0; i < size-20; i++ {
 		unciphered[i] = pad[i] ^ ciphertext[i]
 	}
 
