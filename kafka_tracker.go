@@ -99,7 +99,6 @@ func (self *KafkaTracker) SafeMessage(topic string, value []byte) {
 	self.log.Tracef("topic=%s value=%s", topic, string(value))
 	msg, err := self.Safe.Message(topic, value, 10*time.Millisecond)
 	if err != nil {
-		CaptureError(err)
 		self.enqueue(msg)
 	}
 }
