@@ -11,18 +11,22 @@ import (
 
 type KafkaTracker struct {
 	*BaseTracker
-	log    loggo.Logger
-	Client *kafka.Client
-	Fast   *kafka.Producer
-	Safe   *kafka.Producer
-	quit   chan bool
-	done   chan bool
-	queue  *DiskQueue
+	log         loggo.Logger
+	Client      *kafka.Client
+	Fast        *kafka.Producer
+	FastTimeout time.Duration
+	Safe        *kafka.Producer
+	SafeTimeout time.Duration
+	quit        chan bool
+	done        chan bool
+	queue       *DiskQueue
 }
 
 func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err error) {
 	self := &KafkaTracker{
 		BaseTracker: NewBaseTracker(metadata),
+		FastTimeout: 10 * time.Millisecond,
+		SafeTimeout: 100 * time.Millisecond,
 		log:         loggo.GetLogger("rex.tracker"),
 		queue:       NewDiskQueue("tracker", "cache", 128*1024*1024, 5000, 1*time.Second),
 		quit:        make(chan bool),
@@ -75,12 +79,11 @@ func (self *KafkaTracker) Close() {
 // fast async producer with no ack
 
 func (self *KafkaTracker) ErrorHandler(err *sarama.ProduceError) {
-	CaptureError(err.Err)
 }
 
 func (self *KafkaTracker) FastMessage(topic string, value []byte) {
 	self.log.Tracef("topic=%s value=%s", topic, string(value))
-	self.Fast.Message(topic, value, 10*time.Millisecond)
+	self.Fast.Message(topic, value, self.FastTimeout)
 }
 
 func (self *KafkaTracker) FastEvent(topic string, e EventBase, full bool) {
@@ -97,7 +100,7 @@ func (self *KafkaTracker) FastEventMap(topic string, event map[string]interface{
 
 func (self *KafkaTracker) SafeMessage(topic string, value []byte) {
 	self.log.Tracef("topic=%s value=%s", topic, string(value))
-	msg, err := self.Safe.Message(topic, value, 10*time.Millisecond)
+	msg, err := self.Safe.Message(topic, value, self.SafeTimeout)
 	if err != nil {
 		self.enqueue(msg)
 	}

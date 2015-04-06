@@ -66,7 +66,7 @@ func (client *Client) NewSafeProducer() (*Producer, error) {
 	config := sarama.NewProducerConfig()
 	config.AckSuccesses = true
 	config.RequiredAcks = sarama.WaitForAll
-	config.Timeout = 20 * time.Millisecond
+	config.Timeout = 100 * time.Millisecond
 	return client.NewProducer("safe", config, nil)
 }
 
@@ -126,10 +126,12 @@ func (self *Producer) Message(topic string, value []byte, timeout time.Duration)
 		}
 	}()
 
+	after := time.After(timeout)
+
 	select {
 	case self.Input() <- msg:
 		// fall through
-	case <-time.After(timeout):
+	case <-after:
 		self.errors.Update(time.Since(start))
 		return msg, errors.New("input timed out")
 	}
@@ -145,7 +147,7 @@ func (self *Producer) Message(topic string, value []byte, timeout time.Duration)
 		return msg, err.Err
 	case <-self.Successes():
 		self.messages.Update(time.Since(start))
-	case <-time.After(self.config.Timeout):
+	case <-after:
 		self.errors.Update(time.Since(start))
 		return msg, errors.New("ack timed out")
 	}

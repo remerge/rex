@@ -26,7 +26,7 @@ func MayPanic(err error) {
 }
 
 func MayPanicNew(format string, v ...interface{}) {
-	MayPanic(errors.New(fmt.Sprintf(format, v...)))
+	MayPanic(fmt.Errorf(format, v...))
 }
 
 func CaptureError(err error) chan error {
@@ -43,7 +43,7 @@ func CaptureError(err error) chan error {
 }
 
 func CaptureErrorNew(format string, v ...interface{}) chan error {
-	return CaptureError(errors.New(fmt.Sprintf(format, v...)))
+	return CaptureError(fmt.Errorf(format, v...))
 }
 
 func WithRecover(fn func() error) error {
