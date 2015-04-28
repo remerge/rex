@@ -8,14 +8,15 @@ import (
 )
 
 type Consumer struct {
-	*sarama.Consumer
-	quit chan bool
-	done chan bool
-	log  loggo.Logger
+	sarama.PartitionConsumer
+	master sarama.Consumer
+	quit   chan bool
+	done   chan bool
+	log    loggo.Logger
 }
 
-func (client *Client) NewConsumer(group string, topic string, partition int32, config *sarama.ConsumerConfig) (*Consumer, error) {
-	name := fmt.Sprintf("kafka.consumer.%s.%s.%s.%d", client.GetId(), group, topic, partition)
+func (client *Client) NewConsumer(topic string, partition int32, offset int64, config *sarama.Config) (*Consumer, error) {
+	name := fmt.Sprintf("kafka.consumer.%s.%s.%d", client.GetId(), topic, partition)
 
 	self := &Consumer{
 		quit: make(chan bool),
@@ -23,26 +24,29 @@ func (client *Client) NewConsumer(group string, topic string, partition int32, c
 		log:  loggo.GetLogger(name),
 	}
 
-	if config == nil {
-		self.log.Infof("using default producer config")
-		config = sarama.NewConsumerConfig()
-	}
-
-	consumer, err := sarama.NewConsumer(client.Client, topic, partition, group, config)
+	master, err := sarama.NewConsumer(client.brokers, config)
 	if err != nil {
 		self.log.Errorf("failed to create consumer: %s", err)
 		return nil, err
 	}
 
-	self.Consumer = consumer
+	self.master = master
+
+	consumer, err := master.ConsumePartition(topic, partition, offset)
+	if err != nil {
+		self.log.Errorf("failed to create consumer: %s", err)
+		return nil, err
+	}
+
+	self.PartitionConsumer = consumer
 	return self, nil
 
 }
 
-func (self *Consumer) Start(events chan *sarama.ConsumerEvent) {
+func (self *Consumer) Start(events chan *sarama.ConsumerMessage) {
 	for {
 		select {
-		case event := <-self.Events():
+		case event := <-self.Messages():
 			events <- event
 		case <-self.quit:
 			close(self.done)

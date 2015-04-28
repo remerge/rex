@@ -1,5 +1,5 @@
 code.google.com/p/snappy-go #12e4b4183793ac4b061921e7980845e750679fd0
-github.com/Shopify/sarama #306a77a0d23b8ce58ec71c77244b7c5140759098 !https://github.com/remerge/sarama
+github.com/Shopify/sarama #474417668e5a056d2a8709a5067da8da6baa335a !https://github.com/remerge/sarama
 github.com/eapache/go-resiliency #779a811c89f2d4ca7c2cd7efe1cd350027b407bf
 github.com/getsentry/raven-go #3fd636ed242c26c0f55bc9ee1fe47e1d6d2d77f7
 github.com/gin-gonic/gin #9a8621cea1ac7ae0b66f912890cdae1b66f9587f !https://github.com/remerge/gin

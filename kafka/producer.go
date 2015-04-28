@@ -10,12 +10,12 @@ import (
 	"github.com/rcrowley/go-metrics"
 )
 
-type ProduceErrorCallback func(*sarama.ProduceError)
+type ProducerErrorCallback func(*sarama.ProducerError)
 
 type Producer struct {
-	*sarama.Producer
-	config   *sarama.ProducerConfig
-	callback ProduceErrorCallback
+	sarama.AsyncProducer
+	config   *sarama.Config
+	callback ProducerErrorCallback
 	quit     chan bool
 	done     chan bool
 	log      loggo.Logger
@@ -23,12 +23,12 @@ type Producer struct {
 	errors   metrics.Timer
 }
 
-func (client *Client) NewProducer(name string, config *sarama.ProducerConfig, cb ProduceErrorCallback) (*Producer, error) {
+func (client *Client) NewProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (*Producer, error) {
 	name = fmt.Sprintf("kafka.producer.%s.%s", client.GetId(), name)
 
 	self := &Producer{
-		config:   config,
 		callback: cb,
+		config:   config,
 		quit:     make(chan bool),
 		done:     make(chan bool),
 		log:      loggo.GetLogger(name),
@@ -36,42 +36,37 @@ func (client *Client) NewProducer(name string, config *sarama.ProducerConfig, cb
 		errors:   metrics.NewRegisteredTimer(name+".errors", metrics.DefaultRegistry),
 	}
 
-	if self.config == nil {
-		self.log.Infof("using default producer config")
-		self.config = sarama.NewProducerConfig()
-	}
-
-	producer, err := sarama.NewProducer(client.Client, self.config)
+	producer, err := sarama.NewAsyncProducer(client.brokers, config)
 	if err != nil {
 		self.log.Errorf("failed to create producer: %s", err)
 		return nil, err
 	}
 
-	self.Producer = producer
+	self.AsyncProducer = producer
 	go self.Start()
 
 	return self, nil
 }
 
-func (client *Client) NewFastProducer(cb ProduceErrorCallback) (*Producer, error) {
-	config := sarama.NewProducerConfig()
-	config.AckSuccesses = false
-	config.RequiredAcks = sarama.NoResponse
-	config.FlushMsgCount = 10000
-	config.FlushFrequency = 10 * time.Millisecond
+func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = false
+	config.Producer.RequiredAcks = sarama.NoResponse
+	config.Producer.Flush.Messages = 10000
+	config.Producer.Flush.Frequency = 10 * time.Millisecond
 	return client.NewProducer("fast", config, cb)
 }
 
 func (client *Client) NewSafeProducer() (*Producer, error) {
-	config := sarama.NewProducerConfig()
-	config.AckSuccesses = true
-	config.RequiredAcks = sarama.WaitForAll
-	config.Timeout = 100 * time.Millisecond
+	config := sarama.NewConfig()
+	config.Producer.Return.Successes = true
+	config.Producer.RequiredAcks = sarama.WaitForAll
+	config.Producer.Timeout = 100 * time.Millisecond
 	return client.NewProducer("safe", config, nil)
 }
 
 func (self *Producer) Start() {
-	if self.config.AckSuccesses == true {
+	if self.config.Producer.Return.Successes == true {
 		return
 	}
 
@@ -89,7 +84,7 @@ func (self *Producer) Start() {
 }
 
 func (self *Producer) Shutdown() {
-	if self.config.AckSuccesses == false {
+	if self.config.Producer.Return.Successes == false {
 		self.log.Infof("shutting down producer run loop")
 		close(self.quit)
 		self.log.Infof("waiting for run loop to finish")
@@ -100,7 +95,7 @@ func (self *Producer) Shutdown() {
 	self.log.Infof("shutdown done")
 }
 
-func (self *Producer) Message(topic string, value []byte, timeout time.Duration) (msg *sarama.MessageToSend, err error) {
+func (self *Producer) Message(topic string, value []byte, timeout time.Duration) (msg *sarama.ProducerMessage, err error) {
 	start := time.Now()
 
 	if value == nil || len(value) < 1 {
@@ -108,7 +103,7 @@ func (self *Producer) Message(topic string, value []byte, timeout time.Duration)
 		return msg, errors.New("empty message")
 	}
 
-	msg = &sarama.MessageToSend{
+	msg = &sarama.ProducerMessage{
 		Topic: string(topic),
 		Value: sarama.ByteEncoder(value),
 	}
@@ -136,7 +131,7 @@ func (self *Producer) Message(topic string, value []byte, timeout time.Duration)
 		return msg, errors.New("input timed out")
 	}
 
-	if self.config.AckSuccesses == false {
+	if self.config.Producer.Return.Successes == false {
 		self.messages.Update(time.Since(start))
 		return msg, nil
 	}

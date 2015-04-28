@@ -1,21 +1,19 @@
 package kafka
 
 import (
-	"time"
-
 	"github.com/Shopify/sarama"
 	"github.com/juju/loggo"
 )
 
 type ConsumerGroup struct {
-	Events    chan *sarama.ConsumerEvent
+	Events    chan *sarama.ConsumerMessage
 	consumers []*Consumer
 	log       loggo.Logger
 }
 
-func (client *Client) NewConsumerGroup(group string, topic string, offsets map[int32]int64, config *sarama.ConsumerConfig) (*ConsumerGroup, error) {
+func (client *Client) NewConsumerGroup(group string, topic string, offsets map[int32]int64, config *sarama.Config) (*ConsumerGroup, error) {
 	self := &ConsumerGroup{
-		Events:    make(chan *sarama.ConsumerEvent),
+		Events:    make(chan *sarama.ConsumerMessage),
 		consumers: make([]*Consumer, 0),
 		log:       loggo.GetLogger("kafka.consumer.group." + group),
 	}
@@ -26,13 +24,13 @@ func (client *Client) NewConsumerGroup(group string, topic string, offsets map[i
 	}
 
 	for _, p := range partitions {
-		earliest, err := client.GetGroupOffset(group, topic, p, sarama.EarliestOffset)
+		earliest, err := client.GetGroupOffset(group, topic, p, sarama.OffsetOldest)
 		if err != nil {
 			self.Shutdown()
 			return nil, err
 		}
 
-		latest, err := client.GetGroupOffset(group, topic, p, sarama.LatestOffsets)
+		latest, err := client.GetGroupOffset(group, topic, p, sarama.OffsetNewest)
 		if err != nil {
 			self.Shutdown()
 			return nil, err
@@ -51,22 +49,14 @@ func (client *Client) NewConsumerGroup(group string, topic string, offsets map[i
 			resumeFrom = latest
 		}
 
-		if config == nil {
-			config = sarama.NewConsumerConfig()
-		}
-
-		config.OffsetMethod = sarama.OffsetMethodManual
-		config.OffsetValue = resumeFrom
-		config.MaxWaitTime = 1 * time.Second
-
-		self.log.Infof("new consumer for topic=%v partition=%v earliest=%v latest=%v offset=%v",
-			topic, p, earliest, latest, resumeFrom)
-
-		consumer, err := client.NewConsumer(group, topic, p, config)
+		consumer, err := client.NewConsumer(topic, p, resumeFrom, config)
 		if err != nil {
 			self.Shutdown()
 			return nil, err
 		}
+
+		self.log.Infof("new consumer for topic=%v partition=%v earliest=%v latest=%v offset=%v",
+			topic, p, earliest, latest, resumeFrom)
 
 		self.consumers = append(self.consumers, consumer)
 		go consumer.Start(self.Events)

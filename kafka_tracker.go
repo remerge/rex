@@ -33,7 +33,7 @@ func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err err
 		done:        make(chan bool),
 	}
 
-	self.Client, err = kafka.NewClient("tracker", broker, nil)
+	self.Client, err = kafka.NewClient("tracker", broker)
 	if err != nil {
 		CaptureError(err)
 		return nil, err
@@ -78,7 +78,7 @@ func (self *KafkaTracker) Close() {
 
 // fast async producer with no ack
 
-func (self *KafkaTracker) ErrorHandler(err *sarama.ProduceError) {
+func (self *KafkaTracker) ErrorHandler(err *sarama.ProducerError) {
 }
 
 func (self *KafkaTracker) FastMessage(topic string, value []byte) {
@@ -119,11 +119,11 @@ func (self *KafkaTracker) SafeEventMap(topic string, event map[string]interface{
 // fail-safe disk queue worker
 
 func init() {
-	gob.Register(sarama.MessageToSend{})
+	gob.Register(sarama.ProducerMessage{})
 	gob.Register(sarama.ByteEncoder{})
 }
 
-func (self *KafkaTracker) enqueue(msg *sarama.MessageToSend) error {
+func (self *KafkaTracker) enqueue(msg *sarama.ProducerMessage) error {
 	bytes, err := GobEncode(msg)
 	if err != nil {
 		return err
@@ -146,7 +146,7 @@ func (self *KafkaTracker) start() {
 				CaptureError(err)
 				continue
 			}
-			msg := i.(sarama.MessageToSend)
+			msg := i.(sarama.ProducerMessage)
 			value, _ := msg.Value.Encode()
 			self.SafeMessage(msg.Topic, value)
 		case <-self.quit:
