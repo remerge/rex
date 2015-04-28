@@ -71,7 +71,6 @@ func (self *KafkaTracker) Close() {
 		self.log.Infof("shutting down fast producer")
 		self.Fast.Shutdown()
 	}
-	CaptureError(self.Client.Close())
 	CaptureError(self.queue.Close())
 	self.log.Infof("tracker is stopped")
 }
