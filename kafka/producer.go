@@ -16,6 +16,7 @@ type Producer struct {
 	sarama.AsyncProducer
 	config   *sarama.Config
 	callback ProducerErrorCallback
+	running  bool
 	quit     chan bool
 	done     chan bool
 	log      loggo.Logger
@@ -70,6 +71,7 @@ func (self *Producer) Start() {
 		return
 	}
 
+	self.running = true
 	for {
 		select {
 		case err, ok := <-self.Errors():
@@ -77,6 +79,7 @@ func (self *Producer) Start() {
 				self.callback(err)
 			}
 		case <-self.quit:
+			self.running = false
 			close(self.done)
 			return
 		}
@@ -84,7 +87,7 @@ func (self *Producer) Start() {
 }
 
 func (self *Producer) Shutdown() {
-	if self.config.Producer.Return.Successes == false {
+	if self.running {
 		self.log.Infof("shutting down producer run loop")
 		close(self.quit)
 		self.log.Infof("waiting for run loop to finish")

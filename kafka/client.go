@@ -23,6 +23,12 @@ func NewClient(id string, broker_list string) (*Client, error) {
 		log:     loggo.GetLogger("kafka.client." + id),
 	}
 
+	var err error
+	self.Client, err = sarama.NewClient(self.brokers, nil)
+	if err != nil {
+		return nil, err
+	}
+
 	return self, nil
 }
 
