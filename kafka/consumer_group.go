@@ -23,6 +23,7 @@ func (client *Client) NewConsumerGroup(group string, topic string, offsets map[i
 		return nil, err
 	}
 
+	self.log.Infof("topic=%s partitions=%d partitions=%v", topic, len(partitions), partitions)
 	for _, p := range partitions {
 		earliest, err := client.GetGroupOffset(group, topic, p, sarama.OffsetOldest)
 		if err != nil {
@@ -49,14 +50,14 @@ func (client *Client) NewConsumerGroup(group string, topic string, offsets map[i
 			resumeFrom = latest
 		}
 
+		self.log.Infof("new consumer for topic=%v partition=%v earliest=%v latest=%v offset=%v",
+			topic, p, earliest, latest, resumeFrom)
+
 		consumer, err := client.NewConsumer(topic, p, resumeFrom, config)
 		if err != nil {
 			self.Shutdown()
 			return nil, err
 		}
-
-		self.log.Infof("new consumer for topic=%v partition=%v earliest=%v latest=%v offset=%v",
-			topic, p, earliest, latest, resumeFrom)
 
 		self.consumers = append(self.consumers, consumer)
 		go consumer.Start(self.Events)

@@ -25,12 +25,18 @@ func (client *Client) NewConsumer(topic string, partition int32, offset int64, c
 		log:  loggo.GetLogger(name),
 	}
 
-	self.master, err = sarama.NewConsumer(client.brokers, config)
+	if config == nil {
+		self.master, err = sarama.NewConsumerFromClient(client)
+	} else {
+		self.master, err = sarama.NewConsumer(client.brokers, config)
+	}
+
 	if err != nil {
 		self.log.Errorf("failed to create consumer: %s", err)
 		return nil, err
 	}
 
+	self.log.Infof("consuming topic=%v partition=%v offset=%v", topic, partition, offset)
 	self.PartitionConsumer, err = self.master.ConsumePartition(topic, partition, offset)
 	if err != nil {
 		self.log.Errorf("failed to create consumer: %s", err)

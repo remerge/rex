@@ -24,10 +24,10 @@ type Producer struct {
 	errors   metrics.Timer
 }
 
-func (client *Client) NewProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (*Producer, error) {
+func (client *Client) NewProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (self *Producer, err error) {
 	name = fmt.Sprintf("kafka.producer.%s.%s", client.GetId(), name)
 
-	self := &Producer{
+	self = &Producer{
 		callback: cb,
 		config:   config,
 		quit:     make(chan bool),
@@ -37,13 +37,17 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 		errors:   metrics.NewRegisteredTimer(name+".errors", metrics.DefaultRegistry),
 	}
 
-	producer, err := sarama.NewAsyncProducer(client.brokers, config)
+	if config == nil {
+		self.AsyncProducer, err = sarama.NewAsyncProducerFromClient(client)
+	} else {
+		self.AsyncProducer, err = sarama.NewAsyncProducer(client.brokers, config)
+	}
+
 	if err != nil {
 		self.log.Errorf("failed to create producer: %s", err)
 		return nil, err
 	}
 
-	self.AsyncProducer = producer
 	go self.Start()
 
 	return self, nil
