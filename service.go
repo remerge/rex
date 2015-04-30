@@ -198,10 +198,6 @@ func (service *Service) Shutdown() {
 	service.Tracker.Close()
 	service.Log.Infof("closing raven client")
 
-	// unfortunately sarama does not expose a sync close
-	service.Log.Infof("give sarama some time to shut down brokers")
-	time.Sleep(1 * time.Second)
-
 	// finally close raven and shut down
 	Raven.Close()
 
