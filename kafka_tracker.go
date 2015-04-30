@@ -39,7 +39,7 @@ func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err err
 		return nil, err
 	}
 
-	self.Fast, err = self.Client.NewFastProducer(self.ErrorHandler)
+	self.Fast, err = self.Client.NewFastProducer(nil)
 	if err != nil {
 		CaptureError(err)
 		self.Close()
@@ -74,11 +74,6 @@ func (self *KafkaTracker) Close() {
 	CaptureError(self.Client.Close())
 	CaptureError(self.queue.Close())
 	self.log.Infof("tracker is stopped")
-}
-
-// fast async producer with no ack
-
-func (self *KafkaTracker) ErrorHandler(err *sarama.ProducerError) {
 }
 
 func (self *KafkaTracker) FastMessage(topic string, value []byte) {
