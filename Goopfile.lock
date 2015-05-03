@@ -1,9 +1,12 @@
-code.google.com/p/snappy-go #12e4b4183793ac4b061921e7980845e750679fd0
-github.com/Shopify/sarama #474417668e5a056d2a8709a5067da8da6baa335a !https://github.com/remerge/sarama
-github.com/eapache/go-resiliency #779a811c89f2d4ca7c2cd7efe1cd350027b407bf
-github.com/getsentry/raven-go #3fd636ed242c26c0f55bc9ee1fe47e1d6d2d77f7
-github.com/gin-gonic/gin #9a8621cea1ac7ae0b66f912890cdae1b66f9587f !https://github.com/remerge/gin
-github.com/juju/loggo #dc8e19f7c70a62a59c69c40f85b8df09ff20742c
-github.com/julienschmidt/httprouter #2913780ee44a32395d9a2cf75ee6382b768f422a
+code.google.com/p/snappy-go #8850bd446ad6f18a271a08aae26bdf85bdf87c7f
+github.com/Shopify/sarama #8209c285b87269233cb4f4bee5a24b05199fc2a6 !https://github.com/remerge/sarama
+github.com/eapache/go-resiliency #ed0319b32e66e3295db52695ba3ee493e823fbfe
+github.com/eapache/queue #d1df561eb6b9ffdac8dd98f943e9e9096c76c059
+github.com/flosch/pongo2 #c3e5e0ef65b3da0bd32ef8fc4b920ecd9c6a8c6d
+github.com/getsentry/raven-go #c8f8fb7c415203f52ca882e2661d21bc6dcb54d7
+github.com/gin-gonic/gin #0569c5fb95a49ce4b9a7cc7bc3bad3ee3e152da8 !https://github.com/remerge/gin
+github.com/juju/loggo #6d22922ff98aac6608b8a58191bd6b2e1dac3fca
+github.com/julienschmidt/httprouter #8c199fb6259ffc1af525cc3ad52ee60ba8359669
 github.com/mailgun/manners #38e66a3e3e920713163484c7ab57ffc39c35e257 !https://github.com/remerge/manners
-github.com/rcrowley/go-metrics #0cc4314afc49917d233332bb13b93df5168744bc !https://github.com/remerge/go-metrics
+github.com/mattn/go-colorable #d67e0b7d1797975196499f79bcc322c08b9f218b
+github.com/rcrowley/go-metrics #ace6b1c5df1245cb6a6dc9852abaf76c3ae99606 !https://github.com/remerge/go-metrics
