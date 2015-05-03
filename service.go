@@ -106,6 +106,7 @@ func (service *Service) Run() {
 
 	service.Log.Infof("command line arguments=%q", readArgs())
 	service.Flags.Parse(readArgs())
+	os.Setenv("REX_ENV", config.Environment)
 
 	var err error
 	Raven, err = raven.NewClient(config.SentryDSN, nil)

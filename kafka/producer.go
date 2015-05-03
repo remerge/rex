@@ -3,6 +3,7 @@ package kafka
 import (
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -57,8 +58,12 @@ func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, erro
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = false
 	config.Producer.RequiredAcks = sarama.NoResponse
-	config.Producer.Flush.Messages = 10000
-	config.Producer.Flush.Frequency = 10 * time.Millisecond
+	if os.Getenv("REX_ENV") == "development" {
+		config.Producer.Flush.Messages = 1
+	} else {
+		config.Producer.Flush.Messages = 10000
+		config.Producer.Flush.Frequency = 100 * time.Millisecond
+	}
 	return client.NewProducer("fast", config, cb)
 }
 
@@ -66,6 +71,12 @@ func (client *Client) NewSafeProducer() (*Producer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
 	config.Producer.RequiredAcks = sarama.WaitForAll
+	if os.Getenv("REX_ENV") == "development" {
+		config.Producer.Flush.Messages = 1
+	} else {
+		config.Producer.Flush.Messages = 10000
+		config.Producer.Flush.Frequency = 100 * time.Millisecond
+	}
 	config.Producer.Timeout = 100 * time.Millisecond
 	return client.NewProducer("safe", config, nil)
 }
