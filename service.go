@@ -226,7 +226,7 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM:
 			service.Log.Infof("shutting down")
 			go func() {
-				time.Sleep(30 * time.Second)
+				time.Sleep(5 * time.Minute)
 				service.Log.Infof("still not dead. trying to exit")
 				pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 				go func() {
