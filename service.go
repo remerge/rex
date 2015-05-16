@@ -242,13 +242,13 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 
 		case syscall.SIGUSR2:
 			service.Log.Infof("re-executing binary")
+			if service.ReloadCallback != nil {
+				service.ReloadCallback()
+			}
 			if forked {
 				return syscall.SIGUSR2, nil
 			}
 			forked = true
-			if service.ReloadCallback != nil {
-				service.ReloadCallback()
-			}
 			if err := service.ForkExec(); err != nil {
 				MayPanic(err)
 			}
