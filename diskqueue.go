@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"os"
 	"path"
 	"sync"
@@ -15,6 +14,7 @@ import (
 	"time"
 
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/rand"
 )
 
 // DiskQueue provids a filesystem backed FIFO queue
