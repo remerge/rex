@@ -25,6 +25,10 @@ clean:
 test:
 	go get github.com/smartystreets/goconvey
 	$(GO) test
+	$(GO) test -v $(PACKAGE)/rand
+
+bench:
+	$(GO) test -bench=. -cpu 4
 
 fmt:
 	$(GOFMT) $(GOFILES)

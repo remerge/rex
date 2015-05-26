@@ -17,7 +17,7 @@ var pos uint64
 
 func init() {
 	for i := range pool {
-		pool[i] = NewXorRand()
+		pool[i] = NewXorRand(uint64(time.Now().UnixNano()))
 	}
 }
 
@@ -25,9 +25,8 @@ type Xor128Rand struct {
 	src [2]uint64
 }
 
-func NewXorRand() *Xor128Rand {
-	t := time.Now().UnixNano()
-	return &Xor128Rand{[2]uint64{uint64(t), uint64(t)}}
+func NewXorRand(seed uint64) *Xor128Rand {
+	return &Xor128Rand{[2]uint64{seed, seed}}
 }
 
 func (r *Xor128Rand) Uint64() uint64 {
@@ -43,6 +42,9 @@ func Uint64() uint64 {
 	apos := int(atomic.AddUint64(&pos, 1) % poolSize)
 	return pool[apos].Uint64()
 }
+
+// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
+func (r *Xor128Rand) Int63() int64 { return int64(r.Uint64()) & mask }
 
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
 func Int63() int64 { return int64(Uint64()) & mask }
