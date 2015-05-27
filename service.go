@@ -19,9 +19,9 @@ import (
 	"time"
 
 	"github.com/getsentry/raven-go"
+	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/mailgun/manners"
-	"github.com/rcrowley/go-metrics"
 )
 
 type Config struct {
@@ -149,18 +149,18 @@ func (service *Service) Serve(handler http.Handler) {
 	service.Log.Infof("stopped serving on listener")
 }
 
-var newConnections = NewMeter("listener.connections.new")
-var activeConnections = NewMeter("listener.connections.active")
-var closedConnections = NewMeter("listener.connections.closed")
+var newConnections = reporter.NewRegisteredRate("listener.connections.new")
+var activeConnections = reporter.NewRegisteredRate("listener.connections.active")
+var closedConnections = reporter.NewRegisteredRate("listener.connections.closed")
 
 func (service *Service) ConnStateHandler(conn net.Conn, state http.ConnState) {
 	switch state {
 	case http.StateNew:
-		newConnections.Mark(1)
+		newConnections.Update(1)
 	case http.StateActive:
-		activeConnections.Mark(1)
+		activeConnections.Update(1)
 	case http.StateClosed:
-		closedConnections.Mark(1)
+		closedConnections.Update(1)
 	}
 }
 
@@ -191,8 +191,6 @@ func (service *Service) CloseWait() {
 func (service *Service) Shutdown() {
 	service.Log.Infof("service shutdown")
 	service.CloseWait()
-	service.Log.Infof("shutting down metrics")
-	metrics.Shutdown()
 	service.Log.Infof("shutting down metrics ticker")
 	service.MetricsTicker.Stop()
 	service.Log.Infof("shutting down tracker")

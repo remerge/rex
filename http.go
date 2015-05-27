@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/heroku/instruments"
 	"github.com/juju/loggo"
 	"github.com/julienschmidt/httprouter"
-	"github.com/rcrowley/go-metrics"
 )
 
 type Handler struct {
@@ -18,10 +18,10 @@ type Handler struct {
 	Params  httprouter.Params
 	Log     loggo.Logger
 	Start   time.Time
-	Timer   metrics.Timer
+	Timer   *instruments.Timer
 }
 
-func NewHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params, timer metrics.Timer) *Handler {
+func NewHandler(w http.ResponseWriter, r *http.Request, params httprouter.Params, timer *instruments.Timer) *Handler {
 	return &Handler{
 		ResponseWriter: w,
 		Request:        r,

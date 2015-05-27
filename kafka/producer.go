@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/heroku/instruments"
+	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
-	"github.com/rcrowley/go-metrics"
 )
 
 type ProducerErrorCallback func(*sarama.ProducerError)
@@ -21,8 +22,8 @@ type Producer struct {
 	quit     chan bool
 	done     chan bool
 	log      loggo.Logger
-	messages metrics.Timer
-	errors   metrics.Timer
+	messages *instruments.Timer
+	errors   *instruments.Timer
 }
 
 func (client *Client) NewProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (self *Producer, err error) {
@@ -34,8 +35,8 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 		quit:     make(chan bool),
 		done:     make(chan bool),
 		log:      loggo.GetLogger(name),
-		messages: metrics.NewRegisteredTimer(name+".messages", metrics.DefaultRegistry),
-		errors:   metrics.NewRegisteredTimer(name+".errors", metrics.DefaultRegistry),
+		messages: reporter.NewRegisteredTimer(name+".messages", -1),
+		errors:   reporter.NewRegisteredTimer(name+".errors", -1),
 	}
 
 	if config == nil {

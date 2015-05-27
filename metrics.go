@@ -1,39 +1,13 @@
 package rex
 
 import (
+	"fmt"
 	"time"
 
+	"github.com/heroku/instruments"
+	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
-	"github.com/rcrowley/go-metrics"
 )
-
-func NewGauge(name string) metrics.Gauge {
-	return metrics.NewRegisteredGauge(name, metrics.DefaultRegistry)
-}
-
-func NewGaugeFloat64(name string) metrics.GaugeFloat64 {
-	return metrics.NewRegisteredGaugeFloat64(name, metrics.DefaultRegistry)
-}
-
-func NewCounter(name string) metrics.Counter {
-	return metrics.NewRegisteredCounter(name, metrics.DefaultRegistry)
-}
-
-func NewHistogram(name string) metrics.Histogram {
-	return metrics.NewRegisteredHistogram(name, metrics.DefaultRegistry, metrics.NewExpDecaySample(1028, 0.015))
-}
-
-func NewMeter(name string) metrics.Meter {
-	return metrics.NewRegisteredMeter(name, metrics.DefaultRegistry)
-}
-
-func NewTimer(name string) metrics.Timer {
-	return metrics.NewRegisteredTimer(name, metrics.DefaultRegistry)
-}
-
-func UpdateTimer(timer metrics.Timer, start time.Time) {
-	timer.Update(time.Since(start))
-}
 
 type MetricsTicker struct {
 	tracker Tracker
@@ -73,67 +47,53 @@ func (self *MetricsTicker) Stop() {
 }
 
 func (self *MetricsTicker) Track() {
-	metrics.DefaultRegistry.Each(func(name string, i interface{}) {
-
+	for name, i := range reporter.DefaultRegistry.Instruments() {
 		event := make(map[string]interface{})
 		event["name"] = name
 
-		switch metric := i.(type) {
-		case metrics.Counter:
+		switch instrument := i.(type) {
+		case *instruments.Gauge:
+			event["type"] = "gauge"
+			event["value"] = instrument.Snapshot()
+		case *instruments.Counter:
 			event["type"] = "counter"
-			event["count"] = metric.Count()
-		case metrics.Gauge:
-			event["type"] = "gauge"
-			event["value"] = metric.Value()
-		case metrics.GaugeFloat64:
-			event["type"] = "gauge"
-			event["value"] = metric.Value()
-		case metrics.Histogram:
-			event["type"] = "histogram"
-			h := metric.Snapshot()
-			ps := h.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})
-			event["count"] = h.Count()
-			event["min"] = h.Min()
-			event["max"] = h.Max()
-			event["mean"] = h.Mean()
-			event["stddev"] = h.StdDev()
-			event["p50"] = ps[0]
-			event["p75"] = ps[1]
-			event["p95"] = ps[2]
-			event["p99"] = ps[3]
-			event["p999"] = ps[4]
-		case metrics.Meter:
-			event["type"] = "meter"
-			m := metric.Snapshot()
-			event["count"] = m.Count()
-			event["m1"] = m.Rate1()
-			event["m5"] = m.Rate5()
-			event["m15"] = m.Rate15()
-		case Derive:
-			event["type"] = "meter"
-			m := metric.Snapshot()
-			event["count"] = m.Count()
-			event["m1"] = m.Rate1()
-			event["m5"] = m.Rate5()
-			event["m15"] = m.Rate15()
-		case metrics.Timer:
+			event["value"] = instrument.Snapshot()
+		case *instruments.Rate:
+			event["type"] = "meter" // backwards compat
+			event["value"] = instrument.Snapshot()
+			event["m1"] = event["value"] // backwards compat
+		case *instruments.Derive:
+			event["type"] = "derive"
+			event["value"] = instrument.Snapshot()
+		case *instruments.Reservoir:
+			s := instrument.Snapshot()
+			event["type"] = "histogram" // backwards compat
+			event["min"] = instruments.Min(s)
+			event["max"] = instruments.Max(s)
+			event["mean"] = instruments.Mean(s)
+			event["stddev"] = instruments.StandardDeviation(s)
+			event["p50"] = instruments.Quantile(s, 0.50)
+			event["p75"] = instruments.Quantile(s, 0.75)
+			event["p95"] = instruments.Quantile(s, 0.95)
+			event["p99"] = instruments.Quantile(s, 0.99)
+			event["p999"] = instruments.Quantile(s, 0.999)
+		case *instruments.Timer:
+			s := instrument.Snapshot()
 			event["type"] = "timer"
-			t := metric.Snapshot()
-			ps := t.Percentiles([]float64{0.5, 0.75, 0.95, 0.99, 0.999})
-			event["count"] = t.Count()
-			event["min"] = float32(time.Duration(t.Min())) / float32(time.Millisecond)
-			event["max"] = float32(time.Duration(t.Max())) / float32(time.Millisecond)
-			event["mean"] = float32(time.Duration(t.Mean())) / float32(time.Millisecond)
-			event["stddev"] = float32(time.Duration(t.StdDev())) / float32(time.Millisecond)
-			event["median"] = float32(time.Duration(ps[0])) / float32(time.Millisecond)
-			event["p75"] = float32(time.Duration(ps[1])) / float32(time.Millisecond)
-			event["p95"] = float32(time.Duration(ps[2])) / float32(time.Millisecond)
-			event["p99"] = float32(time.Duration(ps[3])) / float32(time.Millisecond)
-			event["p999"] = float32(time.Duration(ps[4])) / float32(time.Millisecond)
-			event["m1"] = t.Rate1()
-			event["m5"] = t.Rate5()
-			event["m15"] = t.Rate15()
+			event["value"] = instrument.Rate.Snapshot()
+			event["m1"] = event["value"] // backwards compat
+			event["min"] = instruments.Min(s)
+			event["max"] = instruments.Max(s)
+			event["mean"] = instruments.Mean(s)
+			event["stddev"] = instruments.StandardDeviation(s)
+			event["p50"] = instruments.Quantile(s, 0.50)
+			event["p75"] = instruments.Quantile(s, 0.75)
+			event["p95"] = instruments.Quantile(s, 0.95)
+			event["p99"] = instruments.Quantile(s, 0.99)
+			event["p999"] = instruments.Quantile(s, 0.999)
+		default:
+			panic(fmt.Sprintf("unknown instrument %#v", i))
 		}
 		self.tracker.SafeEventMap("metrics", event, true)
-	})
+	}
 }

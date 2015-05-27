@@ -1,12 +1,12 @@
-code.google.com/p/snappy-go #8850bd446ad6f18a271a08aae26bdf85bdf87c7f
-github.com/Shopify/sarama #8209c285b87269233cb4f4bee5a24b05199fc2a6 !https://github.com/remerge/sarama
+github.com/Shopify/sarama #d09a40e7769b69118938d59353f14ce037efa2b9 !https://github.com/remerge/sarama
 github.com/eapache/go-resiliency #ed0319b32e66e3295db52695ba3ee493e823fbfe
 github.com/eapache/queue #d1df561eb6b9ffdac8dd98f943e9e9096c76c059
-github.com/flosch/pongo2 #c3e5e0ef65b3da0bd32ef8fc4b920ecd9c6a8c6d
+github.com/flosch/pongo2 #5c5c2d876f1239ce71a02eae4e1eae9cf8eac85f
 github.com/getsentry/raven-go #c8f8fb7c415203f52ca882e2661d21bc6dcb54d7
 github.com/gin-gonic/gin #0569c5fb95a49ce4b9a7cc7bc3bad3ee3e152da8 !https://github.com/remerge/gin
-github.com/juju/loggo #6d22922ff98aac6608b8a58191bd6b2e1dac3fca
+github.com/golang/snappy #a911026e1ffa84898778ccb0363930485e0aa880
+github.com/heroku/instruments #7d8536f0ee1a293ef9e34a79ad509508141e67a8 !https://github.com/remerge/instruments
+github.com/juju/loggo #8477fc936adf0e382d680310047ca27e128a309a
 github.com/julienschmidt/httprouter #8c199fb6259ffc1af525cc3ad52ee60ba8359669
 github.com/mailgun/manners #38e66a3e3e920713163484c7ab57ffc39c35e257 !https://github.com/remerge/manners
 github.com/mattn/go-colorable #d67e0b7d1797975196499f79bcc322c08b9f218b
-github.com/rcrowley/go-metrics #ace6b1c5df1245cb6a6dc9852abaf76c3ae99606 !https://github.com/remerge/go-metrics
