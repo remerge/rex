@@ -18,7 +18,7 @@ type MetricsTicker struct {
 
 func NewMetricsTicker(t Tracker) *MetricsTicker {
 	return &MetricsTicker{
-		ticker:  time.NewTicker(10 * time.Second),
+		ticker:  time.NewTicker(time.Minute),
 		quit:    make(chan bool, 1),
 		done:    make(chan bool, 1),
 		tracker: t,
