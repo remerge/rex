@@ -1,11 +1,25 @@
 package rand
 
-import "time"
+import (
+	"sync/atomic"
+	"time"
+)
 
 const (
-	max  = 1 << 63
-	mask = max - 1
+	poolSize = 512
+	max      = 1 << 63
+	mask     = max - 1
 )
+
+// random number generator pool
+var pool = make([]*Xor128Rand, poolSize)
+var pos uint64
+
+func init() {
+	for i := range pool {
+		pool[i] = NewXorRand(uint64(time.Now().UnixNano()))
+	}
+}
 
 type Xor128Rand struct {
 	src [2]uint64
@@ -13,11 +27,6 @@ type Xor128Rand struct {
 
 func NewXorRand(seed uint64) *Xor128Rand {
 	return &Xor128Rand{[2]uint64{seed, seed}}
-}
-
-func (r *Xor128Rand) Seed(seed uint64) {
-	r.src[0] = seed
-	r.src[1] = seed
 }
 
 func (r *Xor128Rand) Uint64() uint64 {
@@ -29,19 +38,13 @@ func (r *Xor128Rand) Uint64() uint64 {
 	return r.src[1] + s0
 }
 
-func (r *Xor128Rand) Int63() int64 {
-	return int64(Uint64()) & mask
-}
-
-var globalRand = NewXorRand(uint64(time.Now().UnixNano()))
-
-func Seed(seed uint64) {
-	globalRand.Seed(seed)
-}
-
 func Uint64() uint64 {
-	return globalRand.Uint64()
+	apos := int(atomic.AddUint64(&pos, 1) % poolSize)
+	return pool[apos].Uint64()
 }
+
+// Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
+func (r *Xor128Rand) Int63() int64 { return int64(r.Uint64()) & mask }
 
 // Int63 returns a non-negative pseudo-random 63-bit integer as an int64.
 func Int63() int64 { return int64(Uint64()) & mask }
