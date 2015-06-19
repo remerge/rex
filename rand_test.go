@@ -39,7 +39,7 @@ func BenchmarkRexRandGlobal(b *testing.B) {
 }
 
 func BenchmarkRexRand(b *testing.B) {
-	generator := rand.NewXorRand(uint64(time.Now().UnixNano()))
+	generator := rand.NewXorRand(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano()))
 	var acc int64
 	for i := 0; i < b.N; i++ {
 		acc += generator.Int63()
@@ -49,7 +49,7 @@ func BenchmarkRexRand(b *testing.B) {
 func BenchmarkRexRandEach(b *testing.B) {
 	var acc int64
 	for i := 0; i < b.N; i++ {
-		generator := rand.NewXorRand(uint64(time.Now().UnixNano()))
+		generator := rand.NewXorRand(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano()))
 		acc += generator.Int63()
 	}
 }
@@ -94,7 +94,7 @@ func BenchmarkRexRandGlobalParallel(b *testing.B) {
 
 func BenchmarkRexRandParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
-		generator := rand.NewXorRand(uint64(time.Now().UnixNano()))
+		generator := rand.NewXorRand(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano()))
 		var acc int64
 		for pb.Next() {
 			acc += generator.Int63()
@@ -106,7 +106,7 @@ func BenchmarkRexRandEachParallel(b *testing.B) {
 	b.RunParallel(func(pb *testing.PB) {
 		var acc int64
 		for pb.Next() {
-			generator := rand.NewXorRand(uint64(time.Now().UnixNano()))
+			generator := rand.NewXorRand(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano()))
 			acc += generator.Int63()
 		}
 	})
