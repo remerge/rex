@@ -1,12 +1,13 @@
 package rand
 
 import (
+	gorand "math/rand"
 	"sync/atomic"
 	"time"
 )
 
 const (
-	poolSize = 512
+	poolSize = 4096
 	max      = 1 << 63
 	mask     = max - 1
 )
@@ -16,8 +17,11 @@ var pool = make([]*Xor128Rand, poolSize)
 var pos uint64
 
 func init() {
+	gorand.Seed(time.Now().UnixNano())
 	for i := range pool {
-		pool[i] = NewXorRand(uint64(time.Now().UnixNano()))
+		a := uint64(gorand.Uint32())<<32 + uint64(gorand.Uint32())
+		b := uint64(gorand.Uint32())<<32 + uint64(gorand.Uint32())
+		pool[i] = NewXorRand(a, b)
 	}
 }
 
@@ -25,10 +29,11 @@ type Xor128Rand struct {
 	src [2]uint64
 }
 
-func NewXorRand(seed uint64) *Xor128Rand {
-	return &Xor128Rand{[2]uint64{seed, seed}}
+func NewXorRand(seed1, seed2 uint64) *Xor128Rand {
+	return &Xor128Rand{[2]uint64{seed1, seed2}}
 }
 
+// this is xorshift+ https://en.wikipedia.org/wiki/Xorshift
 func (r *Xor128Rand) Uint64() uint64 {
 	s1 := r.src[0]
 	s0 := r.src[1]
