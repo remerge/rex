@@ -1,6 +1,7 @@
 package rand
 
 import (
+	"fmt"
 	gorand "math/rand"
 	"sync/atomic"
 	"time"
@@ -137,6 +138,13 @@ func Float64() float64 {
 		f = 0
 	}
 	return f
+}
+
+func Float64Range(a, b float64) float64 {
+	if !(a < b) {
+		panic(fmt.Sprintf("Invalid range: %.2f ~ %.2f", a, b))
+	}
+	return a + Float64()*(b-a)
 }
 
 // Float32 returns, as a float32, a pseudo-random number in [0.0,1.0).

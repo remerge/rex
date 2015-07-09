@@ -5,3 +5,4 @@ github.com/heroku/instruments !https://github.com/remerge/instruments
 github.com/juju/loggo
 github.com/julienschmidt/httprouter
 github.com/mailgun/manners !https://github.com/remerge/manners
+github.com/cheekybits/genny
