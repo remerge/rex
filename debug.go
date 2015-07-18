@@ -51,14 +51,14 @@ func setLoggoSpec(c *gin.Context) {
 
 	body, err := ioutil.ReadAll(c.Request.Body)
 	if err != nil {
-		c.Fail(500, err)
+		c.AbortWithError(500, err)
 		return
 	}
 
 	log.Infof("setting new loggo spec: %s", string(body))
 	err = loggo.ConfigureLoggers(string(body))
 	if err != nil {
-		c.Fail(400, err)
+		c.AbortWithError(400, err)
 		return
 	}
 

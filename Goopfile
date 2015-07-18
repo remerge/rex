@@ -1,8 +1,9 @@
 github.com/Shopify/sarama !https://github.com/remerge/sarama
-github.com/getsentry/raven-go
-github.com/gin-gonic/gin !https://github.com/remerge/gin
+github.com/cheekybits/genny
+github.com/gin-gonic/gin
 github.com/heroku/instruments !https://github.com/remerge/instruments
 github.com/juju/loggo
 github.com/julienschmidt/httprouter
 github.com/mailgun/manners !https://github.com/remerge/manners
-github.com/cheekybits/genny
+github.com/remerge/gobi
+github.com/stvp/rollbar

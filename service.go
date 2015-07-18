@@ -3,25 +3,22 @@ package rex
 import (
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"reflect"
 	"runtime"
 	"runtime/pprof"
 	"strings"
 	"syscall"
 	"time"
 
-	"github.com/getsentry/raven-go"
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/mailgun/manners"
+	"github.com/stvp/rollbar"
 )
 
 type Config struct {
@@ -98,7 +95,7 @@ func (service *Service) Init() {
 	service.Flags.StringVar(&config.LogSpec, "loggo", config.LogSpec, "initial loggo spec")
 
 	// sentry options
-	service.Flags.StringVar(&config.SentryDSN, "sentry-dsn", config.SentryDSN, "Sentry DSN")
+	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Sentry DSN")
 }
 
 func (service *Service) Run() {
@@ -108,12 +105,9 @@ func (service *Service) Run() {
 	service.Flags.Parse(readArgs())
 	os.Setenv("REX_ENV", config.Environment)
 
-	var err error
-	Raven, err = raven.NewClient(config.SentryDSN, nil)
-	MayPanic(err)
-
 	loggo.ConfigureLoggers(config.LogSpec)
 
+	var err error
 	service.Tracker, err = NewKafkaTracker(config.KafkaBroker, &config.EventMetadata)
 	MayPanic(err)
 
@@ -123,16 +117,9 @@ func (service *Service) Run() {
 	if service.BaseConfig.Port > 0 {
 		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
 
-		listener, err := newListener()
-		if err != nil {
-			listener, err = net.Listen("tcp", fmt.Sprintf(":%d", service.BaseConfig.Port))
-			MayPanic(err)
-			service.Log.Infof("start listen=:%d", service.BaseConfig.Port)
-		} else {
-			service.Log.Infof("resume listen=%s", listener.Addr())
-		}
-
-		service.Listener = listener
+		service.Listener, err = net.Listen("tcp", fmt.Sprintf(":%d", service.BaseConfig.Port))
+		MayPanic(err)
+		service.Log.Infof("start listen=:%d", service.BaseConfig.Port)
 	}
 }
 
@@ -195,11 +182,8 @@ func (service *Service) Shutdown() {
 	service.MetricsTicker.Stop()
 	service.Log.Infof("shutting down tracker")
 	service.Tracker.Close()
-	service.Log.Infof("closing raven client")
-
-	// finally close raven and shut down
-	Raven.Close()
-
+	service.Log.Infof("waiting for rollbar")
+	rollbar.Wait()
 	service.Log.Infof("service shutdown done, dumping dangling go routines")
 	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 }
@@ -211,173 +195,25 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 		syscall.SIGHUP,
 		syscall.SIGINT,
 		syscall.SIGQUIT,
-		syscall.SIGTERM,
-		syscall.SIGUSR1,
-		syscall.SIGUSR2,
 	)
-	forked := false
 	for {
 		sig := <-ch
-		service.Log.Infof("caught signal %s", sig.String())
-		switch sig {
-
-		case syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM:
-			service.Log.Infof("shutting down")
+		service.Log.Infof("caught signal %s. shutting down", sig.String())
+		go func() {
+			time.Sleep(5 * time.Minute)
+			service.Log.Infof("still not dead. trying to exit")
+			pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 			go func() {
-				time.Sleep(5 * time.Minute)
-				service.Log.Infof("still not dead. trying to exit")
+				time.Sleep(30 * time.Second)
+				service.Log.Infof("still not dead. killing myself")
 				pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
-				go func() {
-					time.Sleep(30 * time.Second)
-					service.Log.Infof("still not dead. killing myself")
-					pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
-					syscall.Kill(os.Getpid(), syscall.SIGKILL)
-				}()
-				os.Exit(-1)
+				syscall.Kill(os.Getpid(), syscall.SIGKILL)
 			}()
-			shutdownCallback()
-			return sig.(syscall.Signal), nil
-
-		case syscall.SIGUSR2:
-			service.Log.Infof("re-executing binary")
-			if service.ReloadCallback != nil {
-				service.ReloadCallback()
-			}
-			if forked {
-				return syscall.SIGUSR2, nil
-			}
-			forked = true
-			if err := service.ForkExec(); err != nil {
-				MayPanic(err)
-			}
-		}
+			os.Exit(-1)
+		}()
+		shutdownCallback()
+		return sig.(syscall.Signal), nil
 	}
-}
-
-func (service *Service) ForkExec() error {
-	argv0, err := lookPath()
-	if err != nil {
-		return err
-	}
-	wd, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-	fd, err := setEnvs(service.Listener)
-	if err != nil {
-		return err
-	}
-	if err := os.Setenv("GOAGAIN_PID", ""); err != nil {
-		return err
-	}
-	if err := os.Setenv("GOAGAIN_PPID", fmt.Sprint(syscall.Getpid())); err != nil {
-		return err
-	}
-	var sig syscall.Signal
-	sig = syscall.SIGQUIT
-	if err := os.Setenv("GOAGAIN_SIGNAL", fmt.Sprintf("%d", sig)); err != nil {
-		return err
-	}
-	files := make([]*os.File, fd+1)
-	files[syscall.Stdin] = os.Stdin
-	files[syscall.Stdout] = os.Stdout
-	files[syscall.Stderr] = os.Stderr
-	addr := service.Listener.Addr()
-	files[fd] = os.NewFile(
-		fd,
-		fmt.Sprintf("%s:%s->", addr.Network(), addr.String()),
-	)
-	service.DebugServer.Close()
-	service.DebugServer = nil
-	p, err := os.StartProcess(argv0, os.Args, &os.ProcAttr{
-		Dir:   wd,
-		Env:   os.Environ(),
-		Files: files,
-		Sys:   &syscall.SysProcAttr{},
-	})
-	if err != nil {
-		return err
-	}
-	service.Log.Infof("spawned child %d", p.Pid)
-	if err = os.Setenv("GOAGAIN_PID", fmt.Sprint(p.Pid)); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (service *Service) KillOld() error {
-	var (
-		pid int
-		sig syscall.Signal
-	)
-	_, err := fmt.Sscan(os.Getenv("GOAGAIN_PID"), &pid)
-	if io.EOF == err {
-		_, err = fmt.Sscan(os.Getenv("GOAGAIN_PPID"), &pid)
-	}
-	if nil != err {
-		return err
-	}
-	if _, err := fmt.Sscan(os.Getenv("GOAGAIN_SIGNAL"), &sig); nil != err {
-		sig = syscall.SIGQUIT
-	}
-	service.Log.Infof("sending signal %d to process %d", sig, pid)
-	return syscall.Kill(pid, sig)
-}
-
-func newListener() (l net.Listener, err error) {
-	var fd uintptr
-	if _, err = fmt.Sscan(os.Getenv("GOAGAIN_FD"), &fd); nil != err {
-		return
-	}
-	l, err = net.FileListener(os.NewFile(fd, os.Getenv("GOAGAIN_NAME")))
-	if nil != err {
-		return
-	}
-	switch l.(type) {
-	case *net.TCPListener, *net.UnixListener:
-	default:
-		err = fmt.Errorf(
-			"file descriptor is %T not *net.TCPListener or *net.UnixListener",
-			l,
-		)
-		return
-	}
-	if err = syscall.Close(int(fd)); nil != err {
-		return
-	}
-	return
-}
-
-func lookPath() (argv0 string, err error) {
-	argv0, err = exec.LookPath(os.Args[0])
-	if err != nil {
-		return
-	}
-	if _, err = os.Stat(argv0); err != nil {
-		return
-	}
-	return
-}
-
-func setEnvs(l net.Listener) (fd uintptr, err error) {
-	v := reflect.ValueOf(l).Elem().FieldByName("fd").Elem()
-	fd = uintptr(v.FieldByName("sysfd").Int())
-	_, _, e1 := syscall.Syscall(syscall.SYS_FCNTL, fd, syscall.F_SETFD, 0)
-	if 0 != e1 {
-		err = e1
-		return
-	}
-	if err = os.Setenv("GOAGAIN_FD", fmt.Sprint(fd)); err != nil {
-		return
-	}
-	addr := l.Addr()
-	if err = os.Setenv(
-		"GOAGAIN_NAME",
-		fmt.Sprintf("%s:%s->", addr.Network(), addr.String()),
-	); err != nil {
-		return
-	}
-	return
 }
 
 func readArgs() []string {

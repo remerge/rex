@@ -1,13 +1,19 @@
-github.com/Shopify/sarama #d09a40e7769b69118938d59353f14ce037efa2b9 !https://github.com/remerge/sarama
-github.com/eapache/go-resiliency #ed0319b32e66e3295db52695ba3ee493e823fbfe
-github.com/eapache/queue #d1df561eb6b9ffdac8dd98f943e9e9096c76c059
-github.com/flosch/pongo2 #5c5c2d876f1239ce71a02eae4e1eae9cf8eac85f
-github.com/getsentry/raven-go #c8f8fb7c415203f52ca882e2661d21bc6dcb54d7
-github.com/gin-gonic/gin #0569c5fb95a49ce4b9a7cc7bc3bad3ee3e152da8 !https://github.com/remerge/gin
-github.com/golang/snappy #a911026e1ffa84898778ccb0363930485e0aa880
-github.com/heroku/instruments #7d8536f0ee1a293ef9e34a79ad509508141e67a8 !https://github.com/remerge/instruments
-github.com/juju/loggo #8477fc936adf0e382d680310047ca27e128a309a
-github.com/julienschmidt/httprouter #8c199fb6259ffc1af525cc3ad52ee60ba8359669
-github.com/mailgun/manners #38e66a3e3e920713163484c7ab57ffc39c35e257 !https://github.com/remerge/manners
-github.com/mattn/go-colorable #d67e0b7d1797975196499f79bcc322c08b9f218b
+github.com/Shopify/sarama #5715ebd5b44d4150ce87b60fef2988ed3722cbc3 !https://github.com/remerge/sarama
 github.com/cheekybits/genny #ed3605f490fb571b5d708aaefc618eaac347fe94
+github.com/dustin/go-broadcast #3bdf6d4a7164a50bc19d5f230e2981d87d2584f1
+github.com/eapache/go-resiliency #ed0319b32e66e3295db52695ba3ee493e823fbfe
+github.com/eapache/queue #ded5959c0d4e360646dc9e9908cff48666781367
+github.com/gin-gonic/gin #fd5d4294a5d5223d55fc76d7840f4b0ad91647bb
+github.com/golang/snappy #f4b10fa94214ba1b3d4068beeda8f920bf352cf0
+github.com/heroku/instruments #1e81d775df4d6d284b2c66e8a790978f4b4ee735 !https://github.com/remerge/instruments
+github.com/juju/loggo #8477fc936adf0e382d680310047ca27e128a309a
+github.com/julienschmidt/httprouter #6aacfd5ab513e34f7e64ea9627ab9670371b34e7
+github.com/mailgun/manners #38e66a3e3e920713163484c7ab57ffc39c35e257 !https://github.com/remerge/manners
+github.com/manucorporat/sse #fe6ea2c8e398672518ef204bf0fbd9af858d0e15
+github.com/manucorporat/stats #8f2d6ace262eba462e9beb552382c98be51d807b
+github.com/mattn/go-colorable #40e4aedc8fabf8c23e040057540867186712faa5
+github.com/remerge/gobi #3de10c67301d6f968927843bdccd1062a1be7a25
+github.com/stvp/rollbar #8b39372e6211ddf06fd182579c397b33c8b8d593
+golang.org/x/net #f0cf018861e2b54077eced91659e255072b5f215
+golang.org/x/tools #87156cb7667343326165d84f3557bd91ab57428b
+gopkg.in/bluesuncorp/validator.v5 #ac33a23e6e6451492f246d6ed9384af421b71d0d
