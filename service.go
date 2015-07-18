@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/mailgun/manners"
@@ -116,6 +117,10 @@ func (service *Service) Run() {
 
 	service.MetricsTicker = NewMetricsTicker(service.Tracker)
 	go service.MetricsTicker.Start()
+
+	if config.Environment == "production" {
+		gin.SetMode("release")
+	}
 
 	if service.BaseConfig.Port > 0 {
 		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
