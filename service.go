@@ -98,13 +98,16 @@ func (service *Service) Init() {
 	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Sentry DSN")
 }
 
-func (service *Service) Run() {
-	config := service.BaseConfig
-
+func (service *Service) ReadArgs() {
 	service.Log.Infof("command line arguments=%q", readArgs())
 	service.Flags.Parse(readArgs())
-	os.Setenv("REX_ENV", config.Environment)
+	os.Setenv("REX_ENV", service.BaseConfig.Environment)
+}
 
+func (service *Service) Run() {
+	service.ReadArgs()
+
+	config := service.BaseConfig
 	loggo.ConfigureLoggers(config.LogSpec)
 
 	var err error
