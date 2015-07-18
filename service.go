@@ -1,12 +1,14 @@
 package rex
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
@@ -103,6 +105,9 @@ func (service *Service) ReadArgs() {
 	service.Log.Infof("command line arguments=%q", readArgs())
 	service.Flags.Parse(readArgs())
 	os.Setenv("REX_ENV", service.BaseConfig.Environment)
+	rollbar.Environment = service.BaseConfig.Environment
+	rev, _ := exec.Command("git", "rev-parse", "HEAD").Output()
+	rollbar.CodeVersion = string(bytes.TrimSpace(rev))
 }
 
 func (service *Service) Run() {

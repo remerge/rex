@@ -316,6 +316,10 @@ func push(body map[string]interface{}) {
 
 // POST the given JSON body to Rollbar synchronously.
 func post(body map[string]interface{}) {
+	if Environment == "development" || Environment == "test" {
+		return
+	}
+
 	if len(Token) == 0 {
 		stderr("empty token")
 		return
