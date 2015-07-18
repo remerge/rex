@@ -7,6 +7,7 @@ import (
 	"github.com/Shopify/sarama"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/kafka"
+	"github.com/remerge/rex/rollbar"
 )
 
 type KafkaTracker struct {
@@ -35,20 +36,17 @@ func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err err
 
 	self.Client, err = kafka.NewClient("tracker", broker)
 	if err != nil {
-		CaptureError(err)
 		return nil, err
 	}
 
 	self.Fast, err = self.Client.NewFastProducer(nil)
 	if err != nil {
-		CaptureError(err)
 		self.Close()
 		return nil, err
 	}
 
 	self.Safe, err = self.Client.NewSafeProducer()
 	if err != nil {
-		CaptureError(err)
 		self.Close()
 		return nil, err
 	}
@@ -71,8 +69,8 @@ func (self *KafkaTracker) Close() {
 		self.log.Infof("shutting down fast producer")
 		self.Fast.Shutdown()
 	}
-	CaptureError(self.Client.Close())
-	CaptureError(self.queue.Close())
+	rollbar.Error(rollbar.INFO, self.Client.Close())
+	rollbar.Error(rollbar.INFO, self.queue.Close())
 	self.log.Infof("tracker is stopped")
 }
 
@@ -138,7 +136,7 @@ func (self *KafkaTracker) start() {
 		case bytes := <-self.queue.ReadChan():
 			i, err := GobDecode(bytes)
 			if err != nil {
-				CaptureError(err)
+				rollbar.Error(rollbar.ERR, err)
 				continue
 			}
 			msg := i.(sarama.ProducerMessage)

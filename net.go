@@ -9,14 +9,11 @@ import (
 )
 
 func GetFQDN() string {
-	cmd := exec.Command("hostname", "-f")
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	err := cmd.Run()
+	out, err := exec.Command("hostname", "-f").Output()
 	if err != nil {
 		return "localhost"
 	}
-	return string(bytes.TrimSpace(out.Bytes()))
+	return string(bytes.TrimSpace(out))
 }
 
 func IsTimeout(err error) bool {

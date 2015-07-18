@@ -19,7 +19,7 @@ import (
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/mailgun/manners"
-	"github.com/stvp/rollbar"
+	"github.com/remerge/rex/rollbar"
 )
 
 type Config struct {
@@ -171,7 +171,7 @@ func (service *Service) CloseWait() {
 	}
 	if service.Listener != nil {
 		service.Log.Infof("closing dangling listener")
-		CaptureError(service.Listener.Close())
+		rollbar.Error(rollbar.INFO, service.Listener.Close())
 	}
 	if service.DebugServer != nil {
 		service.Log.Infof("shutting down debug server")

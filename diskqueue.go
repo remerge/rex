@@ -15,6 +15,7 @@ import (
 
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/rand"
+	"github.com/remerge/rex/rollbar"
 )
 
 // DiskQueue provids a filesystem backed FIFO queue
@@ -180,7 +181,6 @@ func (d *DiskQueue) deleteAllFiles() error {
 
 	innerErr := os.Remove(d.metaDataFileName())
 	if innerErr != nil && !os.IsNotExist(innerErr) {
-		CaptureError(innerErr)
 		return innerErr
 	}
 
@@ -204,7 +204,6 @@ func (d *DiskQueue) skipToNextRWFile() error {
 		fn := d.fileName(i)
 		innerErr := os.Remove(fn)
 		if innerErr != nil && !os.IsNotExist(innerErr) {
-			CaptureError(innerErr)
 			err = innerErr
 		}
 	}
@@ -341,7 +340,7 @@ func (d *DiskQueue) writeOne(data []byte) error {
 		// sync every time we start writing to a new file
 		err = d.sync()
 		if err != nil {
-			CaptureError(err)
+			rollbar.Error(rollbar.CRIT, err)
 		}
 
 		if d.writeFile != nil {
@@ -446,9 +445,9 @@ func (d *DiskQueue) checkTailCorruption(depth int64) {
 	// if depth isn't 0 something went wrong
 	if depth != 0 {
 		if depth < 0 {
-			CaptureErrorNew("negative depth at tail (%d), metadata corruption, resetting 0", depth)
+			rollbar.Error(rollbar.ERR, fmt.Errorf("negative depth at tail (%d), metadata corruption, resetting 0", depth))
 		} else if depth > 0 {
-			CaptureErrorNew("positive depth at tail (%d), data loss, resetting 0", depth)
+			rollbar.Error(rollbar.ERR, fmt.Errorf("positive depth at tail (%d), data loss, resetting 0", depth))
 		}
 		// force set depth 0
 		atomic.StoreInt64(&d.depth, 0)
@@ -457,11 +456,11 @@ func (d *DiskQueue) checkTailCorruption(depth int64) {
 
 	if d.readFileNum != d.writeFileNum || d.readPos != d.writePos {
 		if d.readFileNum > d.writeFileNum {
-			CaptureErrorNew("readFileNum > writeFileNum (%d > %d), corruption, skipping to next writeFileNum and resetting 0...", d.readFileNum, d.writeFileNum)
+			rollbar.Error(rollbar.ERR, fmt.Errorf("readFileNum > writeFileNum (%d > %d), corruption, skipping to next writeFileNum and resetting 0...", d.readFileNum, d.writeFileNum))
 		}
 
 		if d.readPos > d.writePos {
-			CaptureErrorNew("readPos > writePos (%d > %d), corruption, skipping to next writeFileNum and resetting 0...", d.readPos, d.writePos)
+			rollbar.Error(rollbar.ERR, fmt.Errorf("readPos > writePos (%d > %d), corruption, skipping to next writeFileNum and resetting 0...", d.readPos, d.writePos))
 		}
 
 		d.skipToNextRWFile()
@@ -483,7 +482,7 @@ func (d *DiskQueue) moveForward() {
 		fn := d.fileName(oldReadFileNum)
 		err := os.Remove(fn)
 		if err != nil {
-			CaptureError(err)
+			rollbar.Error(rollbar.INFO, err)
 		}
 	}
 
@@ -510,7 +509,7 @@ func (d *DiskQueue) handleReadError() {
 
 	err := os.Rename(badFn, badRenameFn)
 	if err != nil {
-		CaptureError(err)
+		rollbar.Error(rollbar.ERR, err)
 	}
 
 	d.readFileNum++
@@ -548,7 +547,7 @@ func (d *DiskQueue) ioLoop() {
 		if d.needSync {
 			err = d.sync()
 			if err != nil {
-				CaptureError(err)
+				rollbar.Error(rollbar.ERR, err)
 			}
 		}
 
@@ -556,7 +555,7 @@ func (d *DiskQueue) ioLoop() {
 			if d.nextReadPos == d.readPos {
 				dataRead, err = d.readOne()
 				if err != nil {
-					CaptureError(err)
+					rollbar.Error(rollbar.ERR, err)
 					d.handleReadError()
 					continue
 				}

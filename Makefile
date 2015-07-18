@@ -26,6 +26,7 @@ test:
 	go get github.com/smartystreets/goconvey
 	$(GO) test
 	$(GO) test -v $(PACKAGE)/rand
+	$(GO) test -v $(PACKAGE)/rollbar
 
 bench:
 	$(GO) test -bench=. -cpu 4
