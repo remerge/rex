@@ -12,7 +12,6 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -162,7 +161,6 @@ func buildError(level string, err error, stack Stack, fields ...*Field) map[stri
 
 func buildAndPushError(level string, err error, stack Stack, fields ...*Field) {
 	loggo.GetLogger("rollbar.error").Errorf(err.Error())
-	debug.PrintStack()
 	push(buildError(level, err, stack, fields...))
 }
 
@@ -309,8 +307,6 @@ func push(body map[string]interface{}) {
 	if len(bodyChannel) < Buffer {
 		waitGroup.Add(1)
 		bodyChannel <- body
-	} else {
-		stderr("buffer full, dropping error on the floor")
 	}
 }
 
