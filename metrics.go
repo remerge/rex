@@ -33,6 +33,9 @@ func (self *MetricsTicker) Start() {
 	for {
 		select {
 		case <-self.ticker.C:
+			if goMetrics != nil {
+				goMetrics.update()
+			}
 			self.Track()
 		case <-self.quit:
 			self.ticker.Stop()
