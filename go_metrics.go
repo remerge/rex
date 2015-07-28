@@ -32,11 +32,11 @@ func newGoMetrics() *GoMetrics {
 	return &GoMetrics{
 		NumGoRoutines: reporter.NewRegisteredGauge("go.num_go_routines", 0),
 		Alloc:         reporter.NewRegisteredGauge("go.alloc", 0),
-		TotalAlloc:    reporter.NewRegisteredGauge("go.total_alloc", 0),
+		TotalAlloc:    reporter.NewRegisteredDerive("go.total_alloc", 0),
 		HeapInUse:     reporter.NewRegisteredGauge("go.heap_in_use", 0),
 		HeapObjects:   reporter.NewRegisteredGauge("go.heap_objects", 0),
 		StackInUse:    reporter.NewRegisteredGauge("go.stack_in_use", 0),
-		NumGC:         reporter.NewRegisteredGauge("go.num_gc", 0),
+		NumGC:         reporter.NewRegisteredDerive("go.num_gc", 0),
 		GCPause:       reporter.NewRegisteredGauge("go.gc_pause", 0),
 		Mallocs:       reporter.NewRegisteredGauge("go.mallocs", 0),
 		Frees:         reporter.NewRegisteredGauge("go.frees", 0),
