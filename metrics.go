@@ -69,6 +69,7 @@ func (self *MetricsTicker) Track() {
 		case *instruments.Derive:
 			event["type"] = "derive"
 			event["value"] = instrument.Snapshot()
+			event["m1"] = event["value"] // backwards compat
 		case *instruments.Reservoir:
 			s := instrument.Snapshot()
 			event["type"] = "histogram" // backwards compat
