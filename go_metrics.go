@@ -12,11 +12,11 @@ var goMetrics *GoMetrics
 type GoMetrics struct {
 	NumGoRoutines *instruments.Gauge
 	Alloc         *instruments.Gauge
-	TotalAlloc    *instruments.Gauge
+	TotalAlloc    *instruments.Derive
 	HeapInUse     *instruments.Gauge
 	HeapObjects   *instruments.Gauge
 	StackInUse    *instruments.Gauge
-	NumGC         *instruments.Gauge
+	NumGC         *instruments.Derive
 	GCPause       *instruments.Gauge
 	Mallocs       *instruments.Gauge
 	Frees         *instruments.Gauge
