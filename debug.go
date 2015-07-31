@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof"
+	"runtime"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
@@ -27,6 +29,16 @@ func StartDebugServer(port int) *manners.GracefulServer {
 
 	r.GET("/loggo", getLoggoSpec)
 	r.POST("/loggo", setLoggoSpec)
+
+	r.GET("/blockprof/:rate", func(c *gin.Context) {
+		r, err := strconv.Atoi(c.Param("rate"))
+		if err != nil {
+			c.String(http.StatusOK, "rate invalid %s. %v", c.Param("rate"), err)
+			return
+		}
+		runtime.SetBlockProfileRate(r)
+		c.String(http.StatusOK, "new rate %d", r)
+	})
 
 	http.Handle("/", r)
 	server := manners.NewWithServer(&http.Server{Handler: http.DefaultServeMux})
