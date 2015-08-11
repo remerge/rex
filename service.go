@@ -22,7 +22,6 @@ import (
 
 type Config struct {
 	EventMetadata
-	SentryDSN   string
 	LogSpec     string
 	KafkaBroker string
 	Port        int
@@ -96,7 +95,7 @@ func (service *Service) Init() {
 	service.Flags.StringVar(&config.LogSpec, "loggo", config.LogSpec, "initial loggo spec")
 
 	// rollbar options
-	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Sentry DSN")
+	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Rollbar API Token")
 }
 
 func (service *Service) ReadArgs() {
