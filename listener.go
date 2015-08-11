@@ -73,7 +73,9 @@ func (listener *Listener) Serve(server http.Server) {
 	listener.wg.Add(1)
 	defer listener.wg.Done()
 	go func() {
-		MayPanic(server.Serve(listener))
+		if err := server.Serve(listener); err != StoppedError {
+			MayPanic(err)
+		}
 	}()
 }
 
