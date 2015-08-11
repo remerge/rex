@@ -23,7 +23,7 @@ func IsTimeout(err error) bool {
 			return true
 		}
 	case net.Error:
-		if err.Timeout() {
+		if err.Timeout() && err.Temporary() {
 			return true
 		}
 	}

@@ -5,8 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"net"
-	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -18,20 +16,19 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
-	"github.com/mailgun/manners"
 	"github.com/remerge/rex/rollbar"
 )
 
 type Config struct {
 	EventMetadata
-	SentryDSN    string
-	LogSpec      string
-	KafkaBroker  string
-	Port         int
-	ReadTimeout  time.Duration
-	WriteTimeout time.Duration
+	SentryDSN   string
+	LogSpec     string
+	KafkaBroker string
+	Port        int
+	TlsPort     int
+	TlsKey      string
+	TlsCert     string
 }
 
 func NewConfig(name string, port int) *Config {
@@ -43,8 +40,6 @@ func NewConfig(name string, port int) *Config {
 	config.LogSpec = "<root>=INFO"
 	config.KafkaBroker = "0.0.0.0:9092"
 	config.Port = port
-	config.ReadTimeout = 120 * time.Second
-	config.WriteTimeout = 120 * time.Second
 	return config
 }
 
@@ -62,9 +57,7 @@ type Service struct {
 	Flags          flag.FlagSet
 	Tracker        Tracker
 	MetricsTicker  *MetricsTicker
-	Listener       net.Listener
-	Server         *manners.GracefulServer
-	DebugServer    *manners.GracefulServer
+	DebugServer    *Listener
 	BaseConfig     *Config
 	ReloadCallback func()
 }
@@ -87,6 +80,11 @@ func (service *Service) Init() {
 	// listen port for service
 	service.Flags.IntVar(&config.Port, "port", config.Port, "listen port")
 
+	// TLS options
+	service.Flags.IntVar(&config.TlsPort, "tls-port", config.TlsPort, "listen port for TLS")
+	service.Flags.StringVar(&config.TlsKey, "tls-key", config.TlsKey, "TLS certificate key")
+	service.Flags.StringVar(&config.TlsCert, "tls-cert", config.TlsCert, "TLS certificate")
+
 	// event metadata
 	service.Flags.StringVar(&config.Environment, "environment", config.Environment, "Evironment to run in")
 	service.Flags.StringVar(&config.Cluster, "cluster", config.Cluster, "Cluster to run in")
@@ -97,7 +95,7 @@ func (service *Service) Init() {
 	// loggo options
 	service.Flags.StringVar(&config.LogSpec, "loggo", config.LogSpec, "initial loggo spec")
 
-	// sentry options
+	// rollbar options
 	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Sentry DSN")
 }
 
@@ -129,68 +127,18 @@ func (service *Service) Run() {
 
 	if service.BaseConfig.Port > 0 {
 		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
-
-		service.Listener, err = net.Listen("tcp", fmt.Sprintf(":%d", service.BaseConfig.Port))
-		MayPanic(err)
-		service.Log.Infof("start listen=:%d", service.BaseConfig.Port)
-	}
-}
-
-func (service *Service) Serve(handler http.Handler) {
-	service.Server = manners.NewWithServer(&http.Server{
-		Handler:      handler,
-		ReadTimeout:  service.BaseConfig.ReadTimeout,
-		WriteTimeout: service.BaseConfig.WriteTimeout,
-		ConnState:    service.ConnStateHandler,
-	})
-
-	service.Log.Infof("now serving requests on listener")
-	MayPanic(service.Server.Serve(service.Listener))
-	service.Log.Infof("stopped serving on listener")
-}
-
-var newConnections = reporter.NewRegisteredRate("listener.connections.new")
-var activeConnections = reporter.NewRegisteredRate("listener.connections.active")
-var closedConnections = reporter.NewRegisteredRate("listener.connections.closed")
-
-func (service *Service) ConnStateHandler(conn net.Conn, state http.ConnState) {
-	switch state {
-	case http.StateNew:
-		newConnections.Update(1)
-	case http.StateActive:
-		activeConnections.Update(1)
-	case http.StateClosed:
-		closedConnections.Update(1)
-	}
-}
-
-func (service *Service) CloseWait() {
-	if service.Server != nil {
-		service.Log.Infof("shutting down http server")
-		service.Server.Close()
-		service.Listener = nil
-		service.Log.Infof("waiting for requests to finish")
-		service.Server.Wait()
-		service.Server = nil
-		service.Log.Infof("all request handlers done")
-	}
-	if service.Listener != nil {
-		service.Log.Infof("closing dangling listener")
-		rollbar.Error(rollbar.INFO, service.Listener.Close())
-	}
-	if service.DebugServer != nil {
-		service.Log.Infof("shutting down debug server")
-		service.DebugServer.Close()
-		service.Log.Infof("waiting for requests to finish")
-		service.DebugServer.Wait()
-		service.DebugServer = nil
-		service.Log.Infof("all request handlers done")
 	}
 }
 
 func (service *Service) Shutdown() {
 	service.Log.Infof("service shutdown")
-	service.CloseWait()
+	if service.DebugServer != nil {
+		service.Log.Infof("shutting down debug server")
+		service.DebugServer.Stop()
+		service.Log.Infof("waiting for requests to finish")
+		service.DebugServer.Wait()
+		service.DebugServer = nil
+	}
 	service.Log.Infof("shutting down metrics ticker")
 	service.MetricsTicker.Stop()
 	service.Log.Infof("shutting down tracker")
@@ -203,30 +151,21 @@ func (service *Service) Shutdown() {
 
 func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 	ch := make(chan os.Signal, 2)
-	signal.Notify(
-		ch,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGQUIT,
-	)
+	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT)
 	for {
 		sig := <-ch
 		service.Log.Infof("caught signal %s. shutting down", sig.String())
-		go func() {
-			time.Sleep(5 * time.Minute)
-			service.Log.Infof("still not dead. trying to exit")
-			pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
-			go func() {
-				time.Sleep(30 * time.Second)
-				service.Log.Infof("still not dead. killing myself")
-				pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
-				syscall.Kill(os.Getpid(), syscall.SIGKILL)
-			}()
-			os.Exit(-1)
-		}()
+		go service.shutdownCheck()
 		shutdownCallback()
 		return sig.(syscall.Signal), nil
 	}
+}
+
+func (service *Service) shutdownCheck() {
+	time.Sleep(1 * time.Minute)
+	service.Log.Infof("still not dead. dumping dangling go routines")
+	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+	go service.shutdownCheck()
 }
 
 func readArgs() []string {

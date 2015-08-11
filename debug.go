@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net"
 	"net/http"
 	_ "net/http/pprof"
 	"runtime"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
-	"github.com/mailgun/manners"
 )
 
 func Inspect(v interface{}) string {
@@ -23,7 +21,7 @@ func Inspect(v interface{}) string {
 	return string(bytes)
 }
 
-func StartDebugServer(port int) *manners.GracefulServer {
+func StartDebugServer(port int) *Listener {
 	log := loggo.GetLogger("rex.debug")
 	r := gin.Default()
 
@@ -41,17 +39,13 @@ func StartDebugServer(port int) *manners.GracefulServer {
 	})
 
 	http.Handle("/", r)
-	server := manners.NewWithServer(&http.Server{Handler: http.DefaultServeMux})
 
 	log.Infof("starting debug server on port=%d", port)
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	listener, err := NewListener(port)
 	MayPanic(err)
 
-	go func() {
-		MayPanic(server.Serve(listener))
-	}()
-
-	return server
+	listener.Serve(http.Server{Handler: http.DefaultServeMux})
+	return listener
 }
 
 func getLoggoSpec(c *gin.Context) {
