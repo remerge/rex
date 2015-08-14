@@ -13,12 +13,12 @@ var goMetrics *GoMetrics
 
 type MemMetrics struct {
 	// General statistics.
-	Alloc      *instruments.Gauge // bytes allocated and still in use
-	TotalAlloc *instruments.Gauge // bytes allocated (even if freed)
-	Sys        *instruments.Gauge // bytes obtained from system (sum of XxxSys below)
-	Lookups    *instruments.Gauge // number of pointer lookups
-	Mallocs    *instruments.Gauge // number of mallocs
-	Frees      *instruments.Gauge // number of frees
+	Alloc      *instruments.Gauge  // bytes allocated and still in use
+	TotalAlloc *instruments.Gauge  // bytes allocated (even if freed)
+	Sys        *instruments.Gauge  // bytes obtained from system (sum of XxxSys below)
+	Lookups    *instruments.Derive // number of pointer lookups
+	Mallocs    *instruments.Derive // number of mallocs
+	Frees      *instruments.Derive // number of frees
 
 	// Main allocation heap statistics.
 	HeapAlloc    *instruments.Gauge // bytes allocated and still in use
@@ -61,9 +61,9 @@ func NewGoMetrics() *GoMetrics {
 			Alloc:        reporter.NewRegisteredGauge("go.mem.alloc", 0),
 			TotalAlloc:   reporter.NewRegisteredGauge("go.mem.total_alloc", 0),
 			Sys:          reporter.NewRegisteredGauge("go.mem.sys", 0),
-			Lookups:      reporter.NewRegisteredGauge("go.mem.lookups", 0),
-			Mallocs:      reporter.NewRegisteredGauge("go.mem.mallocs", 0),
-			Frees:        reporter.NewRegisteredGauge("go.mem.frees", 0),
+			Lookups:      reporter.NewRegisteredDerive("go.mem.lookups", 0),
+			Mallocs:      reporter.NewRegisteredDerive("go.mem.mallocs", 0),
+			Frees:        reporter.NewRegisteredDerive("go.mem.frees", 0),
 			HeapAlloc:    reporter.NewRegisteredGauge("go.mem.heap_alloc", 0),
 			HeapSys:      reporter.NewRegisteredGauge("go.mem.heap_sys", 0),
 			HeapIdle:     reporter.NewRegisteredGauge("go.mem.heap_idle", 0),
