@@ -52,13 +52,12 @@ const (
 )
 
 type Service struct {
-	Log            loggo.Logger
-	Flags          flag.FlagSet
-	Tracker        Tracker
-	MetricsTicker  *MetricsTicker
-	DebugServer    *Listener
-	BaseConfig     *Config
-	ReloadCallback func()
+	Log           loggo.Logger
+	Flags         flag.FlagSet
+	Tracker       Tracker
+	MetricsTicker *MetricsTicker
+	DebugServer   *Listener
+	BaseConfig    *Config
 }
 
 func (service *Service) Init() {

@@ -9,23 +9,21 @@ import (
 	"github.com/juju/loggo"
 )
 
-func UpdateTimer(timer *instruments.Timer, start time.Time) {
-	timer.Update(time.Since(start))
-}
-
 type MetricsTicker struct {
-	tracker Tracker
-	ticker  *time.Ticker
-	quit    chan bool
-	done    chan bool
+	goMetrics *GoMetrics
+	tracker   Tracker
+	ticker    *time.Ticker
+	quit      chan bool
+	done      chan bool
 }
 
 func NewMetricsTicker(t Tracker) *MetricsTicker {
 	return &MetricsTicker{
-		ticker:  time.NewTicker(time.Minute),
-		quit:    make(chan bool, 1),
-		done:    make(chan bool, 1),
-		tracker: t,
+		goMetrics: NewGoMetrics(),
+		ticker:    time.NewTicker(time.Minute),
+		quit:      make(chan bool, 1),
+		done:      make(chan bool, 1),
+		tracker:   t,
 	}
 }
 
@@ -33,9 +31,7 @@ func (self *MetricsTicker) Start() {
 	for {
 		select {
 		case <-self.ticker.C:
-			if goMetrics != nil {
-				goMetrics.update()
-			}
+			self.goMetrics.Update()
 			self.Track()
 		case <-self.quit:
 			self.ticker.Stop()
