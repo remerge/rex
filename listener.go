@@ -3,10 +3,13 @@ package rex
 import (
 	"crypto/tls"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/juju/loggo"
 )
 
 type Listener struct {
@@ -14,10 +17,13 @@ type Listener struct {
 	TCPListener *net.TCPListener
 	stop        chan int
 	wg          sync.WaitGroup
+	log         loggo.Logger
 }
 
 func NewListener(port int) (listener *Listener, err error) {
 	listener = &Listener{}
+	listener.log = loggo.GetLogger(fmt.Sprintf("listener:%d", port))
+	listener.log.Infof("start listen on port %d", port)
 
 	listener.TCPListener, err = net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	if err != nil {
@@ -40,6 +46,7 @@ func NewTlsListener(port int, key string, cert string) (listener *Listener, err 
 	}
 
 	listener, err = NewListener(port)
+	listener.log.Infof("using TLS certificate at %s", cert)
 	listener.Listener = tls.NewListener(listener.TCPListener, config)
 	return listener, nil
 }
