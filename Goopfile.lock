@@ -5,13 +5,13 @@ github.com/eapache/go-resiliency #ed0319b32e66e3295db52695ba3ee493e823fbfe
 github.com/eapache/queue #ded5959c0d4e360646dc9e9908cff48666781367
 github.com/gin-gonic/gin #fd5d4294a5d5223d55fc76d7840f4b0ad91647bb
 github.com/golang/snappy #723cc1e459b8eea2dea4583200fd60757d40097a
-github.com/heroku/instruments #1e81d775df4d6d284b2c66e8a790978f4b4ee735 !https://github.com/remerge/instruments
+github.com/heroku/instruments #13df4bdd5b2af788a5c68251c7b4fbb3621d6b58 !https://github.com/remerge/instruments
 github.com/juju/loggo #8477fc936adf0e382d680310047ca27e128a309a
 github.com/julienschmidt/httprouter #6aacfd5ab513e34f7e64ea9627ab9670371b34e7
 github.com/manucorporat/sse #fe6ea2c8e398672518ef204bf0fbd9af858d0e15
 github.com/manucorporat/stats #8f2d6ace262eba462e9beb552382c98be51d807b
 github.com/mattn/go-colorable #40e4aedc8fabf8c23e040057540867186712faa5
 github.com/remerge/gobi #3de10c67301d6f968927843bdccd1062a1be7a25
-golang.org/x/net #4a71d182556e05375344f3da665304f3d5784ab4
-golang.org/x/tools #b8e61d42cac5c078c304659f916845a6ee81ac72
+golang.org/x/net #b026840ad5cb594d38a2b783be1b6644fe5325fb
+golang.org/x/tools #4f50f44d7a3206e9e28b984e023efce2a4a75369
 gopkg.in/bluesuncorp/validator.v5 #98121ac23ff3d764f525d18d8de944d150e3c0fe

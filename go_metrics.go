@@ -56,14 +56,14 @@ type GoMetrics struct {
 func NewGoMetrics() *GoMetrics {
 	return &GoMetrics{
 		GoRoutines: reporter.NewRegisteredGauge("go.go_routines", 0),
-		CgoCalls:   reporter.NewRegisteredDerive("go.cgo_calls", 0),
+		CgoCalls:   reporter.NewRegisteredDerive("go.cgo_calls"),
 		Mem: MemMetrics{
 			Alloc:        reporter.NewRegisteredGauge("go.mem.alloc", 0),
 			TotalAlloc:   reporter.NewRegisteredGauge("go.mem.total_alloc", 0),
 			Sys:          reporter.NewRegisteredGauge("go.mem.sys", 0),
-			Lookups:      reporter.NewRegisteredDerive("go.mem.lookups", 0),
-			Mallocs:      reporter.NewRegisteredDerive("go.mem.mallocs", 0),
-			Frees:        reporter.NewRegisteredDerive("go.mem.frees", 0),
+			Lookups:      reporter.NewRegisteredDerive("go.mem.lookups"),
+			Mallocs:      reporter.NewRegisteredDerive("go.mem.mallocs"),
+			Frees:        reporter.NewRegisteredDerive("go.mem.frees"),
 			HeapAlloc:    reporter.NewRegisteredGauge("go.mem.heap_alloc", 0),
 			HeapSys:      reporter.NewRegisteredGauge("go.mem.heap_sys", 0),
 			HeapIdle:     reporter.NewRegisteredGauge("go.mem.heap_idle", 0),
