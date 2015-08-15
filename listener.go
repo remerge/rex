@@ -48,7 +48,7 @@ var StoppedError = errors.New("listener stopped")
 
 func (listener *Listener) Accept() (net.Conn, error) {
 	for {
-		listener.TCPListener.SetDeadline(time.Now().Add(time.Second))
+		listener.TCPListener.SetDeadline(time.Now().Add(1 * time.Second))
 
 		newConn, err := listener.Listener.Accept()
 
@@ -64,6 +64,9 @@ func (listener *Listener) Accept() (net.Conn, error) {
 				continue
 			}
 		}
+
+		// default timeout to prevent go routine leak by blocking indefinitely
+		newConn.SetDeadline(time.Now().Add(2 * time.Minute))
 
 		return newConn, err
 	}
