@@ -52,12 +52,13 @@ const (
 )
 
 type Service struct {
-	Log           loggo.Logger
-	Flags         flag.FlagSet
-	Tracker       Tracker
-	MetricsTicker *MetricsTicker
-	DebugServer   *Listener
-	BaseConfig    *Config
+	Log               loggo.Logger
+	Flags             flag.FlagSet
+	Tracker           Tracker
+	MetricsTicker     *MetricsTicker
+	DebugServer       *Listener
+	DebugServerEngine *gin.Engine
+	BaseConfig        *Config
 }
 
 func (service *Service) Init() {
@@ -124,7 +125,7 @@ func (service *Service) Run() {
 	}
 
 	if service.BaseConfig.Port > 0 {
-		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
+		service.DebugServer, service.DebugServerEngine = StartDebugServer(service.BaseConfig.Port + 9)
 	}
 }
 

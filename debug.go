@@ -21,7 +21,7 @@ func Inspect(v interface{}) string {
 	return string(bytes)
 }
 
-func StartDebugServer(port int) *Listener {
+func StartDebugServer(port int) (*Listener, *gin.Engine) {
 	log := loggo.GetLogger("rex.debug")
 	r := gin.Default()
 
@@ -45,7 +45,7 @@ func StartDebugServer(port int) *Listener {
 	MayPanic(err)
 
 	listener.Serve(http.Server{Handler: http.DefaultServeMux})
-	return listener
+	return listener, r
 }
 
 func getLoggoSpec(c *gin.Context) {
