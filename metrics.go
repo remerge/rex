@@ -9,6 +9,10 @@ import (
 	"github.com/juju/loggo"
 )
 
+func UpdateTimer(timer *instruments.Timer, start time.Time) {
+	timer.Update(time.Since(start))
+}
+
 type MetricsTicker struct {
 	goMetrics *GoMetrics
 	tracker   Tracker
