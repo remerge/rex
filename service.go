@@ -150,7 +150,7 @@ func (service *Service) Shutdown() {
 
 func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 	ch := make(chan os.Signal, 2)
-	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT)
+	signal.Notify(ch, syscall.SIGHUP, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 	for {
 		sig := <-ch
 		service.Log.Infof("caught signal %s. shutting down", sig.String())
