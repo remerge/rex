@@ -73,7 +73,8 @@ func (listener *Listener) Accept() (net.Conn, error) {
 		}
 
 		// default timeout to prevent go routine leak by blocking indefinitely
-		newConn.SetDeadline(time.Now().Add(2 * time.Minute))
+		// TODO - just to test if this is related to the adjust issue
+		// newConn.SetDeadline(time.Now().Add(2 * time.Minute))
 
 		return newConn, err
 	}
