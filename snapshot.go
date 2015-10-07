@@ -201,7 +201,8 @@ func (self *_G_) SnapshotToFileNamedBy(time time.Time) (err error) {
 }
 
 func (self *_G_) SnapshotToFileNamedByTime() (filename string, err error) {
-	err = self.SnapshotToFile(_T_Snapshoter.CurrentTimeBasedFilename())
+	filename = _T_Snapshoter.CurrentTimeBasedFilename()
+	err = self.SnapshotToFile(filename)
 	return filename, err
 }
 
