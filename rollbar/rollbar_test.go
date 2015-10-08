@@ -91,9 +91,9 @@ func TestErrorRequest(t *testing.T) {
 
 func TestFilterParams(t *testing.T) {
 	values := map[string][]string{
-		"password":     []string{"one"},
-		"ok":           []string{"one"},
-		"access_token": []string{"one"},
+		"password":     {"one"},
+		"ok":           {"one"},
+		"access_token": {"one"},
 	}
 
 	clean := filterParams(values)
@@ -112,8 +112,8 @@ func TestFilterParams(t *testing.T) {
 
 func TestFlattenValues(t *testing.T) {
 	values := map[string][]string{
-		"a": []string{"one"},
-		"b": []string{"one", "two"},
+		"a": {"one"},
+		"b": {"one", "two"},
 	}
 
 	flattened := flattenValues(values)

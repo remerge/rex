@@ -5,7 +5,7 @@ TOP := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 
 GOOP=goop
 GO=$(GOOP) exec go
-GOFMT=gofmt -w
+GOFMT=gofmt -w -s
 
 GOFILES=$(shell git ls-files | grep '\.go$$')
 MAINGO=$(wildcard main/*.go)

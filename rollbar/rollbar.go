@@ -256,7 +256,7 @@ func errorRequest(r *http.Request) map[string]interface{} {
 // filterParams filters sensitive information like passwords from being sent to
 // Rollbar.
 func filterParams(values map[string][]string) map[string][]string {
-	for key, _ := range values {
+	for key := range values {
 		if FilterFields.Match([]byte(key)) {
 			values[key] = []string{FILTERED}
 		}
