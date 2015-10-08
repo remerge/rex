@@ -8,21 +8,40 @@ GO=$(GOOP) exec go
 GOFMT=gofmt -w
 
 GOFILES=$(shell git ls-files | grep '\.go$$')
-SRCS=$(wildcard main/*.go)
-OBJS=$(patsubst main/%.go,%,$(SRCS))
+MAINGO=$(wildcard main/*.go)
+MAIN=$(patsubst main/%.go,%,$(MAINGO))
 
-.PHONY: build clean test fmt dep
+.PHONY: build run watch clean test fmt dep
 
 all: build
 
 build: fmt
-	$(GO) build $(SRCS)
+	$(GO) build $(MAINGO)
+
+build-log: fmt
+	$(GO) build -gcflags=-m $(MAINGO) 2>&1 | tee build.log
+	grep escapes build.log | sort > escape.log
+
+install: build
+	$(GO) install $(PACKAGE)
+
+run: build
+	./$(MAIN)
+
+watch:
+	go get github.com/cespare/reflex
+	reflex -t10s -r '\.go$$' -s -- sh -c 'make build test && ./$(MAIN)'
 
 clean:
 	$(GO) clean
-	rm -f $(OBJS)
+	rm -f $(MAIN)
 
-test:
+lint: install
+	go get github.com/alecthomas/gometalinter
+	gometalinter --install
+	$(GOOP) exec gometalinter -D golint -D gocyclo -D errcheck -D dupl
+
+test: build lint
 	go get github.com/smartystreets/goconvey
 	$(GO) test
 	$(GO) test -v $(PACKAGE)/rand

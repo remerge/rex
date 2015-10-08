@@ -1,13 +1,11 @@
 sudo: false
 language: go
 go:
-- 1.4.2
-- 1.5beta2
+- 1.5.1
 env:
 - PATH=$HOME/gopath/bin:$PATH
 script:
 - make dep
-- make build
 - make test
 notifications:
   email: false

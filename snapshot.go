@@ -17,6 +17,9 @@ import (
 
 type _T_ generic.Type
 
+// to make linting happy
+var _ _T_ = nil
+
 // type gobi generic.Type
 
 type SnapshoterFor_T_ struct {

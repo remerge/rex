@@ -13,6 +13,7 @@ func BenchmarkCoreRandGlobal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		acc += coreRand.Int63()
 	}
+	_ = acc
 }
 
 func BenchmarkCoreRand(b *testing.B) {
@@ -21,6 +22,7 @@ func BenchmarkCoreRand(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		acc += generator.Int63()
 	}
+	_ = acc
 }
 
 func BenchmarkCoreRandEach(b *testing.B) {
@@ -29,6 +31,7 @@ func BenchmarkCoreRandEach(b *testing.B) {
 		generator := coreRand.New(coreRand.NewSource(time.Now().UnixNano()))
 		acc += generator.Int63()
 	}
+	_ = acc
 }
 
 func BenchmarkRexRandGlobal(b *testing.B) {
@@ -36,6 +39,7 @@ func BenchmarkRexRandGlobal(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		acc += rand.Int63()
 	}
+	_ = acc
 }
 
 func BenchmarkRexRand(b *testing.B) {
@@ -44,6 +48,7 @@ func BenchmarkRexRand(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		acc += generator.Int63()
 	}
+	_ = acc
 }
 
 func BenchmarkRexRandEach(b *testing.B) {
@@ -52,6 +57,7 @@ func BenchmarkRexRandEach(b *testing.B) {
 		generator := rand.NewXorRand(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano()))
 		acc += generator.Int63()
 	}
+	_ = acc
 }
 
 func BenchmarkCoreRandGlobalParallel(b *testing.B) {
@@ -60,6 +66,7 @@ func BenchmarkCoreRandGlobalParallel(b *testing.B) {
 		for pb.Next() {
 			acc += coreRand.Int63()
 		}
+		_ = acc
 	})
 }
 
@@ -70,6 +77,7 @@ func BenchmarkCoreRandParallel(b *testing.B) {
 		for pb.Next() {
 			acc += generator.Int63()
 		}
+		_ = acc
 	})
 }
 
@@ -80,6 +88,7 @@ func BenchmarkCoreRandEachParallel(b *testing.B) {
 			generator := coreRand.New(coreRand.NewSource(time.Now().UnixNano()))
 			acc += generator.Int63()
 		}
+		_ = acc
 	})
 }
 
@@ -89,6 +98,7 @@ func BenchmarkRexRandGlobalParallel(b *testing.B) {
 		for pb.Next() {
 			acc += rand.Int63()
 		}
+		_ = acc
 	})
 }
 
@@ -99,6 +109,7 @@ func BenchmarkRexRandParallel(b *testing.B) {
 		for pb.Next() {
 			acc += generator.Int63()
 		}
+		_ = acc
 	})
 }
 
@@ -109,5 +120,6 @@ func BenchmarkRexRandEachParallel(b *testing.B) {
 			generator := rand.NewXorRand(uint64(time.Now().UnixNano()), uint64(time.Now().UnixNano()))
 			acc += generator.Int63()
 		}
+		_ = acc
 	})
 }
