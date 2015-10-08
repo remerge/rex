@@ -19,8 +19,8 @@ build: fmt
 	$(GO) build $(MAINGO)
 
 build-log: fmt
-	$(GO) build -gcflags=-m $(MAINGO) 2>&1 | tee build.log
-	grep escapes build.log | sort > escape.log
+	$(GO) build -gcflags=-m $(MAINGO) 2>&1 | sort -u | tee build.log
+	grep escapes build.log > escape.log
 
 install: build
 	$(GO) install $(PACKAGE)
