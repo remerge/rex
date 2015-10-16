@@ -15,4 +15,5 @@ type Event struct {
 
 type EventBase interface {
 	Base() *Event
+	MarshalJSON() ([]byte, error)
 }

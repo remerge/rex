@@ -98,7 +98,7 @@ func (self *KafkaTracker) FastEvent(topic string, e EventBase, full bool) {
 
 func (self *KafkaTracker) FastEventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	self.FastMessage(topic, self.Encode(event))
+	self.FastMessage(topic, self.EncodeMap(event))
 }
 
 func (self *KafkaTracker) SafeMessage(topic string, value []byte) {
@@ -111,14 +111,14 @@ func (self *KafkaTracker) SafeMessage(topic string, value []byte) {
 	})
 }
 
-func (self *KafkaTracker) SafeEvent(topic string, e EventBase, full bool) {
-	self.AddMetadata(e, full)
-	self.SafeMessage(topic, self.Encode(e))
+func (self *KafkaTracker) SafeEvent(topic string, event EventBase, full bool) {
+	self.AddMetadata(event, full)
+	self.SafeMessage(topic, self.Encode(event))
 }
 
 func (self *KafkaTracker) SafeEventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	self.SafeMessage(topic, self.Encode(event))
+	self.SafeMessage(topic, self.EncodeMap(event))
 }
 
 // fail-safe disk queue worker

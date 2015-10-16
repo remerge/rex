@@ -2,7 +2,6 @@ package rex
 
 import (
 	"encoding/json"
-
 	"time"
 )
 
@@ -16,8 +15,13 @@ func NewBaseTracker(metadata *EventMetadata) *BaseTracker {
 	}
 }
 
-func (self *BaseTracker) Encode(message interface{}) []byte {
-	bytes, _ := json.Marshal(message)
+func (self *BaseTracker) Encode(event EventBase) []byte {
+	bytes, _ := event.MarshalJSON()
+	return bytes
+}
+
+func (self *BaseTracker) EncodeMap(event map[string]interface{}) []byte {
+	bytes, _ := json.Marshal(event)
 	return bytes
 }
 

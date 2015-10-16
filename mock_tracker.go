@@ -26,7 +26,7 @@ func (self *MockTracker) FastEvent(topic string, e EventBase, full bool) {
 
 func (self *MockTracker) FastEventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	self.FastMessage(topic, self.Encode(event))
+	self.FastMessage(topic, self.EncodeMap(event))
 }
 
 func (self *MockTracker) SafeMessage(topic string, message []byte) {
@@ -40,5 +40,5 @@ func (self *MockTracker) SafeEvent(topic string, e EventBase, full bool) {
 
 func (self *MockTracker) SafeEventMap(topic string, event map[string]interface{}, full bool) {
 	self.AddMetadataMap(event, full)
-	self.SafeMessage(topic, self.Encode(event))
+	self.SafeMessage(topic, self.EncodeMap(event))
 }
