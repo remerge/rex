@@ -129,27 +129,26 @@ func (self *Producer) SendMessage(msg *sarama.ProducerMessage) (err error) {
 		}
 	}()
 
+	after := time.After(10 * time.Millisecond)
+
 	select {
 	case self.Input() <- msg:
-	default:
+	case <-after:
 		self.errors.Update(time.Since(start))
 		return errors.New("input would block")
 	}
 
-	// fast producer doesn't care after input
-	if self.config.Producer.Return.Successes == false {
-		self.messages.Update(time.Since(start))
-		return nil
-	}
-
 	// safe producer waits for response
-	select {
-	case err := <-self.Errors():
-		self.errors.Update(time.Since(start))
-		return err.Err
-	case <-self.Successes():
-		self.messages.Update(time.Since(start))
+	if self.config.Producer.Return.Successes == true {
+		select {
+		case err := <-self.Errors():
+			self.errors.Update(time.Since(start))
+			return err.Err
+		case <-self.Successes():
+			// do nothing
+		}
 	}
 
+	self.messages.Update(time.Since(start))
 	return nil
 }
