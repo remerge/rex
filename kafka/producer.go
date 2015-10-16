@@ -10,6 +10,7 @@ import (
 	"github.com/heroku/instruments"
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/rollbar"
 )
 
 type ProducerErrorCallback func(*sarama.ProducerError)
@@ -29,6 +30,12 @@ type Producer struct {
 func (client *Client) NewProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (self *Producer, err error) {
 	name = fmt.Sprintf("kafka.producer.%s.%s", client.GetId(), name)
 
+	if cb == nil {
+		cb = func(err *sarama.ProducerError) {
+			rollbar.Error(rollbar.ERR, err)
+		}
+	}
+
 	self = &Producer{
 		callback: cb,
 		config:   config,
@@ -46,7 +53,6 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 	}
 
 	if err != nil {
-		self.log.Errorf("failed to create producer: %s", err)
 		return nil, err
 	}
 
@@ -58,12 +64,10 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = false
+	config.Producer.Return.Errors = true
 	config.Producer.RequiredAcks = sarama.NoResponse
-	if os.Getenv("REX_ENV") == "development" {
-		config.Producer.Flush.Messages = 1
-	} else {
-		config.Producer.Flush.Messages = 10000
-		config.Producer.Flush.Frequency = 100 * time.Millisecond
+	if os.Getenv("REX_ENV") != "development" {
+		config.Producer.Flush.Frequency = 1 * time.Second
 	}
 	return client.NewProducer("fast", config, cb)
 }
@@ -71,14 +75,8 @@ func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, erro
 func (client *Client) NewSafeProducer() (*Producer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Return.Successes = true
-	config.Producer.RequiredAcks = sarama.WaitForAll
-	if os.Getenv("REX_ENV") == "development" {
-		config.Producer.Flush.Messages = 1
-	} else {
-		config.Producer.Flush.Messages = 10000
-		config.Producer.Flush.Frequency = 100 * time.Millisecond
-	}
-	config.Producer.Timeout = 100 * time.Millisecond
+	config.Producer.Return.Errors = true
+	config.Producer.RequiredAcks = sarama.WaitForLocal
 	return client.NewProducer("safe", config, nil)
 }
 
@@ -88,10 +86,11 @@ func (self *Producer) Start() {
 	}
 
 	self.running = true
+
 	for {
 		select {
 		case err, ok := <-self.Errors():
-			if ok && self.callback != nil {
+			if ok {
 				self.callback(err)
 			}
 		case <-self.quit:
@@ -104,9 +103,9 @@ func (self *Producer) Start() {
 
 func (self *Producer) Shutdown() {
 	if self.running {
-		self.log.Infof("shutting down producer run loop")
+		self.log.Infof("shutting down producer error loop")
 		close(self.quit)
-		self.log.Infof("waiting for run loop to finish")
+		self.log.Infof("waiting for error loop to finish")
 		<-self.done
 	}
 	self.log.Infof("closing producer")
@@ -114,18 +113,8 @@ func (self *Producer) Shutdown() {
 	self.log.Infof("shutdown done")
 }
 
-func (self *Producer) Message(topic string, value []byte, timeout time.Duration) (msg *sarama.ProducerMessage, err error) {
+func (self *Producer) SendMessage(msg *sarama.ProducerMessage) (err error) {
 	start := time.Now()
-
-	if value == nil || len(value) < 1 {
-		self.errors.Update(time.Since(start))
-		return msg, errors.New("empty message")
-	}
-
-	msg = &sarama.ProducerMessage{
-		Topic: string(topic),
-		Value: sarama.ByteEncoder(value),
-	}
 
 	defer func() {
 		// we might have tried to write to a closed channel during shutdown
@@ -140,31 +129,27 @@ func (self *Producer) Message(topic string, value []byte, timeout time.Duration)
 		}
 	}()
 
-	after := time.After(timeout)
-
 	select {
 	case self.Input() <- msg:
-		// fall through
-	case <-after:
+	default:
 		self.errors.Update(time.Since(start))
-		return msg, errors.New("input timed out")
+		return errors.New("input would block")
 	}
 
+	// fast producer doesn't care after input
 	if self.config.Producer.Return.Successes == false {
 		self.messages.Update(time.Since(start))
-		return msg, nil
+		return nil
 	}
 
+	// safe producer waits for response
 	select {
 	case err := <-self.Errors():
 		self.errors.Update(time.Since(start))
-		return msg, err.Err
+		return err.Err
 	case <-self.Successes():
 		self.messages.Update(time.Since(start))
-	case <-after:
-		self.errors.Update(time.Since(start))
-		return msg, errors.New("ack timed out")
 	}
 
-	return msg, nil
+	return nil
 }
