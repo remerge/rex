@@ -138,10 +138,14 @@ func (service *Service) Shutdown() {
 		service.DebugServer.Wait()
 		service.DebugServer = nil
 	}
-	service.Log.Infof("shutting down metrics ticker")
-	service.MetricsTicker.Stop()
-	service.Log.Infof("shutting down tracker")
-	service.Tracker.Close()
+	if service.MetricsTicker != nil {
+		service.Log.Infof("shutting down metrics ticker")
+		service.MetricsTicker.Stop()
+	}
+	if service.Tracker != nil {
+		service.Log.Infof("shutting down tracker")
+		service.Tracker.Close()
+	}
 	service.Log.Infof("waiting for rollbar")
 	rollbar.Wait()
 	service.Log.Infof("service shutdown done, dumping dangling go routines")
