@@ -66,6 +66,7 @@ func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, erro
 	config.Producer.Return.Successes = false
 	config.Producer.Return.Errors = true
 	config.Producer.RequiredAcks = sarama.NoResponse
+	config.ChannelBufferSize = 1024
 	if os.Getenv("REX_ENV") != "development" {
 		config.Producer.Flush.Frequency = 1 * time.Second
 	}
@@ -129,7 +130,7 @@ func (self *Producer) SendMessage(msg *sarama.ProducerMessage) (err error) {
 		}
 	}()
 
-	after := time.After(10 * time.Millisecond)
+	after := time.After(100 * time.Millisecond)
 
 	select {
 	case self.Input() <- msg:
