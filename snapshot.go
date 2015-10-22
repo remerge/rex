@@ -96,27 +96,34 @@ func (self *SnapshoterFor_T_) sorted() ([]string, error) {
 	return files, nil
 }
 
-// clean all but the newest
-func (self *SnapshoterFor_T_) Clean() {
-	files, err := self.sorted()
-	_MayPanic(err)
+func removeFiles(files []string) (deleted []string, errs []error) {
 	if len(files) == 0 {
-		return
+		return []string{}, nil
 	}
-	for _, file := range files[0 : len(files)-1] {
-		os.Remove(file)
+	deleted = make([]string, len(files)-1)
+	errs = make([]error, 1)
+	for _, file := range files {
+		err := os.Remove(file)
+		if err == nil {
+			deleted = append(deleted, file)
+		} else {
+			errs = append(errs, errors.New(fmt.Sprintf("not deleted %s : %v", file, err)))
+		}
 	}
+	return deleted, errs
 }
 
-func (self *SnapshoterFor_T_) CleanAll() {
+// clean all but the newest
+func (self *SnapshoterFor_T_) Clean() ([]string, []error) {
+	files, err := self.sorted()
+	_MayPanic(err)
+	return removeFiles(files[0 : len(files)-1])
+}
+
+func (self *SnapshoterFor_T_) CleanAll() ([]string, []error) {
 	files, err := self.Glob()
 	_MayPanic(err)
-	if len(files) == 0 {
-		return
-	}
-	for _, file := range files {
-		os.Remove(file)
-	}
+	return removeFiles(files[0 : len(files)-1])
 }
 
 func (self *SnapshoterFor_T_) Load(b []byte) (*_G_, error) {
