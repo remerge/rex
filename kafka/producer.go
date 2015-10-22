@@ -66,7 +66,7 @@ func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, erro
 	config.Producer.Return.Successes = false
 	config.Producer.Return.Errors = true
 	config.Producer.RequiredAcks = sarama.NoResponse
-	config.ChannelBufferSize = 1024
+	config.ChannelBufferSize = 4096
 	if os.Getenv("REX_ENV") != "development" {
 		config.Producer.Flush.Frequency = 1 * time.Second
 	}
