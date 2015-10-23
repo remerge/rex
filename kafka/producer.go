@@ -1,7 +1,6 @@
 package kafka
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -130,14 +129,7 @@ func (self *Producer) SendMessage(msg *sarama.ProducerMessage) (err error) {
 		}
 	}()
 
-	after := time.After(100 * time.Millisecond)
-
-	select {
-	case self.Input() <- msg:
-	case <-after:
-		self.errors.Update(time.Since(start))
-		return errors.New("input would block")
-	}
+	self.Input() <- msg
 
 	// safe producer waits for response
 	if self.config.Producer.Return.Successes == true {
