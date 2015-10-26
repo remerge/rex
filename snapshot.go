@@ -97,8 +97,8 @@ func removeFiles(files []string) (deleted []string, errs []error) {
 	if len(files) == 0 {
 		return []string{}, nil
 	}
-	deleted = make([]string, len(files)-1)
-	errs = make([]error, 1)
+	deleted = make([]string, 0)
+	errs = make([]error, 0)
 	for _, file := range files {
 		err := os.Remove(file)
 		if err == nil {
