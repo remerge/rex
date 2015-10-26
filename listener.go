@@ -6,10 +6,13 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/rollbar"
 )
 
 type Listener struct {
@@ -77,8 +80,9 @@ func (listener *Listener) Accept() (net.Conn, error) {
 
 func (listener *Listener) Serve(server http.Server) {
 	listener.wg.Add(1)
-	defer listener.wg.Done()
 	go func() {
+		defer listener.wg.Done()
+		server.Handler = &recoveryHandler{h: server.Handler}
 		if err := server.Serve(listener); err != StoppedError {
 			MayPanic(err)
 		}
@@ -95,4 +99,28 @@ func (listener *Listener) Done() {
 
 func (listener *Listener) Wait() {
 	listener.wg.Wait()
+}
+
+type recoveryHandler struct {
+	h http.Handler
+}
+
+var recoveryLock sync.Mutex
+
+func (h *recoveryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	defer func() {
+		if r := recover(); r != nil {
+			recoveryLock.Lock()
+			err, ok := r.(error)
+			if !ok {
+				err = fmt.Errorf("unknown error: %v", r)
+			}
+			rollbar.Error(rollbar.CRIT, err)
+			rollbar.Wait()
+			os.RemoveAll("cache")
+			os.Mkdir("cache", 0755)
+			syscall.Kill(os.Getpid(), syscall.SIGKILL)
+		}
+	}()
+	h.h.ServeHTTP(w, r)
 }
