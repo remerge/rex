@@ -17,9 +17,6 @@ import (
 
 type _T_ generic.Type
 
-// to make linting happy
-var _ _T_ = nil
-
 // type gobi generic.Type
 
 type SnapshoterFor_T_ struct {
@@ -117,6 +114,9 @@ func removeFiles(files []string) (deleted []string, errs []error) {
 func (self *SnapshoterFor_T_) Clean() ([]string, []error) {
 	files, err := self.sorted()
 	_MayPanic(err)
+	if len(files) <= 1 {
+		return []string{}, nil
+	}
 	return removeFiles(files[0 : len(files)-1])
 }
 
