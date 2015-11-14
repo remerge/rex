@@ -61,20 +61,26 @@ type Service struct {
 	BaseConfig        *Config
 }
 
-func (service *Service) Init() {
+func (service *Service) InitLogger() {
 	config := service.BaseConfig
-
 	loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, &LogFormat{Service: config.Service}))
 	rootLogger := loggo.GetLogger("")
 	rootLogger.SetLogLevel(loggo.INFO)
 	service.Log = loggo.GetLogger(config.Service)
+}
 
+func (service *Service) InitCommandLine() {
+	config := service.BaseConfig
 	if os.Getenv("GOMAXPROCS") == "" {
 		runtime.GOMAXPROCS(runtime.NumCPU())
 	}
 	service.Log.Infof("using %d cores for go routines", runtime.GOMAXPROCS(0))
-
 	service.Flags.Init(os.Args[0], flag.ExitOnError)
+	service.Flags.StringVar(&config.LogSpec, "loggo", config.LogSpec, "initial loggo spec")
+}
+
+func (service *Service) InitDefaultFlags() {
+	config := service.BaseConfig
 
 	// listen port for service
 	service.Flags.IntVar(&config.Port, "port", config.Port, "listen port")
@@ -91,11 +97,14 @@ func (service *Service) Init() {
 	// tracker options
 	service.Flags.StringVar(&config.KafkaBroker, "kafka", config.KafkaBroker, "Initial Kafka Broker")
 
-	// loggo options
-	service.Flags.StringVar(&config.LogSpec, "loggo", config.LogSpec, "initial loggo spec")
-
 	// rollbar options
 	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Rollbar API Token")
+}
+
+func (service *Service) Init() {
+	service.InitLogger()
+	service.InitCommandLine()
+	service.InitDefaultFlags()
 }
 
 func (service *Service) ReadArgs() {
@@ -105,13 +114,14 @@ func (service *Service) ReadArgs() {
 	rollbar.Environment = service.BaseConfig.Environment
 	rev, _ := exec.Command("git", "rev-parse", "HEAD").Output()
 	rollbar.CodeVersion = string(bytes.TrimSpace(rev))
+	config := service.BaseConfig
+	loggo.ConfigureLoggers(config.LogSpec)
 }
 
 func (service *Service) Run() {
 	service.ReadArgs()
 
 	config := service.BaseConfig
-	loggo.ConfigureLoggers(config.LogSpec)
 
 	var err error
 	service.Tracker, err = NewKafkaTracker(config.KafkaBroker, &config.EventMetadata)
