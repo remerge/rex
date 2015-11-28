@@ -484,7 +484,7 @@ func (d *DiskQueue) moveForward() {
 		fn := d.fileName(oldReadFileNum)
 		err := os.Remove(fn)
 		if err != nil {
-			rollbar.Error(rollbar.INFO, err)
+			rollbar.Error(rollbar.WARN, err)
 		}
 	}
 

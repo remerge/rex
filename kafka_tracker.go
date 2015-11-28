@@ -73,8 +73,8 @@ func (self *KafkaTracker) Close() {
 		self.log.Infof("shutting down fast producer")
 		self.Fast.Shutdown()
 	}
-	rollbar.Error(rollbar.INFO, self.Client.Close())
-	rollbar.Error(rollbar.INFO, self.queue.Close())
+	rollbar.Error(rollbar.WARN, self.Client.Close())
+	rollbar.Error(rollbar.WARN, self.queue.Close())
 	self.log.Infof("tracker is stopped")
 }
 
@@ -87,7 +87,7 @@ func (self *KafkaTracker) FastMessage(topic string, value []byte) {
 		Value: sarama.ByteEncoder(value),
 	})
 	if err != nil {
-		rollbar.Error(rollbar.INFO, err)
+		rollbar.Error(rollbar.WARN, err)
 	}
 }
 
