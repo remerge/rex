@@ -334,7 +334,7 @@ func post(body map[string]interface{}) {
 		stderr("received response: %s", resp.Status)
 	}
 	if resp != nil {
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}
 }
 

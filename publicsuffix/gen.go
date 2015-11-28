@@ -133,7 +133,7 @@ func main1() error {
 			return err
 		}
 		if res.StatusCode != http.StatusOK {
-			return fmt.Errorf("bad GET status for %s: %d", *url, res.Status)
+			return fmt.Errorf("bad GET status for %s: %s", *url, res.Status)
 		}
 		r = res.Body
 		defer res.Body.Close()

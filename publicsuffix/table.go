@@ -17,9 +17,8 @@ const (
 )
 
 const (
-	nodeTypeNormal     = 0
-	nodeTypeException  = 1
-	nodeTypeParentOnly = 2
+	nodeTypeNormal    = 0
+	nodeTypeException = 1
 )
 
 // numTLD is the number of top level domains.

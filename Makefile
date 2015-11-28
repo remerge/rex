@@ -27,6 +27,9 @@ lint: install
 	go get github.com/alecthomas/gometalinter
 	gometalinter --install
 	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl -D deadcode
+	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl kafka
+	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl publicsuffix
+	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl rollbar
 
 test: build lint
 	$(GO) test -v -timeout 60s -race $(PACKAGE)

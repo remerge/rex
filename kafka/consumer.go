@@ -5,6 +5,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/rollbar"
 )
 
 type Consumer struct {
@@ -68,8 +69,8 @@ func (self *Consumer) Shutdown() {
 		<-self.done
 	}
 	self.log.Infof("closing consumer")
-	self.Close()
+	rollbar.Error(rollbar.WARN, self.Close())
 	self.log.Infof("closing kafka client")
-	self.master.Close()
+	rollbar.Error(rollbar.WARN, self.master.Close())
 	self.log.Infof("shutdown done")
 }

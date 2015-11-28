@@ -109,7 +109,7 @@ func (self *Producer) Shutdown() {
 		<-self.done
 	}
 	self.log.Infof("closing producer")
-	self.Close()
+	rollbar.Error(rollbar.WARN, self.Close())
 	self.log.Infof("shutdown done")
 }
 
