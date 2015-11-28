@@ -1,17 +1,20 @@
-github.com/Shopify/sarama #5715ebd5b44d4150ce87b60fef2988ed3722cbc3 !https://github.com/remerge/sarama
+github.com/Shopify/sarama #09281dde40e5a7a9701719f7737f9d0f259bc0e7 !https://github.com/remerge/sarama
 github.com/cheekybits/genny #ed3605f490fb571b5d708aaefc618eaac347fe94
+github.com/davecgh/go-spew #5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
 github.com/dustin/go-broadcast #3bdf6d4a7164a50bc19d5f230e2981d87d2584f1
-github.com/eapache/go-resiliency #ed0319b32e66e3295db52695ba3ee493e823fbfe
+github.com/eapache/go-resiliency #f341fb4dca45128e4aa86389fa6a675d55fe25e1
 github.com/eapache/queue #ded5959c0d4e360646dc9e9908cff48666781367
-github.com/gin-gonic/gin #fd5d4294a5d5223d55fc76d7840f4b0ad91647bb
+github.com/gin-gonic/gin #52fcc5dbf6e94df33ad313858fb94b713e9d1b4a
 github.com/golang/snappy #723cc1e459b8eea2dea4583200fd60757d40097a
 github.com/heroku/instruments #13df4bdd5b2af788a5c68251c7b4fbb3621d6b58 !https://github.com/remerge/instruments
 github.com/juju/loggo #8477fc936adf0e382d680310047ca27e128a309a
-github.com/julienschmidt/httprouter #6aacfd5ab513e34f7e64ea9627ab9670371b34e7
+github.com/julienschmidt/httprouter #77a895ad01ebc98a4dc95d8355bc825ce80a56f6
+github.com/klauspost/crc32 #3e5c38b8b170916b332a5ccb25f921314b98ba01
 github.com/manucorporat/sse #fe6ea2c8e398672518ef204bf0fbd9af858d0e15
 github.com/manucorporat/stats #8f2d6ace262eba462e9beb552382c98be51d807b
-github.com/mattn/go-colorable #40e4aedc8fabf8c23e040057540867186712faa5
-github.com/remerge/gobi #3de10c67301d6f968927843bdccd1062a1be7a25
-golang.org/x/net #b026840ad5cb594d38a2b783be1b6644fe5325fb
-golang.org/x/tools #4f50f44d7a3206e9e28b984e023efce2a4a75369
-gopkg.in/bluesuncorp/validator.v5 #98121ac23ff3d764f525d18d8de944d150e3c0fe
+github.com/mattn/go-colorable #3dac7b4f76f6e17fb39b768b89e3783d16e237fe
+github.com/remerge/gobi #7ee0e656fb6cc017dce89e15e5d950dc54664f5c
+github.com/remerge/rand #a724adcff176d7a4ed0cfa07bbb9867c7be70400
+golang.org/x/net #62ac18b461605b4be188bbc7300e9aa2bc836cd4
+golang.org/x/tools #fff8fd7b194011cfedeafda246f0bfc275abb904
+gopkg.in/bluesuncorp/validator.v5 #d5acf1dac43705f8bfbb71d878e290e2bed3950b

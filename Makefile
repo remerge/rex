@@ -8,44 +8,31 @@ GO=$(GOOP) exec go
 GOFMT=gofmt -w -s
 
 GOFILES=$(shell git ls-files | grep '\.go$$')
-MAINGO=$(wildcard main/*.go)
-MAIN=$(patsubst main/%.go,%,$(MAINGO))
 
 .PHONY: build run watch clean test fmt dep
 
 all: build
 
 build: fmt
-	$(GO) build $(MAINGO)
-
-build-log: fmt
-	$(GO) build -gcflags=-m $(MAINGO) 2>&1 | sort -u | tee build.log
-	grep escapes build.log > escape.log
+	$(GO) build
 
 install: build
 	$(GO) install $(PACKAGE)
 
-run: build
-	./$(MAIN)
-
-watch:
-	go get github.com/cespare/reflex
-	reflex -t10s -r '\.go$$' -s -- sh -c 'make build test && ./$(MAIN)'
-
 clean:
 	$(GO) clean
-	rm -f $(MAIN)
+	rm -rf $(TOP)/.vendor/
 
 lint: install
 	go get github.com/alecthomas/gometalinter
 	gometalinter --install
-	$(GOOP) exec gometalinter -D golint -D gocyclo -D errcheck -D dupl
+	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl -D deadcode
 
 test: build lint
-	go get github.com/smartystreets/goconvey
-	$(GO) test
-	$(GO) test -v $(PACKAGE)/rand
-	$(GO) test -v $(PACKAGE)/rollbar
+	$(GO) test -v -timeout 60s -race $(PACKAGE)
+	$(GO) test -v -timeout 60s -race $(PACKAGE)/kafka
+	$(GO) test -v -timeout 60s -race $(PACKAGE)/publicsuffix
+	$(GO) test -v -timeout 60s -race $(PACKAGE)/rollbar
 
 bench:
 	$(GO) test -bench=. -cpu 4

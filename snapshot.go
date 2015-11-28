@@ -150,7 +150,9 @@ func (self *SnapshoterFor_T_) LoadFromFile(filename string) (result *_G_, err er
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		_MayPanic(file.Close())
+	}()
 	return self.LoadFromReader(file)
 }
 
@@ -185,7 +187,9 @@ func (self *SnapshoterFor_T_) BytesToFile(b []byte, filename string) error {
 		_MayPanic(fo.Close())
 	}()
 	w := bufio.NewWriter(fo)
-	w.Write(b)
+	if _, err = w.Write(b); err != nil {
+		return err
+	}
 	if err = w.Flush(); err != nil {
 		return err
 	}

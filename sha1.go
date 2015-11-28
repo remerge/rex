@@ -4,11 +4,14 @@ import (
 	"crypto/sha1"
 	"io"
 	"os"
+
+	"github.com/remerge/rex/rollbar"
 )
 
 func SHA1(data []byte) []byte {
 	hasher := sha1.New()
-	hasher.Write(data)
+	_, err := hasher.Write(data)
+	rollbar.Error(rollbar.WARN, err)
 	return hasher.Sum(nil)
 }
 
@@ -22,7 +25,9 @@ func SHA1F(filename string) []byte {
 		return nil
 	}
 
-	defer file.Close()
+	defer func() {
+		rollbar.Error(rollbar.WARN, file.Close())
+	}()
 
 	hasher := sha1.New()
 	_, err = io.Copy(hasher, file)

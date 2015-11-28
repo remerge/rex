@@ -1,12 +1,15 @@
 sudo: false
 language: go
 go:
+- 1.4.3
 - 1.5.1
-env:
-- PATH=$HOME/gopath/bin:$PATH
-script:
+
+install:
 - make dep
+
+script:
 - make test
+
 notifications:
   email: false
   slack:

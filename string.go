@@ -11,9 +11,9 @@ func RemoveAccents(text string) string {
 	for _, c := range text {
 		// Check transliterations first
 		if val, ok := transliterations[c]; ok {
-			b.WriteString(val)
+			_, _ = b.WriteString(val)
 		} else {
-			b.WriteRune(c)
+			_, _ = b.WriteRune(c)
 		}
 	}
 	return b.String()

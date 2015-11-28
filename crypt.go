@@ -13,7 +13,10 @@ func DecryptHmacXorWithIntegrity(message, encrypt_key, integrity_key []byte) ([]
 	integrity_signature := message[size-4 : size]
 
 	mac := hmac.New(sha1.New, encrypt_key)
-	mac.Write(initialization_vector)
+	if _, err := mac.Write(initialization_vector); err != nil {
+		return nil, err
+	}
+
 	pad := mac.Sum(nil)
 
 	unciphered := make([]byte, size-20)
@@ -22,8 +25,14 @@ func DecryptHmacXorWithIntegrity(message, encrypt_key, integrity_key []byte) ([]
 	}
 
 	mac = hmac.New(sha1.New, integrity_key)
-	mac.Write(unciphered)
-	mac.Write(initialization_vector)
+	if _, err := mac.Write(unciphered); err != nil {
+		return nil, err
+	}
+
+	if _, err := mac.Write(initialization_vector); err != nil {
+		return nil, err
+	}
+
 	signature := mac.Sum(nil)[0:4]
 
 	// check signature

@@ -58,13 +58,19 @@ var StoppedError = errors.New("listener stopped")
 
 func (listener *Listener) Accept() (net.Conn, error) {
 	for {
-		listener.TCPListener.SetDeadline(time.Now().Add(1 * time.Second))
+		err := listener.TCPListener.SetDeadline(time.Now().Add(1 * time.Second))
+		if err != nil {
+			return nil, err
+		}
 
 		newConn, err := listener.Listener.Accept()
 
 		select {
 		case <-listener.stop:
-			listener.Listener.Close()
+			err = listener.Listener.Close()
+			if err != nil {
+				return nil, err
+			}
 			return nil, StoppedError
 		default:
 		}
@@ -117,9 +123,9 @@ func (h *recoveryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			rollbar.Error(rollbar.CRIT, err)
 			rollbar.Wait()
-			os.RemoveAll("cache")
-			os.Mkdir("cache", 0755)
-			syscall.Kill(os.Getpid(), syscall.SIGKILL)
+			_ = os.RemoveAll("cache")
+			_ = os.Mkdir("cache", 0755)
+			_ = syscall.Kill(os.Getpid(), syscall.SIGKILL)
 		}
 	}()
 	h.h.ServeHTTP(w, r)

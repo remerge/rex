@@ -63,7 +63,8 @@ type Service struct {
 
 func (service *Service) InitLogger() {
 	config := service.BaseConfig
-	loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, &LogFormat{Service: config.Service}))
+	_, err := loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, &LogFormat{Service: config.Service}))
+	MayPanic(err)
 	rootLogger := loggo.GetLogger("")
 	rootLogger.SetLogLevel(loggo.INFO)
 	service.Log = loggo.GetLogger(config.Service)
@@ -109,13 +110,13 @@ func (service *Service) Init() {
 
 func (service *Service) ReadArgs() {
 	service.Log.Infof("command line arguments=%q", readArgs())
-	service.Flags.Parse(readArgs())
-	os.Setenv("REX_ENV", service.BaseConfig.Environment)
+	MayPanic(service.Flags.Parse(readArgs()))
+	MayPanic(os.Setenv("REX_ENV", service.BaseConfig.Environment))
 	rollbar.Environment = service.BaseConfig.Environment
 	rev, _ := exec.Command("git", "rev-parse", "HEAD").Output()
 	rollbar.CodeVersion = string(bytes.TrimSpace(rev))
 	config := service.BaseConfig
-	loggo.ConfigureLoggers(config.LogSpec)
+	MayPanic(loggo.ConfigureLoggers(config.LogSpec))
 }
 
 func (service *Service) Run() {
@@ -159,7 +160,7 @@ func (service *Service) Shutdown() {
 	service.Log.Infof("waiting for rollbar")
 	rollbar.Wait()
 	service.Log.Infof("service shutdown done, dumping dangling go routines")
-	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+	_ = pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 }
 
 func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
@@ -177,7 +178,7 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 func (service *Service) shutdownCheck() {
 	time.Sleep(1 * time.Minute)
 	service.Log.Infof("still not dead. dumping dangling go routines")
-	pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+	_ = pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 	go service.shutdownCheck()
 }
 

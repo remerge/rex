@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/juju/loggo"
-	"github.com/remerge/rex/rand"
+	"github.com/remerge/rand"
 	"github.com/remerge/rex/rollbar"
 )
 
@@ -148,12 +148,12 @@ func (d *DiskQueue) exit(deleted bool) error {
 	<-d.exitSyncChan
 
 	if d.readFile != nil {
-		d.readFile.Close()
+		rollbar.Error(rollbar.WARN, d.readFile.Close())
 		d.readFile = nil
 	}
 
 	if d.writeFile != nil {
-		d.writeFile.Close()
+		rollbar.Error(rollbar.WARN, d.writeFile.Close())
 		d.writeFile = nil
 	}
 
@@ -191,12 +191,12 @@ func (d *DiskQueue) skipToNextRWFile() error {
 	var err error
 
 	if d.readFile != nil {
-		d.readFile.Close()
+		rollbar.Error(rollbar.WARN, d.readFile.Close())
 		d.readFile = nil
 	}
 
 	if d.writeFile != nil {
-		d.writeFile.Close()
+		rollbar.Error(rollbar.WARN, d.writeFile.Close())
 		d.writeFile = nil
 	}
 
@@ -237,7 +237,7 @@ func (d *DiskQueue) readOne() ([]byte, error) {
 		if d.readPos > 0 {
 			_, err = d.readFile.Seek(d.readPos, 0)
 			if err != nil {
-				d.readFile.Close()
+				rollbar.Error(rollbar.WARN, d.readFile.Close())
 				d.readFile = nil
 				return nil, err
 			}
@@ -248,7 +248,7 @@ func (d *DiskQueue) readOne() ([]byte, error) {
 
 	err = binary.Read(d.reader, binary.BigEndian, &msgSize)
 	if err != nil {
-		d.readFile.Close()
+		rollbar.Error(rollbar.WARN, d.readFile.Close())
 		d.readFile = nil
 		return nil, err
 	}
@@ -256,7 +256,7 @@ func (d *DiskQueue) readOne() ([]byte, error) {
 	readBuf := make([]byte, msgSize)
 	_, err = io.ReadFull(d.reader, readBuf)
 	if err != nil {
-		d.readFile.Close()
+		rollbar.Error(rollbar.WARN, d.readFile.Close())
 		d.readFile = nil
 		return nil, err
 	}
@@ -273,7 +273,7 @@ func (d *DiskQueue) readOne() ([]byte, error) {
 	// the value can change without affecting runtime
 	if d.nextReadPos > d.maxBytesPerFile {
 		if d.readFile != nil {
-			d.readFile.Close()
+			rollbar.Error(rollbar.WARN, d.readFile.Close())
 			d.readFile = nil
 		}
 
@@ -301,7 +301,7 @@ func (d *DiskQueue) writeOne(data []byte) error {
 		if d.writePos > 0 {
 			_, err = d.writeFile.Seek(d.writePos, 0)
 			if err != nil {
-				d.writeFile.Close()
+				rollbar.Error(rollbar.WARN, d.writeFile.Close())
 				d.writeFile = nil
 				return err
 			}
@@ -324,7 +324,7 @@ func (d *DiskQueue) writeOne(data []byte) error {
 	// only write to the file once
 	_, err = d.writeFile.Write(d.writeBuf.Bytes())
 	if err != nil {
-		d.writeFile.Close()
+		rollbar.Error(rollbar.WARN, d.writeFile.Close())
 		d.writeFile = nil
 		return err
 	}
@@ -344,7 +344,7 @@ func (d *DiskQueue) writeOne(data []byte) error {
 		}
 
 		if d.writeFile != nil {
-			d.writeFile.Close()
+			rollbar.Error(rollbar.WARN, d.writeFile.Close())
 			d.writeFile = nil
 		}
 	}
@@ -357,7 +357,7 @@ func (d *DiskQueue) sync() error {
 	if d.writeFile != nil {
 		err := d.writeFile.Sync()
 		if err != nil {
-			d.writeFile.Close()
+			rollbar.Error(rollbar.WARN, d.writeFile.Close())
 			d.writeFile = nil
 			return err
 		}
@@ -382,7 +382,9 @@ func (d *DiskQueue) retrieveMetaData() error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() {
+		rollbar.Error(rollbar.WARN, f.Close())
+	}()
 
 	var depth int64
 	_, err = fmt.Fscanf(f, "%d\n%d,%d\n%d,%d\n",
@@ -418,11 +420,11 @@ func (d *DiskQueue) persistMetaData() error {
 		d.readFileNum, d.readPos,
 		d.writeFileNum, d.writePos)
 	if err != nil {
-		f.Close()
+		rollbar.Error(rollbar.WARN, f.Close())
 		return err
 	}
-	f.Sync()
-	f.Close()
+	rollbar.Error(rollbar.WARN, f.Sync())
+	rollbar.Error(rollbar.WARN, f.Close())
 
 	// atomically rename
 	return os.Rename(tmpFileName, fileName)
@@ -463,7 +465,7 @@ func (d *DiskQueue) checkTailCorruption(depth int64) {
 			rollbar.Error(rollbar.ERR, fmt.Errorf("readPos > writePos (%d > %d), corruption, skipping to next writeFileNum and resetting 0...", d.readPos, d.writePos))
 		}
 
-		d.skipToNextRWFile()
+		rollbar.Error(rollbar.WARN, d.skipToNextRWFile())
 		d.needSync = true
 	}
 }
@@ -495,7 +497,7 @@ func (d *DiskQueue) handleReadError() {
 		// if you can't properly read from the current write file it's safe to
 		// assume that something is fucked and we should skip the current file too
 		if d.writeFile != nil {
-			d.writeFile.Close()
+			rollbar.Error(rollbar.WARN, d.writeFile.Close())
 			d.writeFile = nil
 		}
 		d.writeFileNum++
