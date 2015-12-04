@@ -72,7 +72,7 @@ func (listener *Listener) Serve(server http.Server) {
 }
 
 func (listener *Listener) Stop() {
-	listener.Listener.Close()
+	_ = listener.Listener.Close()
 }
 
 func (listener *Listener) Done() {

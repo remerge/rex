@@ -1,4 +1,4 @@
-github.com/Shopify/sarama #09281dde40e5a7a9701719f7737f9d0f259bc0e7 !https://github.com/remerge/sarama
+github.com/Shopify/sarama #137c1834ecb266056cb11f6f36060b9e47d210d3 !https://github.com/remerge/sarama
 github.com/cheekybits/genny #ed3605f490fb571b5d708aaefc618eaac347fe94
 github.com/davecgh/go-spew #5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
 github.com/dustin/go-broadcast #3bdf6d4a7164a50bc19d5f230e2981d87d2584f1
@@ -6,15 +6,15 @@ github.com/eapache/go-resiliency #f341fb4dca45128e4aa86389fa6a675d55fe25e1
 github.com/eapache/queue #ded5959c0d4e360646dc9e9908cff48666781367
 github.com/gin-gonic/gin #52fcc5dbf6e94df33ad313858fb94b713e9d1b4a
 github.com/golang/snappy #723cc1e459b8eea2dea4583200fd60757d40097a
-github.com/heroku/instruments #13df4bdd5b2af788a5c68251c7b4fbb3621d6b58 !https://github.com/remerge/instruments
+github.com/heroku/instruments #a199d086f867b1fa73fb9ee61a6ed2c5818c2317 !https://github.com/remerge/instruments
 github.com/juju/loggo #8477fc936adf0e382d680310047ca27e128a309a
-github.com/julienschmidt/httprouter #77a895ad01ebc98a4dc95d8355bc825ce80a56f6
+github.com/julienschmidt/httprouter #f30ab90cccbd5171771d26b6557d3c2f49e047a6
 github.com/klauspost/crc32 #3e5c38b8b170916b332a5ccb25f921314b98ba01
 github.com/manucorporat/sse #fe6ea2c8e398672518ef204bf0fbd9af858d0e15
 github.com/manucorporat/stats #8f2d6ace262eba462e9beb552382c98be51d807b
 github.com/mattn/go-colorable #3dac7b4f76f6e17fb39b768b89e3783d16e237fe
-github.com/remerge/gobi #7ee0e656fb6cc017dce89e15e5d950dc54664f5c
-github.com/remerge/rand #a724adcff176d7a4ed0cfa07bbb9867c7be70400
-golang.org/x/net #62ac18b461605b4be188bbc7300e9aa2bc836cd4
-golang.org/x/tools #fff8fd7b194011cfedeafda246f0bfc275abb904
+github.com/remerge/gobi #e7e43812b90d990de74a19cff4874e7cb1cc38b0
+github.com/remerge/rand #7d2b7c1a1a00f42160861c941d67e0e61adc8477
+golang.org/x/net #d5cd7348bfebdf7dbb6dbb18fa488525f9024293
+golang.org/x/tools #eb69368e05c29338c7d489799e460058b71791f1
 gopkg.in/bluesuncorp/validator.v5 #d5acf1dac43705f8bfbb71d878e290e2bed3950b
