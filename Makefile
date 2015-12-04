@@ -8,13 +8,15 @@ GO=$(GOOP) exec go
 GOFMT=gofmt -w -s
 
 GOFILES=$(shell git ls-files | grep '\.go$$')
+MAINGO=$(wildcard main/*.go)
+MAIN=$(patsubst main/%.go,%,$(MAINGO))
 
 .PHONY: build run watch clean test fmt dep
 
 all: build
 
 build: fmt
-	$(GO) build
+	$(GO) build $(MAINGO)
 
 install: build
 	$(GO) install $(PACKAGE)
