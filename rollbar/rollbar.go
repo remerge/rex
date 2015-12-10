@@ -169,6 +169,8 @@ func buildAndPushError(level string, err error, stack Stack, fields ...*Field) {
 // Message asynchronously sends a message to Rollbar with the given severity
 // level.
 func Message(level string, msg string, fields ...*Field) {
+	loggo.GetLogger("rollbar.message").Errorf(msg)
+
 	body := buildBody(level, msg)
 	data := body["data"].(map[string]interface{})
 	data["body"] = messageBody(msg)

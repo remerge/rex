@@ -4,5 +4,6 @@ github.com/gin-gonic/gin
 github.com/heroku/instruments !https://github.com/remerge/instruments
 github.com/juju/loggo
 github.com/julienschmidt/httprouter
+github.com/pquerna/ffjson
 github.com/remerge/gobi
 github.com/remerge/rand

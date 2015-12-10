@@ -1,7 +1,7 @@
 package rex
 
 import (
-	"encoding/gob"
+	"bytes"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -31,7 +31,7 @@ func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err err
 		FastTimeout: 10 * time.Millisecond,
 		SafeTimeout: 100 * time.Millisecond,
 		log:         loggo.GetLogger("rex.tracker"),
-		queue:       NewDiskQueue("tracker", "cache", 128*1024*1024, 5000, 1*time.Second),
+		queue:       NewDiskQueue("tracker.v2", "cache", 128*1024*1024, 5000, 1*time.Second),
 		quit:        make(chan bool),
 		done:        make(chan bool),
 	}
@@ -105,10 +105,7 @@ func (self *KafkaTracker) SafeMessage(topic string, value []byte) {
 	if self.log.IsTraceEnabled() {
 		self.log.Tracef("topic=%s value=%s", topic, string(value))
 	}
-	self.enqueue(&sarama.ProducerMessage{
-		Topic: topic,
-		Value: sarama.ByteEncoder(value),
-	})
+	self.enqueue(topic, value)
 }
 
 func (self *KafkaTracker) SafeEvent(topic string, event EventBase, full bool) {
@@ -123,34 +120,29 @@ func (self *KafkaTracker) SafeEventMap(topic string, event map[string]interface{
 
 // fail-safe disk queue worker
 
-func init() {
-	gob.Register(sarama.ProducerMessage{})
-	gob.Register(sarama.ByteEncoder{})
-}
+var safeQueueDelim = []byte{0x0}
 
-func (self *KafkaTracker) enqueue(msg *sarama.ProducerMessage) {
-	bytes, err := GobEncode(msg)
-	if err != nil {
-		rollbar.Error(rollbar.ERR, err)
-		return
-	}
+func (self *KafkaTracker) enqueue(topic string, value []byte) {
+	msg := append([]byte(topic), safeQueueDelim...)
+	msg = append(msg, value...)
 
-	err = self.queue.Put(bytes)
+	err := self.queue.Put(msg)
 	if err != nil {
 		rollbar.Error(rollbar.ERR, err)
 		return
 	}
 }
 
-func (self *KafkaTracker) processSafeMessage(bytes []byte) {
-	i, err := GobDecode(bytes)
-	if err != nil {
-		rollbar.Error(rollbar.ERR, err)
-		return
-	}
+func (self *KafkaTracker) processSafeMessage(msg []byte) {
+	idx := bytes.Index(msg, safeQueueDelim)
+	topic := string(msg[0:idx])
+	value := msg[idx+1:]
 
-	msg := i.(sarama.ProducerMessage)
-	err = self.Safe.SendMessage(&msg)
+	err := self.Safe.SendMessage(&sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.ByteEncoder(value),
+	})
+
 	if err != nil {
 		switch err {
 		case breaker.ErrBreakerOpen:
@@ -158,7 +150,7 @@ func (self *KafkaTracker) processSafeMessage(bytes []byte) {
 		default:
 			rollbar.Error(rollbar.ERR, err)
 		}
-		self.enqueue(&msg)
+		self.enqueue(topic, value)
 		return
 	}
 }

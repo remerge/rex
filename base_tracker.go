@@ -9,6 +9,20 @@ type BaseTracker struct {
 	*EventMetadata
 }
 
+// to reduce allocations in AddMetadata
+var metricsTimestampNow = ""
+
+func updateMetricsTimestampNow() {
+	for {
+		metricsTimestampNow = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+		time.Sleep(1 * time.Second)
+	}
+}
+
+func init() {
+	go updateMetricsTimestampNow()
+}
+
 func NewBaseTracker(metadata *EventMetadata) *BaseTracker {
 	return &BaseTracker{
 		EventMetadata: metadata,
@@ -29,7 +43,7 @@ func (self *BaseTracker) AddMetadata(e EventBase, full bool) {
 	event := e.Base()
 
 	if event.Ts == "" {
-		event.Ts = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+		event.Ts = metricsTimestampNow
 
 		if full == true {
 			event.Service = self.Service
@@ -43,7 +57,7 @@ func (self *BaseTracker) AddMetadata(e EventBase, full bool) {
 
 func (self *BaseTracker) AddMetadataMap(event map[string]interface{}, full bool) {
 	if event["ts"] == nil {
-		event["ts"] = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+		event["ts"] = metricsTimestampNow
 
 		if full == true {
 			event["service"] = self.Service

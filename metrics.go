@@ -9,6 +9,27 @@ import (
 	"github.com/juju/loggo"
 )
 
+type MetricEvent struct {
+	Event
+	Name   string  `json:"name,omitempty"`
+	Type   string  `json:"type,omitempty"`
+	Value  int64   `json:"value,omitempty"`
+	M1     int64   `json:"m1,omitempty"`
+	Min    int64   `json:"min,omitempty"`
+	Max    int64   `json:"max,omitempty"`
+	Mean   float64 `json:"mean,omitempty"`
+	Stddev float64 `json:"stddev,omitempty"`
+	P50    int64   `json:"p50,omitempty"`
+	P75    int64   `json:"p75,omitempty"`
+	P95    int64   `json:"p95,omitempty"`
+	P99    int64   `json:"p99,omitempty"`
+	P999   int64   `json:"p999,omitempty"`
+}
+
+func (e *MetricEvent) Base() *Event {
+	return &e.Event
+}
+
 func UpdateTimer(timer *instruments.Timer, start time.Time) {
 	timer.Update(time.Since(start))
 }
@@ -55,53 +76,54 @@ func (self *MetricsTicker) Stop() {
 
 func (self *MetricsTicker) Track() {
 	for name, i := range reporter.DefaultRegistry.Instruments() {
-		event := make(map[string]interface{})
-		event["name"] = name
+		event := &MetricEvent{
+			Name: name,
+		}
 
 		switch instrument := i.(type) {
 		case *instruments.Gauge:
-			event["type"] = "gauge"
-			event["value"] = instrument.Snapshot()
+			event.Type = "gauge"
+			event.Value = instrument.Snapshot()
 		case *instruments.Counter:
-			event["type"] = "counter"
-			event["value"] = instrument.Snapshot()
+			event.Type = "counter"
+			event.Value = instrument.Snapshot()
 		case *instruments.Rate:
-			event["type"] = "meter" // backwards compat
-			event["value"] = instrument.Snapshot()
-			event["m1"] = event["value"] // backwards compat
+			event.Type = "meter" // backwards compat
+			event.Value = instrument.Snapshot()
+			event.M1 = event.Value // backwards compat
 		case *instruments.Derive:
-			event["type"] = "derive"
-			event["value"] = instrument.Snapshot()
-			event["m1"] = event["value"] // backwards compat
+			event.Type = "derive"
+			event.Value = instrument.Snapshot()
+			event.M1 = event.Value // backwards compat
 		case *instruments.Reservoir:
 			s := instrument.Snapshot()
-			event["type"] = "histogram" // backwards compat
-			event["min"] = instruments.Min(s)
-			event["max"] = instruments.Max(s)
-			event["mean"] = instruments.Mean(s)
-			event["stddev"] = instruments.StandardDeviation(s)
-			event["p50"] = instruments.Quantile(s, 0.50)
-			event["p75"] = instruments.Quantile(s, 0.75)
-			event["p95"] = instruments.Quantile(s, 0.95)
-			event["p99"] = instruments.Quantile(s, 0.99)
-			event["p999"] = instruments.Quantile(s, 0.999)
+			event.Type = "histogram" // backwards compat
+			event.Min = instruments.Min(s)
+			event.Max = instruments.Max(s)
+			event.Mean = instruments.Mean(s)
+			event.Stddev = instruments.StandardDeviation(s)
+			event.P50 = instruments.Quantile(s, 0.50)
+			event.P75 = instruments.Quantile(s, 0.75)
+			event.P95 = instruments.Quantile(s, 0.95)
+			event.P99 = instruments.Quantile(s, 0.99)
+			event.P999 = instruments.Quantile(s, 0.999)
 		case *instruments.Timer:
 			s := instrument.Snapshot()
-			event["type"] = "timer"
-			event["value"] = instrument.Rate.Snapshot()
-			event["m1"] = event["value"] // backwards compat
-			event["min"] = instruments.Min(s)
-			event["max"] = instruments.Max(s)
-			event["mean"] = instruments.Mean(s)
-			event["stddev"] = instruments.StandardDeviation(s)
-			event["p50"] = instruments.Quantile(s, 0.50)
-			event["p75"] = instruments.Quantile(s, 0.75)
-			event["p95"] = instruments.Quantile(s, 0.95)
-			event["p99"] = instruments.Quantile(s, 0.99)
-			event["p999"] = instruments.Quantile(s, 0.999)
+			event.Type = "timer"
+			event.Value = instrument.Rate.Snapshot()
+			event.M1 = event.Value // backwards compat
+			event.Min = instruments.Min(s)
+			event.Max = instruments.Max(s)
+			event.Mean = instruments.Mean(s)
+			event.Stddev = instruments.StandardDeviation(s)
+			event.P50 = instruments.Quantile(s, 0.50)
+			event.P75 = instruments.Quantile(s, 0.75)
+			event.P95 = instruments.Quantile(s, 0.95)
+			event.P99 = instruments.Quantile(s, 0.99)
+			event.P999 = instruments.Quantile(s, 0.999)
 		default:
 			panic(fmt.Sprintf("unknown instrument %#v", i))
 		}
-		self.tracker.SafeEventMap("metrics", event, true)
+		self.tracker.SafeEvent("metrics", event, true)
 	}
 }

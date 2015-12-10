@@ -28,7 +28,7 @@ clean:
 lint: install
 	go get github.com/alecthomas/gometalinter
 	gometalinter --install
-	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl -D deadcode
+	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl -D deadcode -D vetshadow -D errcheck
 	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl kafka
 	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl publicsuffix
 	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl rollbar
@@ -50,3 +50,9 @@ dep:
 	goop install
 	mkdir -p $(dir $(TOP)/.vendor/src/$(PACKAGE))
 	ln -nfs $(TOP) $(TOP)/.vendor/src/$(PACKAGE)
+
+ffjson:
+	go get -u github.com/pquerna/ffjson
+	goop exec ffjson -import-name="$(PACKAGE)" metrics.go
+
+gen: ffjson
