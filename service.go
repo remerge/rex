@@ -115,6 +115,7 @@ func (service *Service) ReadArgs() {
 	rollbar.Environment = service.BaseConfig.Environment
 	rev, _ := exec.Command("git", "rev-parse", "HEAD").Output()
 	rollbar.CodeVersion = string(bytes.TrimSpace(rev))
+	service.BaseConfig.EventMetadata.Release = rollbar.CodeVersion
 	config := service.BaseConfig
 	MayPanic(loggo.ConfigureLoggers(config.LogSpec))
 }
