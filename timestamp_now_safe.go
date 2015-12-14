@@ -15,8 +15,8 @@ func updateMetricsTimestampNow() {
 	for {
 		time.Sleep(1 * time.Second)
 		metricsTimestampMutex.Lock()
-		defer metricsTimestampMutex.Unlock()
 		metricsTimestampNow = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+		metricsTimestampMutex.Unlock()
 	}
 }
 
