@@ -2,7 +2,10 @@
 
 package rex
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // to reduce allocations in AddMetadata
 var metricsTimestampNow = ""
