@@ -2,25 +2,10 @@ package rex
 
 import (
 	"encoding/json"
-	"time"
 )
 
 type BaseTracker struct {
 	*EventMetadata
-}
-
-// to reduce allocations in AddMetadata
-var metricsTimestampNow = ""
-
-func updateMetricsTimestampNow() {
-	for {
-		metricsTimestampNow = time.Now().UTC().Format("2006-01-02T15:04:05Z")
-		time.Sleep(1 * time.Second)
-	}
-}
-
-func init() {
-	go updateMetricsTimestampNow()
 }
 
 func NewBaseTracker(metadata *EventMetadata) *BaseTracker {
@@ -43,7 +28,7 @@ func (self *BaseTracker) AddMetadata(e EventBase, full bool) {
 	event := e.Base()
 
 	if event.Ts == "" {
-		event.Ts = metricsTimestampNow
+		event.Ts = GetTimestampNowFormat()
 
 		if full == true {
 			event.Service = self.Service
@@ -57,7 +42,7 @@ func (self *BaseTracker) AddMetadata(e EventBase, full bool) {
 
 func (self *BaseTracker) AddMetadataMap(event map[string]interface{}, full bool) {
 	if event["ts"] == nil {
-		event["ts"] = metricsTimestampNow
+		event["ts"] = GetTimestampNowFormat()
 
 		if full == true {
 			event["service"] = self.Service
