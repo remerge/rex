@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"sync"
-	"syscall"
 
 	"github.com/heroku/instruments"
 	"github.com/heroku/instruments/reporter"
@@ -99,9 +97,6 @@ func (h *recoveryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			rollbar.Error(rollbar.CRIT, err)
 			rollbar.Wait()
-			_ = os.RemoveAll("cache")
-			_ = os.Mkdir("cache", 0755)
-			_ = syscall.Kill(os.Getpid(), syscall.SIGKILL)
 		}
 	}()
 	h.h.ServeHTTP(w, r)
