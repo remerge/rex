@@ -117,11 +117,11 @@ func (server *Server) Stop() {
 }
 
 func (server *Server) Serve() {
-	server.listener.Run(server.serve)
+	rex.MayPanic(server.listener.Run(server.serve))
 }
 
 func (server *Server) ServeTLS() {
-	server.tlsListener.Run(server.serve)
+	rex.MayPanic(server.tlsListener.Run(server.serve))
 }
 
 func (server *Server) serve(l *Listener) error {
@@ -169,10 +169,12 @@ func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
 	c.Conn = conn
 	c.Server = server
 	c.Log = loggo.GetLogger(c.Id)
+
 	// TODO: buffer pool?
 	c.LimitReader = io.LimitReader(conn, noLimit).(*io.LimitedReader)
 	reader := bufio.NewReader(c.LimitReader)
 	writer := bufio.NewWriterSize(conn, 4096)
 	c.Buffer = bufio.NewReadWriter(reader, writer)
+
 	return c, nil
 }

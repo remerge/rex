@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/juju/loggo"
-	"github.com/remerge/rex"
 )
 
 type Listener struct {
@@ -43,12 +42,10 @@ func (listener *Listener) Accept() (conn net.Conn, err error) {
 	return listener.Listener.Accept()
 }
 
-func (listener *Listener) Run(callback func(*Listener) error) {
+func (listener *Listener) Run(callback func(*Listener) error) error {
 	listener.wg.Add(1)
-	go func() {
-		defer listener.wg.Done()
-		rex.MayPanic(callback(listener))
-	}()
+	defer listener.wg.Done()
+	return callback(listener)
 }
 
 func (listener *Listener) Stop() {
