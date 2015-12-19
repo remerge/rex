@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	_ "net/http/pprof"
+	"net/http/pprof"
 	"runtime"
 	"strconv"
 
@@ -22,12 +22,19 @@ func Inspect(v interface{}) string {
 	return string(bytes)
 }
 
-func StartDebugServer(port int) (*Listener, *gin.Engine) {
+func StartDebugServer(port int) *gin.Engine {
 	log := loggo.GetLogger("rex.debug")
 	r := gin.Default()
 
 	r.GET("/loggo", getLoggoSpec)
 	r.POST("/loggo", setLoggoSpec)
+
+	r.GET("/debug/pprof/", gin.WrapF(pprof.Index))
+	r.GET("/debug/pprof/heap", gin.WrapF(pprof.Index))
+	r.GET("/debug/pprof/cmdline", gin.WrapF(pprof.Cmdline))
+	r.GET("/debug/pprof/profile", gin.WrapF(pprof.Profile))
+	r.GET("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
+	r.GET("/debug/pprof/trace", gin.WrapF(pprof.Trace))
 
 	r.GET("/blockprof/:rate", func(c *gin.Context) {
 		r, err := strconv.Atoi(c.Param("rate"))
@@ -39,14 +46,12 @@ func StartDebugServer(port int) (*Listener, *gin.Engine) {
 		c.String(http.StatusOK, "new rate %d", r)
 	})
 
-	http.Handle("/", r)
-
 	log.Infof("starting debug server on port=%d", port)
-	listener, err := NewListener(port)
-	MayPanic(err)
+	go func() {
+		MayPanic(r.Run(fmt.Sprintf(":%d", port)))
+	}()
 
-	listener.Serve(http.Server{Handler: http.DefaultServeMux})
-	return listener, r
+	return r
 }
 
 func getLoggoSpec(c *gin.Context) {

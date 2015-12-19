@@ -52,13 +52,12 @@ const (
 )
 
 type Service struct {
-	Log               loggo.Logger
-	Flags             flag.FlagSet
-	Tracker           Tracker
-	MetricsTicker     *MetricsTicker
-	DebugServer       *Listener
-	DebugServerEngine *gin.Engine
-	BaseConfig        *Config
+	Log           loggo.Logger
+	Flags         flag.FlagSet
+	Tracker       Tracker
+	MetricsTicker *MetricsTicker
+	DebugServer   *gin.Engine
+	BaseConfig    *Config
 }
 
 func (service *Service) InitLogger() {
@@ -137,19 +136,12 @@ func (service *Service) Run() {
 	}
 
 	if service.BaseConfig.Port > 0 {
-		service.DebugServer, service.DebugServerEngine = StartDebugServer(service.BaseConfig.Port + 9)
+		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
 	}
 }
 
 func (service *Service) Shutdown() {
 	service.Log.Infof("service shutdown")
-	if service.DebugServer != nil {
-		service.Log.Infof("shutting down debug server")
-		service.DebugServer.Stop()
-		service.Log.Infof("waiting for requests to finish")
-		service.DebugServer.Wait()
-		service.DebugServer = nil
-	}
 	if service.MetricsTicker != nil {
 		service.Log.Infof("shutting down metrics ticker")
 		service.MetricsTicker.Stop()
