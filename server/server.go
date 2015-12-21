@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/heroku/instruments"
@@ -49,6 +50,10 @@ func NewServerWithTLS(port int, tlsPort int, key string, cert string) (server *S
 	server, err = NewServer(port)
 	if err != nil {
 		return nil, err
+	}
+
+	if tlsPort < 1 {
+		return server, nil
 	}
 
 	server.Log.Infof("using TLS key=%v cert=%v", key, cert)
@@ -145,6 +150,10 @@ func (server *Server) serve(l *Listener) error {
 				time.Sleep(b.Duration())
 				continue
 			}
+			// ignore stray shutdown error
+			if strings.Contains(err.Error(), "use of closed network connection") {
+				return nil
+			}
 			return err
 		}
 
@@ -159,8 +168,8 @@ func (server *Server) serve(l *Listener) error {
 	}
 }
 
-// noLimit is an effective infinite upper bound for io.LimitedReader
-const noLimit int64 = (1 << 63) - 1
+// NoLimit is an effective infinite upper bound for io.LimitedReader
+const NoLimit int64 = (1 << 63) - 1
 
 func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
 	c := &Connection{}
@@ -171,7 +180,7 @@ func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
 	c.Log = loggo.GetLogger(c.Id)
 
 	// TODO: buffer pool?
-	c.LimitReader = io.LimitReader(conn, noLimit).(*io.LimitedReader)
+	c.LimitReader = io.LimitReader(conn, NoLimit).(*io.LimitedReader)
 	reader := bufio.NewReader(c.LimitReader)
 	writer := bufio.NewWriterSize(conn, 4096)
 	c.Buffer = bufio.NewReadWriter(reader, writer)
