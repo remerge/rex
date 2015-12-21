@@ -160,7 +160,6 @@ func buildError(level string, err error, stack Stack, fields ...*Field) map[stri
 }
 
 func buildAndPushError(level string, err error, stack Stack, fields ...*Field) {
-	loggo.GetLogger("rollbar.error").Errorf(err.Error())
 	push(buildError(level, err, stack, fields...))
 }
 
@@ -169,8 +168,6 @@ func buildAndPushError(level string, err error, stack Stack, fields ...*Field) {
 // Message asynchronously sends a message to Rollbar with the given severity
 // level.
 func Message(level string, msg string, fields ...*Field) {
-	loggo.GetLogger("rollbar.message").Errorf(msg)
-
 	body := buildBody(level, msg)
 	data := body["data"].(map[string]interface{})
 	data["body"] = messageBody(msg)
@@ -306,6 +303,8 @@ func errorClass(err error) string {
 
 // Queue the given JSON body to be POSTed to Rollbar.
 func push(body map[string]interface{}) {
+	loggo.GetLogger("rollbar.message").Errorf("%#v", body)
+
 	if len(bodyChannel) < Buffer {
 		waitGroup.Add(1)
 		bodyChannel <- body
