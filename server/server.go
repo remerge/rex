@@ -1,13 +1,10 @@
 package server
 
 import (
-	"bufio"
 	"crypto/tls"
 	"fmt"
-	"io"
 	"net"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/heroku/instruments"
@@ -167,58 +164,4 @@ func (server *Server) serve(l *Listener) error {
 
 		go c.Serve()
 	}
-}
-
-// NoLimit is an effective infinite upper bound for io.LimitedReader
-const NoLimit int64 = (1 << 63) - 1
-
-func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
-	c := &Connection{}
-	c.Conn = conn
-	c.Server = server
-	c.Log = server.Log
-
-	c.LimitReader = &io.LimitedReader{
-		R: conn,
-		N: NoLimit,
-	}
-
-	br := newBufioReader(c.LimitReader)
-	bw := newBufioWriter(conn)
-	c.Buffer = bufio.NewReadWriter(br, bw)
-
-	return c, nil
-}
-
-var (
-	bufioReaderPool sync.Pool
-	bufioWriterPool sync.Pool
-)
-
-func newBufioReader(r io.Reader) *bufio.Reader {
-	if v := bufioReaderPool.Get(); v != nil {
-		br := v.(*bufio.Reader)
-		br.Reset(r)
-		return br
-	}
-	return bufio.NewReader(r)
-}
-
-func putBufioReader(br *bufio.Reader) {
-	br.Reset(nil)
-	bufioReaderPool.Put(br)
-}
-
-func newBufioWriter(w io.Writer) *bufio.Writer {
-	if v := bufioWriterPool.Get(); v != nil {
-		bw := v.(*bufio.Writer)
-		bw.Reset(w)
-		return bw
-	}
-	return bufio.NewWriterSize(w, 4096)
-}
-
-func putBufioWriter(bw *bufio.Writer) {
-	bw.Reset(nil)
-	bufioWriterPool.Put(bw)
 }

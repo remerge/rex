@@ -6,21 +6,93 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"sync"
 	"time"
 
-	"github.com/juju/loggo"
 	"github.com/remerge/rex/rollbar"
 )
 
 type Connection struct {
 	net.Conn
 	Server      *Server
-	Log         loggo.Logger
-	LimitReader *io.LimitedReader
-	Buffer      *bufio.ReadWriter
+	LimitReader io.LimitedReader
+	Buffer      bufio.ReadWriter
 	tlsState    *tls.ConnectionState
 }
 
+// NoLimit is an effective infinite upper bound for io.LimitedReader
+const NoLimit int64 = (1 << 63) - 1
+
+var connectionPool sync.Pool
+
+func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
+	c := newConnection()
+	c.Conn = conn
+	c.Server = server
+
+	c.LimitReader.R = conn
+	c.LimitReader.N = NoLimit
+
+	br := newBufioReader(&c.LimitReader)
+	bw := newBufioWriter(conn)
+	c.Buffer.Reader = br
+	c.Buffer.Writer = bw
+
+	c.tlsState = nil
+
+	return c, nil
+}
+
+func newConnection() *Connection {
+	if v := connectionPool.Get(); v != nil {
+		return v.(*Connection)
+	}
+	return &Connection{}
+}
+
+func putConnection(c *Connection) {
+	c.Conn = nil
+	c.Server = nil
+	c.LimitReader.R = nil
+	c.LimitReader.N = 0
+	c.Buffer.Reader = nil
+	c.Buffer.Writer = nil
+	c.tlsState = nil
+	connectionPool.Put(c)
+}
+
+var (
+	bufioReaderPool sync.Pool
+	bufioWriterPool sync.Pool
+)
+
+func newBufioReader(r io.Reader) *bufio.Reader {
+	if v := bufioReaderPool.Get(); v != nil {
+		br := v.(*bufio.Reader)
+		br.Reset(r)
+		return br
+	}
+	return bufio.NewReader(r)
+}
+
+func putBufioReader(br *bufio.Reader) {
+	br.Reset(nil)
+	bufioReaderPool.Put(br)
+}
+
+func newBufioWriter(w io.Writer) *bufio.Writer {
+	if v := bufioWriterPool.Get(); v != nil {
+		bw := v.(*bufio.Writer)
+		bw.Reset(w)
+		return bw
+	}
+	return bufio.NewWriterSize(w, 4096)
+}
+
+func putBufioWriter(bw *bufio.Writer) {
+	bw.Reset(nil)
+	bufioWriterPool.Put(bw)
+}
 func (c *Connection) Serve() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -43,6 +115,7 @@ func (c *Connection) Serve() {
 		}
 		c.Server.closeRate.Update(1)
 		c.Close()
+		putConnection(c)
 	}()
 
 	if tlsConn, ok := c.Conn.(*tls.Conn); ok {
@@ -99,10 +172,11 @@ func (c *Connection) CloseWriteAndWait() {
 }
 
 func (c *Connection) finalFlush() {
-	if c.Buffer != nil {
+	if c.Buffer.Writer != nil {
 		c.Buffer.Flush()
 		putBufioReader(c.Buffer.Reader)
+		c.Buffer.Reader = nil
 		putBufioWriter(c.Buffer.Writer)
-		c.Buffer = nil
+		c.Buffer.Writer = nil
 	}
 }
