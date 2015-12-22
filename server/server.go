@@ -174,11 +174,9 @@ const NoLimit int64 = (1 << 63) - 1
 
 func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
 	c := &Connection{}
-	c.RemoteAddr = conn.RemoteAddr().String()
-	c.Id = server.Id + "[" + c.RemoteAddr + "]"
 	c.Conn = conn
 	c.Server = server
-	c.Log = loggo.GetLogger(c.Id)
+	c.Log = server.Log
 
 	c.LimitReader = &io.LimitedReader{
 		R: conn,

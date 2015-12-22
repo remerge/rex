@@ -15,8 +15,6 @@ import (
 type Connection struct {
 	net.Conn
 	Server      *Server
-	Id          string
-	RemoteAddr  string
 	Log         loggo.Logger
 	LimitReader *io.LimitedReader
 	Buffer      *bufio.ReadWriter
@@ -31,14 +29,14 @@ func (c *Connection) Serve() {
 				rollbar.Error(rollbar.CRIT, err.(error), &rollbar.Field{
 					Name: "person",
 					Data: map[string]string{
-						"id": c.RemoteAddr,
+						"id": c.Conn.RemoteAddr().String(),
 					},
 				})
 			default:
 				rollbar.Message(rollbar.CRIT, fmt.Sprintf("unhandled error: %v", err), &rollbar.Field{
 					Name: "person",
 					Data: map[string]string{
-						"id": c.RemoteAddr,
+						"id": c.Conn.RemoteAddr().String(),
 					},
 				})
 			}
@@ -52,7 +50,7 @@ func (c *Connection) Serve() {
 			rollbar.Error(rollbar.WARN, err, &rollbar.Field{
 				Name: "person",
 				Data: map[string]string{
-					"id": c.RemoteAddr,
+					"id": c.Conn.RemoteAddr().String(),
 				},
 			})
 			return
