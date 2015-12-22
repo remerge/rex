@@ -110,6 +110,7 @@ func (c *Connection) Serve() {
 			}
 		}
 		c.Server.closeRate.Update(1)
+		c.CloseWriteAndWait()
 		c.Close()
 		putConnection(c)
 	}()
