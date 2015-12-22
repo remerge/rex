@@ -30,10 +30,13 @@ func StartDebugServer(port int) *gin.Engine {
 	r.POST("/loggo", setLoggoSpec)
 
 	r.GET("/debug/pprof/", gin.WrapF(pprof.Index))
-	r.GET("/debug/pprof/heap", gin.WrapF(pprof.Index))
+	r.GET("/debug/pprof/block", gin.WrapF(pprof.Index))
 	r.GET("/debug/pprof/cmdline", gin.WrapF(pprof.Cmdline))
+	r.GET("/debug/pprof/goroutine", gin.WrapF(pprof.Index))
+	r.GET("/debug/pprof/heap", gin.WrapF(pprof.Index))
 	r.GET("/debug/pprof/profile", gin.WrapF(pprof.Profile))
 	r.GET("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
+	r.GET("/debug/pprof/threadcreate", gin.WrapF(pprof.Index))
 	r.GET("/debug/pprof/trace", gin.WrapF(pprof.Trace))
 
 	r.GET("/blockprof/:rate", func(c *gin.Context) {
