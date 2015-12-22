@@ -132,7 +132,7 @@ func (server *Server) ServeTLS() {
 func (server *Server) serve(l *Listener) error {
 	defer l.Close()
 
-	b := &rex.Backoff{
+	b := &rex.BackoffDuration{
 		Min:    100 * time.Millisecond,
 		Max:    10 * time.Second,
 		Factor: 2,

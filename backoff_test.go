@@ -3,11 +3,27 @@ package rex
 import (
 	"testing"
 	"time"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
+
+func TestBackoff(t *testing.T) {
+	Convey("should backoff properly", t, func() {
+		var b BackoffCallback
+		correct := []int{0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192}
+		var result []int = make([]int, 0)
+		for i := 0; i < 10000; i++ {
+			b.Step(func() {
+				result = append(result, i)
+			})
+		}
+		So(result, ShouldResemble, correct)
+	})
+}
 
 func Test1(t *testing.T) {
 
-	b := &Backoff{
+	b := &BackoffDuration{
 		Min:    100 * time.Millisecond,
 		Max:    10 * time.Second,
 		Factor: 2,
@@ -22,7 +38,7 @@ func Test1(t *testing.T) {
 
 func Test2(t *testing.T) {
 
-	b := &Backoff{
+	b := &BackoffDuration{
 		Min:    100 * time.Millisecond,
 		Max:    10 * time.Second,
 		Factor: 1.5,
@@ -37,7 +53,7 @@ func Test2(t *testing.T) {
 
 func Test3(t *testing.T) {
 
-	b := &Backoff{
+	b := &BackoffDuration{
 		Min:    100 * time.Nanosecond,
 		Max:    10 * time.Second,
 		Factor: 1.75,
@@ -51,7 +67,7 @@ func Test3(t *testing.T) {
 }
 
 func TestJitter(t *testing.T) {
-	b := &Backoff{
+	b := &BackoffDuration{
 		Min:    100 * time.Millisecond,
 		Max:    10 * time.Second,
 		Factor: 2,
