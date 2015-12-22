@@ -103,6 +103,8 @@ func (c *Connection) CloseWriteAndWait() {
 func (c *Connection) finalFlush() {
 	if c.Buffer != nil {
 		c.Buffer.Flush()
+		putBufioReader(c.Buffer.Reader)
+		putBufioWriter(c.Buffer.Writer)
 		c.Buffer = nil
 	}
 }
