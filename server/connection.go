@@ -17,7 +17,6 @@ type Connection struct {
 	Server      *Server
 	LimitReader io.LimitedReader
 	Buffer      bufio.ReadWriter
-	tlsState    *tls.ConnectionState
 }
 
 // NoLimit is an effective infinite upper bound for io.LimitedReader
@@ -38,8 +37,6 @@ func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
 	c.Buffer.Reader = br
 	c.Buffer.Writer = bw
 
-	c.tlsState = nil
-
 	return c, nil
 }
 
@@ -57,7 +54,6 @@ func putConnection(c *Connection) {
 	c.LimitReader.N = 0
 	c.Buffer.Reader = nil
 	c.Buffer.Writer = nil
-	c.tlsState = nil
 	connectionPool.Put(c)
 }
 
@@ -128,15 +124,6 @@ func (c *Connection) Serve() {
 			})
 			return
 		}
-		c.tlsState = new(tls.ConnectionState)
-		*c.tlsState = tlsConn.ConnectionState()
-		//if proto := c.tlsState.NegotiatedProtocol; validNPN(proto) {
-		//    if fn := c.server.TLSNextProto[proto]; fn != nil {
-		//        h := initNPNRequest{tlsConn, serverHandler{c.server}}
-		//        fn(c.server, tlsConn, h)
-		//    }
-		//    return
-		//}
 	}
 
 	c.Server.Handler.Handle(c)
