@@ -21,6 +21,8 @@ type Server struct {
 	Handler     Handler
 	acceptRate  *instruments.Rate
 	closeRate   *instruments.Rate
+	numConns    *instruments.Counter
+	tlsErrors   *instruments.Rate
 }
 
 func NewServer(port int) (server *Server, err error) {
@@ -34,6 +36,8 @@ func NewServer(port int) (server *Server, err error) {
 
 	server.acceptRate = reporter.NewRegisteredRate(fmt.Sprintf("server.accept:%d", port))
 	server.closeRate = reporter.NewRegisteredRate(fmt.Sprintf("server.close:%d", port))
+	server.numConns = reporter.NewRegisteredCounter(fmt.Sprintf("server.connections:%d", port))
+	server.tlsErrors = reporter.NewRegisteredRate(fmt.Sprintf("server.tls.errors:%d", port))
 
 	return server, nil
 }

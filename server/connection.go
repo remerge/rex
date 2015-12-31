@@ -36,6 +36,7 @@ func (server *Server) NewConnection(conn net.Conn) *Connection {
 	c.Buffer.Reader = br
 	c.Buffer.Writer = bw
 
+	c.Server.numConns.Update(1)
 	return c
 }
 
@@ -62,6 +63,7 @@ func putConnection(c *Connection) {
 		c.Buffer.Writer = nil
 	}
 
+	c.Server.numConns.Update(-1)
 	connectionPool.Put(c)
 }
 
@@ -122,12 +124,7 @@ func (c *Connection) Serve() {
 
 	if tlsConn, ok := c.Conn.(*tls.Conn); ok {
 		if err := tlsConn.Handshake(); err != nil {
-			rollbar.Error(rollbar.WARN, err, &rollbar.Field{
-				Name: "person",
-				Data: map[string]string{
-					"id": c.Conn.RemoteAddr().String(),
-				},
-			})
+			c.Server.tlsErrors.Update(1)
 			return
 		}
 	}
