@@ -3,29 +3,24 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
-	"strings"
-	"time"
 
 	"github.com/heroku/instruments"
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex"
-	"github.com/remerge/rex/rollbar"
 )
 
 type Server struct {
-	Id              string
-	Port            int
-	TlsPort         int
-	TlsConfig       *tls.Config
-	Log             loggo.Logger
-	listener        *Listener
-	tlsListener     *Listener
-	Handler         Handler
-	acceptRate      *instruments.Rate
-	acceptErrorRate *instruments.Rate
-	closeRate       *instruments.Rate
+	Id          string
+	Port        int
+	TlsPort     int
+	TlsConfig   *tls.Config
+	Log         loggo.Logger
+	listener    *Listener
+	tlsListener *Listener
+	Handler     Handler
+	acceptRate  *instruments.Rate
+	closeRate   *instruments.Rate
 }
 
 func NewServer(port int) (server *Server, err error) {
@@ -38,7 +33,6 @@ func NewServer(port int) (server *Server, err error) {
 	server.Log.Infof("new server on port %d", port)
 
 	server.acceptRate = reporter.NewRegisteredRate(fmt.Sprintf("server.accept:%d", port))
-	server.acceptErrorRate = reporter.NewRegisteredRate(fmt.Sprintf("server.accept.error:%d", port))
 	server.closeRate = reporter.NewRegisteredRate(fmt.Sprintf("server.close:%d", port))
 
 	return server, nil
@@ -127,41 +121,19 @@ func (server *Server) ServeTLS() {
 	rex.MayPanic(server.tlsListener.Run(server.serve))
 }
 
-func (server *Server) serve(l *Listener) error {
-	defer l.Close()
-
-	b := &rex.BackoffDuration{
-		Min:    100 * time.Millisecond,
-		Max:    10 * time.Second,
-		Factor: 2,
-		Jitter: true,
-	}
+func (server *Server) serve(listener *Listener) error {
+	defer listener.Close()
 
 	for {
-		conn, err := l.Accept()
-		server.acceptRate.Update(1)
-
+		conn, err := listener.Accept()
 		if err != nil {
-			server.acceptErrorRate.Update(1)
-			if ne, ok := err.(net.Error); ok && ne.Temporary() {
-				rollbar.Error(rollbar.ERR, err)
-				time.Sleep(b.Duration())
-				continue
-			}
-			// ignore stray shutdown error
-			if strings.Contains(err.Error(), "use of closed network connection") {
+			if listener.IsStopped() {
 				return nil
 			}
 			return err
 		}
 
-		b.Reset()
-
-		c, err := server.NewConnection(conn)
-		if err != nil {
-			continue
-		}
-
-		go c.Serve()
+		server.acceptRate.Update(1)
+		go server.NewConnection(conn).Serve()
 	}
 }

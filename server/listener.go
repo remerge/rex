@@ -11,12 +11,14 @@ import (
 
 type Listener struct {
 	net.Listener
-	wg  sync.WaitGroup
-	log loggo.Logger
+	wg      sync.WaitGroup
+	log     loggo.Logger
+	stopped bool
 }
 
 func NewListener(port int) (listener *Listener, err error) {
 	listener = &Listener{}
+
 	listener.log = loggo.GetLogger(fmt.Sprintf("listener:%d", port))
 	listener.log.Infof("start listen on port %d", port)
 
@@ -49,7 +51,12 @@ func (listener *Listener) Run(callback func(*Listener) error) error {
 }
 
 func (listener *Listener) Stop() {
+	listener.stopped = true
 	_ = listener.Listener.Close()
+}
+
+func (listener *Listener) IsStopped() bool {
+	return listener.stopped
 }
 
 func (listener *Listener) Wait() {

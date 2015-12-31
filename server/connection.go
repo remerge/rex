@@ -7,7 +7,6 @@ import (
 	"io"
 	"net"
 	"sync"
-	"time"
 
 	"github.com/remerge/rex/rollbar"
 )
@@ -24,7 +23,7 @@ const NoLimit int64 = (1 << 63) - 1
 
 var connectionPool sync.Pool
 
-func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
+func (server *Server) NewConnection(conn net.Conn) *Connection {
 	c := newConnection()
 	c.Conn = conn
 	c.Server = server
@@ -37,7 +36,7 @@ func (server *Server) NewConnection(conn net.Conn) (*Connection, error) {
 	c.Buffer.Reader = br
 	c.Buffer.Writer = bw
 
-	return c, nil
+	return c
 }
 
 func newConnection() *Connection {
@@ -52,8 +51,17 @@ func putConnection(c *Connection) {
 	c.Server = nil
 	c.LimitReader.R = nil
 	c.LimitReader.N = 0
-	c.Buffer.Reader = nil
-	c.Buffer.Writer = nil
+
+	if c.Buffer.Reader != nil {
+		putBufioReader(c.Buffer.Reader)
+		c.Buffer.Reader = nil
+	}
+
+	if c.Buffer.Writer != nil {
+		putBufioWriter(c.Buffer.Writer)
+		c.Buffer.Writer = nil
+	}
+
 	connectionPool.Put(c)
 }
 
@@ -109,10 +117,7 @@ func (c *Connection) Serve() {
 				})
 			}
 		}
-		c.Server.closeRate.Update(1)
-		c.CloseWriteAndWait()
 		c.Close()
-		putConnection(c)
 	}()
 
 	if tlsConn, ok := c.Conn.(*tls.Conn); ok {
@@ -130,41 +135,21 @@ func (c *Connection) Serve() {
 	c.Server.Handler.Handle(c)
 }
 
-// rstAvoidanceDelay is the amount of time we sleep after closing the
-// write side of a TCP connection before closing the entire socket.
-// By sleeping, we increase the chances that the client sees our FIN
-// and processes its final data before they process the subsequent RST
-// from closing a connection with known unread data.
-// This RST seems to occur mostly on BSD systems. (And Windows?)
-// This timeout is somewhat arbitrary (~latency around the planet).
-const rstAvoidanceDelay = 500 * time.Millisecond
-
-type closeWriter interface {
-	CloseWrite() error
-}
-
-var _ closeWriter = (*net.TCPConn)(nil)
-
-// closeWrite flushes any outstanding data and sends a FIN packet (if
-// client is connected via TCP), signalling that we're done.  We then
-// pause for a bit, hoping the client processes it before any
-// subsequent RST.
-//
-// See https://golang.org/issue/3595
-func (c *Connection) CloseWriteAndWait() {
-	c.finalFlush()
-	if tcp, ok := c.Conn.(closeWriter); ok {
-		tcp.CloseWrite()
+func (c *Connection) Close() {
+	if c.Server != nil {
+		c.Server.closeRate.Update(1)
 	}
-	time.Sleep(rstAvoidanceDelay)
-}
 
-func (c *Connection) finalFlush() {
+	// flush write buffer before close
 	if c.Buffer.Writer != nil {
-		c.Buffer.Flush()
-		putBufioReader(c.Buffer.Reader)
-		c.Buffer.Reader = nil
-		putBufioWriter(c.Buffer.Writer)
-		c.Buffer.Writer = nil
+		c.Buffer.Writer.Flush()
 	}
+
+	// close socket
+	if c.Conn != nil {
+		c.Conn.Close()
+	}
+
+	// put connection back into pool
+	putConnection(c)
 }
