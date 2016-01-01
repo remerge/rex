@@ -48,6 +48,8 @@ func newConnection() *Connection {
 }
 
 func putConnection(c *Connection) {
+	c.Server.numConns.Update(-1)
+
 	c.Conn = nil
 	c.Server = nil
 	c.LimitReader.R = nil
@@ -63,7 +65,6 @@ func putConnection(c *Connection) {
 		c.Buffer.Writer = nil
 	}
 
-	c.Server.numConns.Update(-1)
 	connectionPool.Put(c)
 }
 
@@ -133,6 +134,11 @@ func (c *Connection) Serve() {
 }
 
 func (c *Connection) Close() {
+	// prevent double close
+	if c.Conn == nil {
+		return
+	}
+
 	if c.Server != nil {
 		c.Server.closeRate.Update(1)
 	}
