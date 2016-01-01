@@ -7,6 +7,7 @@ import (
 	"io"
 	"net"
 	"sync"
+	"sync/atomic"
 
 	"github.com/remerge/rex/rollbar"
 )
@@ -22,6 +23,7 @@ type Connection struct {
 const NoLimit int64 = (1 << 63) - 1
 
 var connectionPool sync.Pool
+var connectionCount *int64 = new(int64)
 
 func (server *Server) NewConnection(conn net.Conn) *Connection {
 	c := newConnection()
@@ -36,7 +38,7 @@ func (server *Server) NewConnection(conn net.Conn) *Connection {
 	c.Buffer.Reader = br
 	c.Buffer.Writer = bw
 
-	c.Server.numConns.Update(1)
+	c.Server.numConns.Update(atomic.AddInt64(connectionCount, 1))
 	return c
 }
 
@@ -48,7 +50,7 @@ func newConnection() *Connection {
 }
 
 func putConnection(c *Connection) {
-	c.Server.numConns.Update(-1)
+	c.Server.numConns.Update(atomic.AddInt64(connectionCount, -1))
 
 	c.Conn = nil
 	c.Server = nil
