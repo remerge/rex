@@ -36,6 +36,7 @@ func StartDebugServer(port int) *gin.Engine {
 	r.GET("/debug/pprof/heap", gin.WrapF(pprof.Index))
 	r.GET("/debug/pprof/profile", gin.WrapF(pprof.Profile))
 	r.GET("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
+	r.POST("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
 	r.GET("/debug/pprof/threadcreate", gin.WrapF(pprof.Index))
 	r.GET("/debug/pprof/trace", gin.WrapF(pprof.Trace))
 
