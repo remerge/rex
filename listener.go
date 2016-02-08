@@ -11,6 +11,7 @@ import (
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/rollbar"
+	"github.com/tylerb/graceful"
 )
 
 type Listener struct {
@@ -69,8 +70,23 @@ func (listener *Listener) Serve(server http.Server) {
 	}()
 }
 
+func (listener *Listener) ServeGraceful(server *graceful.Server) {
+	listener.wg.Add(1)
+	go func() {
+		defer listener.wg.Done()
+		server.Handler = &recoveryHandler{h: server.Handler}
+		if err := server.Serve(listener); !IsTimeout(err) {
+			MayPanic(err)
+		}
+	}()
+}
+
 func (listener *Listener) Stop() {
-	_ = listener.Listener.Close()
+	err := listener.Listener.Close()
+	if err != nil {
+		listener.log.Warningf("listener shutdown error %s", err)
+	}
+
 }
 
 func (listener *Listener) Done() {
