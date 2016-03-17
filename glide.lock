@@ -1,5 +1,5 @@
-hash: 9f4abceea88ec869f9d620718c7f1d841f6197b0ba55070a85fe979f79c86946
-updated: 2016-03-17T10:20:19.004175482+01:00
+hash: ece77b9fd7916ddfd3285e686a0163164abe670eab85283c0479a78c3506b489
+updated: 2016-03-17T10:53:14.379422037+01:00
 imports:
 - name: github.com/cheekybits/genny
   version: 670ed678f7799e3ead194eaf9a0848920a494889
@@ -28,7 +28,7 @@ imports:
   version: 5f1c01d9f64b941dd9582c638279d046eda6ca31
 - name: github.com/heroku/instruments
   version: f45f03823736dd69f6e284ab4386d9e415f2f966
-  repo: git@github.com:remerge/instruments
+  repo: https://github.com/remerge/instruments
   vcs: git
   subpackages:
   - reporter
@@ -42,22 +42,14 @@ imports:
   version: 215028ffa1b291d28e4007437cbdb53a9a958a3d
   subpackages:
   - fflib/v1
-  - shared
-  - inception
   - fflib/v1/internal
 - name: github.com/remerge/gobi
   version: e7e43812b90d990de74a19cff4874e7cb1cc38b0
 - name: github.com/remerge/rand
   version: 7d2b7c1a1a00f42160861c941d67e0e61adc8477
-- name: github.com/remerge/rex
-  version: 38b0c6f541f0cb9b55369dcc11f555939d0c82bb
-  subpackages:
-  - kafka
-  - publicsuffix
-  - rollbar
 - name: github.com/Shopify/sarama
   version: 9d8f070f5b67786dd476cbd59d8b88bf7c3dc80d
-  repo: git@github.com:remerge/sarama
+  repo: https://github.com/remerge/sarama
   vcs: git
 - name: github.com/tylerb/graceful
   version: c78c8d9dded2ad16ad81b1fa526a81b2bb8049f6
