@@ -1,0 +1,71 @@
+hash: 9f4abceea88ec869f9d620718c7f1d841f6197b0ba55070a85fe979f79c86946
+updated: 2016-03-17T10:20:19.004175482+01:00
+imports:
+- name: github.com/cheekybits/genny
+  version: 670ed678f7799e3ead194eaf9a0848920a494889
+  subpackages:
+  - generic
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
+- name: github.com/eapache/go-resiliency
+  version: b86b1ec0dd4209a588dc1285cdd471e73525c0b3
+  subpackages:
+  - breaker
+- name: github.com/eapache/queue
+  version: ded5959c0d4e360646dc9e9908cff48666781367
+- name: github.com/gin-gonic/gin
+  version: 4a6bc4aac4607e253bcda67c8c5bcda693d2388e
+  subpackages:
+  - binding
+  - render
+- name: github.com/golang/protobuf
+  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
+  subpackages:
+  - proto
+- name: github.com/golang/snappy
+  version: 5f1c01d9f64b941dd9582c638279d046eda6ca31
+- name: github.com/heroku/instruments
+  version: f45f03823736dd69f6e284ab4386d9e415f2f966
+  repo: git@github.com:remerge/instruments
+  vcs: git
+  subpackages:
+  - reporter
+- name: github.com/juju/loggo
+  version: 8477fc936adf0e382d680310047ca27e128a309a
+- name: github.com/klauspost/crc32
+  version: 19b0b332c9e4516a6370a0456e6182c3b5036720
+- name: github.com/manucorporat/sse
+  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: github.com/pquerna/ffjson
+  version: 215028ffa1b291d28e4007437cbdb53a9a958a3d
+  subpackages:
+  - fflib/v1
+  - shared
+  - inception
+  - fflib/v1/internal
+- name: github.com/remerge/gobi
+  version: e7e43812b90d990de74a19cff4874e7cb1cc38b0
+- name: github.com/remerge/rand
+  version: 7d2b7c1a1a00f42160861c941d67e0e61adc8477
+- name: github.com/remerge/rex
+  version: 38b0c6f541f0cb9b55369dcc11f555939d0c82bb
+  subpackages:
+  - kafka
+  - publicsuffix
+  - rollbar
+- name: github.com/Shopify/sarama
+  version: 9d8f070f5b67786dd476cbd59d8b88bf7c3dc80d
+  repo: git@github.com:remerge/sarama
+  vcs: git
+- name: github.com/tylerb/graceful
+  version: c78c8d9dded2ad16ad81b1fa526a81b2bb8049f6
+- name: golang.org/x/net
+  version: f315505cf3349909cdf013ea56690da34e96a451
+  subpackages:
+  - context
+  - netutil
+- name: gopkg.in/go-playground/validator.v8
+  version: c193cecd124b5cc722d7ee5538e945bdb3348435
+devImports: []

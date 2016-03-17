@@ -1,0 +1,24 @@
+package: github.com/remerge/rex
+import:
+- package: github.com/Shopify/sarama
+  vcs: git
+  repo: git@github.com:remerge/sarama
+- package: github.com/heroku/instruments
+  vcs: git
+  repo: git@github.com:remerge/instruments
+  subpackages:
+  - reporter
+- package: github.com/cheekybits/genny
+  subpackages:
+  - generic
+- package: github.com/eapache/go-resiliency
+  subpackages:
+  - breaker
+- package: github.com/gin-gonic/gin
+- package: github.com/juju/loggo
+- package: github.com/pquerna/ffjson
+  subpackages:
+  - fflib/v1
+- package: github.com/remerge/gobi
+- package: github.com/remerge/rand
+- package: github.com/tylerb/graceful

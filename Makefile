@@ -3,56 +3,59 @@ PACKAGE := github.com/remerge/rex
 # http://stackoverflow.com/questions/322936/common-gnu-makefile-directory-path#comment11704496_324782
 TOP := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 
-GOOP=goop
-GO=$(GOOP) exec go
 GOFMT=gofmt -w -s
 
+GOSRCDIR=$(GOPATH)/src/$(PACKAGE)
+GOPATHS=$(shell glide novendor)
 GOFILES=$(shell git ls-files | grep '\.go$$')
 MAINGO=$(wildcard main/*.go)
 MAIN=$(patsubst main/%.go,%,$(MAINGO))
 
-.PHONY: build run watch clean test fmt dep
+.PHONY: build run clean lint test bench fmt dep up gen
 
 all: build
 
 build: fmt
-	$(GO) build $(MAINGO)
+	cd $(GOSRCDIR) && \
+		CGO_ENABLED=0 \
+		go build $(MAINGO)
 
-install: build
-	$(GO) install $(PACKAGE)
+run: build
+	./$(MAIN)
 
 clean:
-	$(GO) clean
-	rm -rf $(TOP)/.vendor/
+	go clean
+	rm -f $(MAIN)
+	rm -rf $(TOP)/vendor/
 
-lint: install
-	go get github.com/alecthomas/gometalinter
-	gometalinter --install
-	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl -D deadcode -D vetshadow -D errcheck
-	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl kafka
-	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl publicsuffix
-	$(GOOP) exec gometalinter -D golint -D gocyclo -D dupl rollbar
+lint:
+	cd $(GOSRCDIR) && \
+		gometalinter --vendor --errors --fast --deadline=60s -D gotype $(GOPATHS)
 
 test: build lint
-	$(GO) test -v -timeout 60s -race $(PACKAGE)
-	$(GO) test -v -timeout 60s -race $(PACKAGE)/kafka
-	$(GO) test -v -timeout 60s -race $(PACKAGE)/publicsuffix
-	$(GO) test -v -timeout 60s -race $(PACKAGE)/rollbar
+	cd $(GOSRCDIR) && \
+		go test -timeout 60s $(GOPATHS)
 
 bench:
-	$(GO) test -bench=. -cpu 4
+	cd $(GOSRCDIR) && \
+		go test -bench=. -cpu 4 $(GOPATHS)
 
 fmt:
 	$(GOFMT) $(GOFILES)
 
 dep:
-	go get github.com/nitrous-io/goop
-	goop install
-	mkdir -p $(dir $(TOP)/.vendor/src/$(PACKAGE))
-	ln -nfs $(TOP) $(TOP)/.vendor/src/$(PACKAGE)
-
-ffjson:
+	go get -u github.com/Masterminds/glide
 	go get -u github.com/pquerna/ffjson
-	goop exec ffjson -import-name="$(PACKAGE)" metrics.go
+	go get -u github.com/smartystreets/goconvey
+	go get -u github.com/alecthomas/gometalinter
+	gometalinter --install --update
+	cd $(GOSRCDIR) && glide install
 
-gen: ffjson
+up:
+	cd $(GOSRCDIR) && \
+		glide update
+
+gen:
+	cd $(GOSRCDIR) && \
+		go generate $(GOPATHS)
+	$(GOFMT) $(GOFILES)

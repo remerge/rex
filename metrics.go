@@ -1,3 +1,4 @@
+//go:generate ffjson metrics.go
 package rex
 
 import (

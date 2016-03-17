@@ -59,7 +59,7 @@ func (listener *Listener) Accept() (conn net.Conn, err error) {
 	return listener.Listener.Accept()
 }
 
-func (listener *Listener) Serve(server http.Server) {
+func (listener *Listener) Serve(server *http.Server) {
 	listener.wg.Add(1)
 	go func() {
 		defer listener.wg.Done()

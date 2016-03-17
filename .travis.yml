@@ -1,15 +1,11 @@
 sudo: false
 language: go
 go:
-- 1.5.1
-
+- 1.6
+cache:
+  directories:
+    - vendor
 install:
 - make dep
-
 script:
 - make test
-
-notifications:
-  email: false
-  slack:
-    secure: ErSz9HRyhznsKHtMUYl7gfwoweW7/Zao7EQVoXF68rme5bQYr/+94hHtRkHIAh75vLftBETQGuaaPnX4jF8pftOp3eZQilbJZ+F0FrNuTehA2cirw5C4tjQks49Cm9HxZLj8xeD8SnKE92x2cMycZizyItMHORJCXjzAS96MZDU=
