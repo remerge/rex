@@ -2,10 +2,10 @@ package: github.com/remerge/rex
 import:
 - package: github.com/Shopify/sarama
   vcs: git
-  repo: git@github.com:remerge/sarama
+  repo: https://github.com/remerge/sarama
 - package: github.com/heroku/instruments
   vcs: git
-  repo: git@github.com:remerge/instruments
+  repo: https://github.com/remerge/instruments
   subpackages:
   - reporter
 - package: github.com/cheekybits/genny
