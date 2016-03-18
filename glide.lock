@@ -1,5 +1,5 @@
-hash: 9b9118b131c3e44cd6c76aad26c843ecfca58e65481c017becd15b03f8056072
-updated: 2016-03-18T18:50:51.432094976+01:00
+hash: bcee542ae0ef222c600b21660dff8e1734590069882f503acd152bf28a32565b
+updated: 2016-03-18T22:15:51.60167377+01:00
 imports:
 - name: github.com/cheekybits/genny
   version: 670ed678f7799e3ead194eaf9a0848920a494889
@@ -39,14 +39,14 @@ imports:
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/pquerna/ffjson
-  version: 215028ffa1b291d28e4007437cbdb53a9a958a3d
+  version: 03d5a0ae3a5a5d0cd8d2b593e247bb073c25dbcb
   subpackages:
   - fflib/v1
   - fflib/v1/internal
 - name: github.com/remerge/gobi
-  version: b85f5058de719d926c915c5540d9b7b1c05a30de
+  version: 89ce09afd32aaace82d0697d13f501029cfc106b
 - name: github.com/remerge/rand
-  version: 653d270e6fd5ff8e9d02c489ea2e896f64e31f5b
+  version: 1dfe1edfb36845180aec114ec53195e27f8d33f2
 - name: github.com/Shopify/sarama
   version: fdea37926ffa7d09c6e6ec511f22c48954fef5de
 - name: github.com/tylerb/graceful

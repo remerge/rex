@@ -1,10 +1,5 @@
 package: github.com/remerge/rex
 import:
-- package: github.com/heroku/instruments
-  vcs: git
-  repo: https://github.com/remerge/instruments
-  subpackages:
-  - reporter
 - package: github.com/Shopify/sarama
 - package: github.com/cheekybits/genny
   subpackages:
@@ -13,6 +8,11 @@ import:
   subpackages:
   - breaker
 - package: github.com/gin-gonic/gin
+- package: github.com/heroku/instruments
+  vcs: git
+  repo: https://github.com/remerge/instruments
+  subpackages:
+  - reporter
 - package: github.com/juju/loggo
 - package: github.com/pquerna/ffjson
   subpackages:
