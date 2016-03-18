@@ -1,5 +1,4 @@
-*.log
 .args
-vendor/
-cache/
 rex
+cache/
+vendor/
