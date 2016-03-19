@@ -104,14 +104,16 @@ func (service *Service) InitDefaultFlags() {
 }
 
 func (service *Service) Init() {
-	service.CodeVersion = CodeVersion
-	service.CodeBuild = CodeBuild
 	service.InitLogger()
 	service.InitCommandLine()
 	service.InitDefaultFlags()
 }
 
 func (service *Service) ReadArgs() {
+	// set global version and build info
+	service.CodeVersion = CodeVersion
+	service.CodeBuild = CodeBuild
+
 	// parse command line
 	doVersion := service.Flags.Bool("version", false, "show version and exit")
 	MayPanic(service.Flags.Parse(readArgs()))
