@@ -1,12 +1,10 @@
 package rex
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"os/signal"
 	"path/filepath"
 	"runtime"
@@ -19,6 +17,9 @@ import (
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/rollbar"
 )
+
+var CodeVersion = "unknown"
+var CodeBuild = "unknown"
 
 type Config struct {
 	EventMetadata
@@ -58,6 +59,8 @@ type Service struct {
 	MetricsTicker *MetricsTicker
 	DebugServer   *gin.Engine
 	BaseConfig    *Config
+	CodeVersion   string
+	CodeBuild     string
 }
 
 func (service *Service) InitLogger() {
@@ -74,7 +77,6 @@ func (service *Service) InitCommandLine() {
 	if os.Getenv("GOMAXPROCS") == "" {
 		runtime.GOMAXPROCS(runtime.NumCPU())
 	}
-	service.Log.Infof("using %d cores for go routines", runtime.GOMAXPROCS(0))
 	service.Flags.Init(os.Args[0], flag.ExitOnError)
 	service.Flags.StringVar(&config.LogSpec, "loggo", config.LogSpec, "initial loggo spec")
 }
@@ -102,21 +104,40 @@ func (service *Service) InitDefaultFlags() {
 }
 
 func (service *Service) Init() {
+	service.CodeVersion = CodeVersion
+	service.CodeBuild = CodeBuild
 	service.InitLogger()
 	service.InitCommandLine()
 	service.InitDefaultFlags()
 }
 
 func (service *Service) ReadArgs() {
-	service.Log.Infof("command line arguments=%q", readArgs())
+	// parse command line
+	doVersion := service.Flags.Bool("version", false, "show version and exit")
 	MayPanic(service.Flags.Parse(readArgs()))
+
+	// show version and exit
+	if *doVersion {
+		fmt.Println(service.CodeVersion)
+		os.Exit(0)
+	}
+
+	service.Log.Infof("code version=%v build=%v", service.CodeVersion, service.CodeBuild)
+	service.Log.Infof("command line arguments=%q", readArgs())
+	service.Log.Infof("using %d cores for go routines", runtime.GOMAXPROCS(0))
+
+	// set environment for children
 	MayPanic(os.Setenv("REX_ENV", service.BaseConfig.Environment))
+
+	// setup rollbar
 	rollbar.Environment = service.BaseConfig.Environment
-	rev, _ := exec.Command("git", "rev-parse", "HEAD").Output()
-	rollbar.CodeVersion = string(bytes.TrimSpace(rev))
+	rollbar.CodeVersion = service.CodeVersion
+
+	// add code version to event metadata
 	service.BaseConfig.EventMetadata.Release = rollbar.CodeVersion
-	config := service.BaseConfig
-	MayPanic(loggo.ConfigureLoggers(config.LogSpec))
+
+	// configure log levels
+	MayPanic(loggo.ConfigureLoggers(service.BaseConfig.LogSpec))
 }
 
 func (service *Service) Run() {

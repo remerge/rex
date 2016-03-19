@@ -12,6 +12,18 @@ GOFILES=$(shell git ls-files | grep '\.go$$')
 MAINGO=$(wildcard main/*.go)
 MAIN=$(patsubst main/%.go,%,$(MAINGO))
 
+CODE_VERSION=$(TRAVIS_COMMIT)
+ifeq ($(CODE_VERSION),)
+	CODE_VERSION=$(shell git rev-parse --short HEAD)-dev
+endif
+
+CODE_BUILD=$(TRAVIS_REPO_SLUG)\#$(TRAVIS_JOB_NUMBER)
+ifeq ($(CODE_BUILD),\#)
+	CODE_BUILD=$(PACKAGE)\#$(shell whoami)
+endif
+
+LDFLAGS=-X github.com/remerge/rex.CodeVersion=$(CODE_VERSION) -X github.com/remerge/rex.CodeBuild=$(CODE_BUILD)@$(shell date -u +%FT%TZ)
+
 .PHONY: build run clean lint test bench fmt dep init up gen release deploy
 
 all: build
@@ -19,7 +31,7 @@ all: build
 build: fmt
 	cd $(GOSRCDIR) && \
 		CGO_ENABLED=0 \
-		go build $(MAINGO)
+		go build -ldflags "$(LDFLAGS)" $(MAINGO)
 
 run: build
 	./$(MAIN)
