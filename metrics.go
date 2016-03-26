@@ -36,6 +36,7 @@ func UpdateTimer(timer *instruments.Timer, start time.Time) {
 }
 
 type MetricsTicker struct {
+	cb        func(tracker Tracker)
 	goMetrics *GoMetrics
 	tracker   Tracker
 	ticker    *time.Ticker
@@ -53,6 +54,10 @@ func NewMetricsTicker(t Tracker) *MetricsTicker {
 	}
 }
 
+func (ticker *MetricsTicker) SetCallback(cb func(tracker Tracker)) {
+	ticker.cb = cb
+}
+
 func (self *MetricsTicker) Start() {
 	for {
 		select {
@@ -61,6 +66,7 @@ func (self *MetricsTicker) Start() {
 			self.Track()
 		case <-self.quit:
 			self.ticker.Stop()
+			self.Track()
 			close(self.quit)
 			close(self.done)
 			return
@@ -126,5 +132,9 @@ func (self *MetricsTicker) Track() {
 			panic(fmt.Sprintf("unknown instrument %#v", i))
 		}
 		self.tracker.SafeEvent("metrics", event, true)
+	}
+
+	if self.cb != nil {
+		self.cb(self.tracker)
 	}
 }

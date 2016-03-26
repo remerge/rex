@@ -1,4 +1,5 @@
-.args
+*.test
+.args*
 rex
 cache/
 vendor/

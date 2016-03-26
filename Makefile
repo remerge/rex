@@ -7,7 +7,7 @@ TOP := $(dir $(CURDIR)/$(word $(words $(MAKEFILE_LIST)),$(MAKEFILE_LIST)))
 GOFMT=gofmt -w -s
 
 GOSRCDIR=$(GOPATH)/src/$(PACKAGE)
-GOPATHS=$(shell glide novendor)
+GOPATHS=$(shell glide novendor | grep -v /main/)
 GOFILES=$(shell git ls-files | grep '\.go$$')
 MAINGO=$(wildcard main/*.go)
 MAIN=$(patsubst main/%.go,%,$(MAINGO))
@@ -31,7 +31,7 @@ all: build
 build: fmt
 	cd $(GOSRCDIR) && \
 		CGO_ENABLED=0 \
-		go build -ldflags "$(LDFLAGS)" $(MAINGO)
+		go build -v -i -ldflags "$(LDFLAGS)" $(MAINGO)
 
 run: build
 	./$(MAIN)
