@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/eapache/go-resiliency/breaker"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/kafka"
 	"github.com/remerge/rex/rollbar"
@@ -78,81 +77,62 @@ func (self *KafkaTracker) Close() {
 	self.log.Infof("tracker is stopped")
 }
 
-func (self *KafkaTracker) FastMessage(topic string, value []byte) {
+func (self *KafkaTracker) FastMessage(topic string, value []byte) error {
 	if self.log.IsTraceEnabled() {
 		self.log.Tracef("topic=%s value=%s", topic, string(value))
 	}
-	err := self.Fast.SendMessage(&sarama.ProducerMessage{
+	return self.Fast.SendMessage(&sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(value),
 	})
-	if err != nil {
-		rollbar.Error(rollbar.WARN, err)
-	}
 }
 
-func (self *KafkaTracker) FastEvent(topic string, e EventBase, full bool) {
+func (self *KafkaTracker) FastEvent(topic string, e EventBase, full bool) error {
 	self.AddMetadata(e, full)
-	self.FastMessage(topic, self.Encode(e))
+	return self.FastMessage(topic, self.Encode(e))
 }
 
-func (self *KafkaTracker) FastEventMap(topic string, event map[string]interface{}, full bool) {
+func (self *KafkaTracker) FastEventMap(topic string, event map[string]interface{}, full bool) error {
 	self.AddMetadataMap(event, full)
-	self.FastMessage(topic, self.EncodeMap(event))
+	return self.FastMessage(topic, self.EncodeMap(event))
 }
 
-func (self *KafkaTracker) SafeMessage(topic string, value []byte) {
+func (self *KafkaTracker) SafeMessage(topic string, value []byte) error {
 	if self.log.IsTraceEnabled() {
 		self.log.Tracef("topic=%s value=%s", topic, string(value))
 	}
-	self.enqueue(topic, value)
+	return self.enqueue(topic, value)
 }
 
-func (self *KafkaTracker) SafeEvent(topic string, event EventBase, full bool) {
+func (self *KafkaTracker) SafeEvent(topic string, event EventBase, full bool) error {
 	self.AddMetadata(event, full)
-	self.SafeMessage(topic, self.Encode(event))
+	return self.SafeMessage(topic, self.Encode(event))
 }
 
-func (self *KafkaTracker) SafeEventMap(topic string, event map[string]interface{}, full bool) {
+func (self *KafkaTracker) SafeEventMap(topic string, event map[string]interface{}, full bool) error {
 	self.AddMetadataMap(event, full)
-	self.SafeMessage(topic, self.EncodeMap(event))
+	return self.SafeMessage(topic, self.EncodeMap(event))
 }
 
 // fail-safe disk queue worker
 
 var safeQueueDelim = []byte{0x0}
 
-func (self *KafkaTracker) enqueue(topic string, value []byte) {
+func (self *KafkaTracker) enqueue(topic string, value []byte) error {
 	msg := append([]byte(topic), safeQueueDelim...)
 	msg = append(msg, value...)
-
-	err := self.queue.Put(msg)
-	if err != nil {
-		rollbar.Error(rollbar.ERR, err)
-		return
-	}
+	return self.queue.Put(msg)
 }
 
-func (self *KafkaTracker) processSafeMessage(msg []byte) {
+func (self *KafkaTracker) processSafeMessage(msg []byte) error {
 	idx := bytes.Index(msg, safeQueueDelim)
 	topic := string(msg[0:idx])
 	value := msg[idx+1:]
 
-	err := self.Safe.SendMessage(&sarama.ProducerMessage{
+	return self.Safe.SendMessage(&sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.ByteEncoder(value),
 	})
-
-	if err != nil {
-		switch err {
-		case breaker.ErrBreakerOpen:
-			// do nothing
-		default:
-			rollbar.Error(rollbar.ERR, err)
-		}
-		self.enqueue(topic, value)
-		return
-	}
 }
 
 func (self *KafkaTracker) start() {
@@ -161,7 +141,10 @@ func (self *KafkaTracker) start() {
 	for {
 		select {
 		case bytes := <-self.queue.ReadChan():
-			self.processSafeMessage(bytes)
+			if err := self.processSafeMessage(bytes); err != nil {
+				rollbar.Error(rollbar.ERR, err)
+				self.queue.Put(bytes)
+			}
 		case <-self.quit:
 			self.running = false
 			close(self.done)

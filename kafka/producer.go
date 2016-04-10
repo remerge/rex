@@ -31,7 +31,7 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 
 	if cb == nil {
 		cb = func(err *sarama.ProducerError) {
-			rollbar.Error(rollbar.ERR, err)
+			loggo.GetLogger(name).Errorf("%v", err)
 		}
 	}
 
