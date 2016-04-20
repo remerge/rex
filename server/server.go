@@ -3,6 +3,8 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
+	"sync/atomic"
+	"time"
 
 	"github.com/heroku/instruments"
 	"github.com/heroku/instruments/reporter"
@@ -23,6 +25,8 @@ type Server struct {
 	closeRate   *instruments.Rate
 	numConns    *instruments.Reservoir
 	tlsErrors   *instruments.Rate
+	MaxConns    int
+	backoff     *rex.BackoffDuration
 }
 
 func NewServer(port int) (server *Server, err error) {
@@ -38,6 +42,12 @@ func NewServer(port int) (server *Server, err error) {
 	server.closeRate = reporter.NewRegisteredRate(fmt.Sprintf("server.close:%d", port))
 	server.numConns = reporter.NewRegisteredReservoir(fmt.Sprintf("server.connections:%d", port), -1)
 	server.tlsErrors = reporter.NewRegisteredRate(fmt.Sprintf("server.tls.errors:%d", port))
+
+	server.backoff = &rex.BackoffDuration{
+		Min:    100 * time.Millisecond,
+		Max:    10 * time.Second,
+		Factor: 1.5,
+	}
 
 	return server, nil
 }
@@ -129,6 +139,18 @@ func (server *Server) serve(listener *Listener) error {
 	defer listener.Close()
 
 	for {
+		if listener.IsStopped() {
+			return nil
+		}
+
+		if server.MaxConns > 0 && atomic.LoadInt64(connectionCount) >= server.MaxConns {
+			// let's delay accept a bit in case of too many connections
+			time.Sleep(server.backoff.Duration())
+			continue
+		}
+
+		server.backoff.Reset()
+
 		conn, err := listener.Accept()
 		if err != nil {
 			if listener.IsStopped() {
