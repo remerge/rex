@@ -25,7 +25,7 @@ type Server struct {
 	closeRate   *instruments.Rate
 	numConns    *instruments.Reservoir
 	tlsErrors   *instruments.Rate
-	MaxConns    int
+	MaxConns    int64
 	backoff     *rex.BackoffDuration
 }
 
