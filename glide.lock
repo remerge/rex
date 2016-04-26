@@ -1,5 +1,5 @@
 hash: bcee542ae0ef222c600b21660dff8e1734590069882f503acd152bf28a32565b
-updated: 2016-04-26T12:07:19.81616465+02:00
+updated: 2016-04-26T16:25:18.420747446+02:00
 imports:
 - name: github.com/cheekybits/genny
   version: 670ed678f7799e3ead194eaf9a0848920a494889
@@ -44,9 +44,9 @@ imports:
   - fflib/v1
   - fflib/v1/internal
 - name: github.com/remerge/gobi
-  version: 89ce09afd32aaace82d0697d13f501029cfc106b
+  version: 9f28b2d2ea10d1e63f0ad2faabeb901f4b569e9b
 - name: github.com/remerge/rand
-  version: 1dfe1edfb36845180aec114ec53195e27f8d33f2
+  version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
   version: 92a286e4dde1688175cff3d2ec9b49a02838b447
 - name: github.com/tylerb/graceful
