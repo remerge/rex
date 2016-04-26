@@ -47,7 +47,7 @@ lint:
 
 test: build lint
 	cd $(GOSRCDIR) && \
-		go test -timeout 60s $(GOPATHS)
+		go test -timeout 60s -v $(GOPATHS)
 
 bench:
 	cd $(GOSRCDIR) && \
