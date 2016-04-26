@@ -175,8 +175,6 @@ func (service *Service) Shutdown() {
 	}
 	service.Log.Infof("waiting for rollbar")
 	rollbar.Wait()
-	service.Log.Infof("service shutdown done, dumping dangling go routines")
-	_ = pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
 }
 
 func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
