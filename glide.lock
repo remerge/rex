@@ -1,5 +1,5 @@
 hash: bcee542ae0ef222c600b21660dff8e1734590069882f503acd152bf28a32565b
-updated: 2016-03-18T22:15:51.60167377+01:00
+updated: 2016-04-26T12:07:19.81616465+02:00
 imports:
 - name: github.com/cheekybits/genny
   version: 670ed678f7799e3ead194eaf9a0848920a494889
@@ -16,7 +16,7 @@ imports:
 - name: github.com/eapache/queue
   version: ded5959c0d4e360646dc9e9908cff48666781367
 - name: github.com/gin-gonic/gin
-  version: 4a6bc4aac4607e253bcda67c8c5bcda693d2388e
+  version: 542be2fe77724f800fcab7eb6c01a4e597fb8506
   subpackages:
   - binding
   - render
@@ -25,7 +25,7 @@ imports:
   subpackages:
   - proto
 - name: github.com/golang/snappy
-  version: 5f1c01d9f64b941dd9582c638279d046eda6ca31
+  version: ec642410cd033af63620b66a91ccbd3c69c2c59a
 - name: github.com/heroku/instruments
   version: 28308dce46c98f50b571e34c9cc2e5994163bf6c
   repo: https://github.com/remerge/instruments
@@ -39,7 +39,7 @@ imports:
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/pquerna/ffjson
-  version: 03d5a0ae3a5a5d0cd8d2b593e247bb073c25dbcb
+  version: 7327d038fae6927740461371efe7f330c23c3e5f
   subpackages:
   - fflib/v1
   - fflib/v1/internal
@@ -48,9 +48,9 @@ imports:
 - name: github.com/remerge/rand
   version: 1dfe1edfb36845180aec114ec53195e27f8d33f2
 - name: github.com/Shopify/sarama
-  version: fdea37926ffa7d09c6e6ec511f22c48954fef5de
+  version: 92a286e4dde1688175cff3d2ec9b49a02838b447
 - name: github.com/tylerb/graceful
-  version: c78c8d9dded2ad16ad81b1fa526a81b2bb8049f6
+  version: 9a3d4236b03bb5d26f7951134d248f9d5510d599
 - name: golang.org/x/net
   version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
@@ -58,4 +58,6 @@ imports:
   - netutil
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
+- name: gopkg.in/yaml.v2
+  version: a83829b6f1293c91addabc89d0571c246397bbf4
 devImports: []
