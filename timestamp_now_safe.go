@@ -9,6 +9,7 @@ import (
 
 // to reduce allocations in AddMetadata
 var metricsTimestampNow = ""
+var metricsTimestampNowUrlSafe = ""
 var metricsTimestampMutex = sync.Mutex{}
 
 func updateMetricsTimestampNow() {
@@ -16,6 +17,7 @@ func updateMetricsTimestampNow() {
 		time.Sleep(1 * time.Second)
 		metricsTimestampMutex.Lock()
 		metricsTimestampNow = time.Now().UTC().Format("2006-01-02T15:04:05Z")
+		metricsTimestampNowUrlSafe = time.Now().UTC().Format("2006-01-02T15-04-05Z")
 		metricsTimestampMutex.Unlock()
 	}
 }
@@ -28,4 +30,10 @@ func GetTimestampNowFormat() string {
 	metricsTimestampMutex.Lock()
 	defer metricsTimestampMutex.Unlock()
 	return metricsTimestampNow
+}
+
+func GetTimestampNowUrlSafe() string {
+	metricsTimestampMutex.Lock()
+	defer metricsTimestampMutex.Unlock()
+	return metricsTimestampNowUrlSafe
 }
