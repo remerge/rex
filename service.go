@@ -143,7 +143,9 @@ func (service *Service) ReadArgs() {
 }
 
 func (service *Service) Run() {
-	service.ReadArgs()
+	if service.CodeVersion == "" {
+		service.ReadArgs()
+	}
 
 	config := service.BaseConfig
 
