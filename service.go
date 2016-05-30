@@ -4,11 +4,14 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/pprof"
 	"os"
 	"os/signal"
 	"path/filepath"
 	"runtime"
-	"runtime/pprof"
+	rp "runtime/pprof"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -16,6 +19,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/rollbar"
+	"github.com/tylerb/graceful"
 )
 
 var CodeVersion = "unknown"
@@ -23,12 +27,14 @@ var CodeBuild = "unknown"
 
 type Config struct {
 	EventMetadata
-	LogSpec     string
-	KafkaBroker string
-	Port        int
-	TlsPort     int
-	TlsKey      string
-	TlsCert     string
+	LogSpec                 string
+	KafkaBroker             string
+	Port                    int
+	TlsPort                 int
+	TlsKey                  string
+	TlsCert                 string
+	ServerShutdownTimeout   time.Duration
+	ServerConnectionTimeout time.Duration
 }
 
 func NewConfig(name string, port int) *Config {
@@ -40,6 +46,8 @@ func NewConfig(name string, port int) *Config {
 	config.LogSpec = "<root>=INFO"
 	config.KafkaBroker = "0.0.0.0:9092"
 	config.Port = port
+	config.ServerShutdownTimeout = 30 * time.Second
+	config.ServerConnectionTimeout = 2 * time.Minute
 	return config
 }
 
@@ -57,10 +65,14 @@ type Service struct {
 	Flags         flag.FlagSet
 	Tracker       Tracker
 	MetricsTicker *MetricsTicker
-	DebugServer   *gin.Engine
 	BaseConfig    *Config
 	CodeVersion   string
 	CodeBuild     string
+	Engine        *gin.Engine
+	Server        *graceful.Server
+	TlsServer     *graceful.Server
+	DebugEngine   *gin.Engine
+	DebugServer   *graceful.Server
 }
 
 func (service *Service) InitLogger() {
@@ -103,10 +115,16 @@ func (service *Service) InitDefaultFlags() {
 	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Rollbar API Token")
 }
 
+func (service *Service) InitEngine() {
+	service.Engine = gin.New()
+	service.Engine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)))
+}
+
 func (service *Service) Init() {
 	service.InitLogger()
 	service.InitCommandLine()
 	service.InitDefaultFlags()
+	service.InitEngine()
 }
 
 func (service *Service) ReadArgs() {
@@ -161,20 +179,151 @@ func (service *Service) Run() {
 	}
 
 	if service.BaseConfig.Port > 0 {
-		service.DebugServer = StartDebugServer(service.BaseConfig.Port + 9)
+		go service.ServeDebug()
 	}
+}
+
+func GinLogger(name string) gin.HandlerFunc {
+	log := loggo.GetLogger(name)
+	return func(c *gin.Context) {
+		start := time.Now()
+		c.Next()
+		log.Debugf("%s %s -> %d in %v %s",
+			c.Request.Method,
+			c.Request.URL.Path,
+			c.Writer.Status(),
+			time.Now().Sub(start),
+			c.Errors.String(),
+		)
+	}
+}
+
+func (service *Service) Serve(handler http.Handler) {
+	if handler == nil {
+		handler = service.Engine
+	}
+
+	service.Server = &graceful.Server{
+		Timeout:          service.BaseConfig.ServerShutdownTimeout,
+		NoSignalHandling: true,
+		Server: &http.Server{
+			Handler: handler,
+			Addr:    fmt.Sprintf(":%d", service.BaseConfig.Port),
+		},
+	}
+
+	service.Server.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
+	service.Server.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
+
+	MayPanic(service.Server.ListenAndServe())
+}
+
+func (service *Service) ServeTLS(handler http.Handler) {
+	if handler == nil {
+		handler = service.Engine
+	}
+
+	service.TlsServer = &graceful.Server{
+		Timeout: service.BaseConfig.ServerShutdownTimeout,
+		Server: &http.Server{
+			Handler: handler,
+			Addr:    fmt.Sprintf(":%d", service.BaseConfig.TlsPort),
+		},
+		NoSignalHandling: true,
+	}
+
+	service.TlsServer.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
+	service.TlsServer.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
+
+	MayPanic(service.TlsServer.ListenAndServeTLS(service.BaseConfig.TlsCert, service.BaseConfig.TlsKey))
+}
+
+func (service *Service) ServeDebug() {
+	service.DebugEngine = gin.New()
+	service.DebugEngine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)))
+
+	service.DebugEngine.GET("/loggo", getLoggoSpec)
+	service.DebugEngine.POST("/loggo", setLoggoSpec)
+
+	service.DebugEngine.GET("/debug/pprof/", gin.WrapF(pprof.Index))
+	service.DebugEngine.GET("/debug/pprof/block", gin.WrapF(pprof.Index))
+	service.DebugEngine.GET("/debug/pprof/cmdline", gin.WrapF(pprof.Cmdline))
+	service.DebugEngine.GET("/debug/pprof/goroutine", gin.WrapF(pprof.Index))
+	service.DebugEngine.GET("/debug/pprof/heap", gin.WrapF(pprof.Index))
+	service.DebugEngine.GET("/debug/pprof/profile", gin.WrapF(pprof.Profile))
+	service.DebugEngine.GET("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
+	service.DebugEngine.POST("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
+	service.DebugEngine.GET("/debug/pprof/threadcreate", gin.WrapF(pprof.Index))
+	service.DebugEngine.GET("/debug/pprof/trace", gin.WrapF(pprof.Trace))
+
+	service.DebugEngine.GET("/blockprof/:rate", func(c *gin.Context) {
+		r, err := strconv.Atoi(c.Param("rate"))
+		if err != nil {
+			c.String(http.StatusOK, "rate invalid %s. %v", c.Param("rate"), err)
+			return
+		}
+		runtime.SetBlockProfileRate(r)
+		c.String(http.StatusOK, "new rate %d", r)
+	})
+
+	service.DebugServer = &graceful.Server{
+		Timeout:          service.BaseConfig.ServerShutdownTimeout,
+		NoSignalHandling: true,
+		Server: &http.Server{
+			Handler: service.DebugEngine,
+			Addr:    fmt.Sprintf(":%d", service.BaseConfig.Port+9),
+		},
+	}
+
+	service.DebugServer.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
+	service.DebugServer.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
+
+	MayPanic(service.DebugServer.ListenAndServe())
 }
 
 func (service *Service) Shutdown() {
 	service.Log.Infof("service shutdown")
+
+	if service.TlsServer != nil {
+		service.Log.Infof("shutting down tls server")
+		service.TlsServer.Stop(service.BaseConfig.ServerShutdownTimeout)
+	}
+
+	if service.Server != nil {
+		service.Log.Infof("shutting down server")
+		service.Server.Stop(service.BaseConfig.ServerShutdownTimeout)
+	}
+
+	if service.DebugServer != nil {
+		service.Log.Infof("shutting down debug server")
+		service.DebugServer.Stop(service.BaseConfig.ServerShutdownTimeout)
+	}
+
+	if service.TlsServer != nil {
+		<-service.TlsServer.StopChan()
+		service.Log.Infof("tls server shutdown complete")
+	}
+
+	if service.Server != nil {
+		<-service.Server.StopChan()
+		service.Log.Infof("server shutdown complete")
+	}
+
+	if service.DebugServer != nil {
+		<-service.DebugServer.StopChan()
+		service.Log.Infof("debug server shutdown complete")
+	}
+
 	if service.MetricsTicker != nil {
 		service.Log.Infof("shutting down metrics ticker")
 		service.MetricsTicker.Stop()
 	}
+
 	if service.Tracker != nil {
 		service.Log.Infof("shutting down tracker")
 		service.Tracker.Close()
 	}
+
 	service.Log.Infof("waiting for rollbar")
 	rollbar.Wait()
 }
@@ -194,7 +343,7 @@ func (service *Service) Wait(shutdownCallback func()) (syscall.Signal, error) {
 func (service *Service) shutdownCheck() {
 	time.Sleep(1 * time.Minute)
 	service.Log.Infof("still not dead. dumping dangling go routines")
-	_ = pprof.Lookup("goroutine").WriteTo(os.Stdout, 1)
+	_ = rp.Lookup("goroutine").WriteTo(os.Stdout, 1)
 	go service.shutdownCheck()
 }
 
