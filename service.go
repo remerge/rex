@@ -287,33 +287,38 @@ func (service *Service) ServeDebug() {
 func (service *Service) Shutdown() {
 	service.Log.Infof("service shutdown")
 
+	var serverChan, tlsServerChan, debugServerChan <-chan struct{}
+
 	if service.TlsServer != nil {
 		service.Log.Infof("shutting down tls server")
+		tlsServerChan = service.TlsServer.StopChan()
 		service.TlsServer.Stop(service.BaseConfig.ServerShutdownTimeout)
 	}
 
 	if service.Server != nil {
 		service.Log.Infof("shutting down server")
+		serverChan = service.Server.StopChan()
 		service.Server.Stop(service.BaseConfig.ServerShutdownTimeout)
 	}
 
 	if service.DebugServer != nil {
 		service.Log.Infof("shutting down debug server")
+		debugServerChan = service.DebugServer.StopChan()
 		service.DebugServer.Stop(service.BaseConfig.ServerShutdownTimeout)
 	}
 
 	if service.TlsServer != nil {
-		<-service.TlsServer.StopChan()
+		<-tlsServerChan
 		service.Log.Infof("tls server shutdown complete")
 	}
 
 	if service.Server != nil {
-		<-service.Server.StopChan()
+		<-serverChan
 		service.Log.Infof("server shutdown complete")
 	}
 
 	if service.DebugServer != nil {
-		<-service.DebugServer.StopChan()
+		<-debugServerChan
 		service.Log.Infof("debug server shutdown complete")
 	}
 
