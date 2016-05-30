@@ -215,6 +215,7 @@ func (service *Service) Serve(handler http.Handler) {
 	service.Server.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
 	service.Server.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
 
+	service.Log.Infof("start server listen %s", service.Server.Server.Addr)
 	MayPanic(service.Server.ListenAndServe())
 }
 
@@ -235,6 +236,7 @@ func (service *Service) ServeTLS(handler http.Handler) {
 	service.TlsServer.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
 	service.TlsServer.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
 
+	service.Log.Infof("start tls server listen %s", service.TlsServer.Server.Addr)
 	MayPanic(service.TlsServer.ListenAndServeTLS(service.BaseConfig.TlsCert, service.BaseConfig.TlsKey))
 }
 
@@ -278,6 +280,7 @@ func (service *Service) ServeDebug() {
 	service.DebugServer.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
 	service.DebugServer.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
 
+	service.Log.Infof("start debug server listen %s", service.DebugServer.Server.Addr)
 	MayPanic(service.DebugServer.ListenAndServe())
 }
 
