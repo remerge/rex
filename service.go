@@ -286,7 +286,7 @@ func (service *Service) ServeDebug() {
 	MayPanic(service.DebugServer.ListenAndServe())
 }
 
-func (service *Service) ShutdownServers(afterServer func()) {
+func (service *Service) ShutdownServers() {
 	var serverChan, tlsServerChan, debugServerChan <-chan struct{}
 
 	if service.TlsServer != nil {
@@ -326,7 +326,7 @@ func (service *Service) ShutdownServers(afterServer func()) {
 	}
 }
 
-func (service *Service) Shutdown(afterServer func()) {
+func (service *Service) Shutdown() {
 	service.Log.Infof("service shutdown")
 
 	service.ShutdownServers()
