@@ -116,8 +116,10 @@ func (service *Service) InitDefaultFlags() {
 }
 
 func (service *Service) InitEngine() {
-	service.Engine = gin.New()
-	service.Engine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)))
+	if service.Engine == nil {
+		service.Engine = gin.New()
+		service.Engine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)))
+	}
 }
 
 func (service *Service) Init() {
