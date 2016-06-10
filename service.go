@@ -120,6 +120,11 @@ func (service *Service) InitEngine() {
 		service.Engine = gin.New()
 		service.Engine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)))
 	}
+
+	if service.DebugEngine == nil {
+		service.DebugEngine = gin.New()
+		service.DebugEngine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)))
+	}
 }
 
 func (service *Service) Init() {
@@ -243,9 +248,6 @@ func (service *Service) ServeTLS(handler http.Handler) {
 }
 
 func (service *Service) ServeDebug() {
-	service.DebugEngine = gin.New()
-	service.DebugEngine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)))
-
 	service.DebugEngine.GET("/loggo", getLoggoSpec)
 	service.DebugEngine.POST("/loggo", setLoggoSpec)
 
