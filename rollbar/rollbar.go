@@ -301,11 +301,32 @@ func errorClass(err error) string {
 
 // Queue the given JSON body to be POSTed to Rollbar.
 func push(body map[string]interface{}) {
-	loggo.GetLogger("rollbar.message").Errorf("%#v", body)
+
+	if Environment == "development" || Environment == "test" {
+		logReadableRollbarMessage(body)
+	} else {
+		logRollbarMessage(body)
+	}
 
 	if len(bodyChannel) < Buffer {
 		waitGroup.Add(1)
 		bodyChannel <- body
+	}
+}
+
+// Sends the rollbar message as-is to the log interface
+func logRollbarMessage(body map[string]interface{}) {
+	loggo.GetLogger("rollbar.message").Errorf("%#v", body)
+}
+
+// Attempts to pretty-print the rollbar message to the log interface
+func logReadableRollbarMessage(body map[string]interface{}) {
+	readableBody, err := json.MarshalIndent(body, "", "  ")
+
+	if err != nil {
+		logRollbarMessage(body)
+	} else {
+		loggo.GetLogger("rollbar.message").Errorf(string(readableBody))
 	}
 }
 
