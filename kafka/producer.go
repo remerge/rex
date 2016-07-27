@@ -27,11 +27,11 @@ type Producer struct {
 }
 
 func (client *Client) NewProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (self *Producer, err error) {
-	name = fmt.Sprintf("kafka.producer.%s.%s", client.GetId(), name)
+	config.ClientID = fmt.Sprintf("%s.%s", client.Config().ClientID, name)
 
 	if cb == nil {
 		cb = func(err *sarama.ProducerError) {
-			loggo.GetLogger(name).Errorf("%v", err)
+			loggo.GetLogger(config.ClientID).Errorf("%v", err)
 		}
 	}
 
@@ -40,9 +40,9 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 		config:   config,
 		quit:     make(chan bool),
 		done:     make(chan bool),
-		log:      loggo.GetLogger(name),
-		messages: reporter.NewRegisteredTimer(name+".messages", -1),
-		errors:   reporter.NewRegisteredTimer(name+".errors", -1),
+		log:      loggo.GetLogger(config.ClientID),
+		messages: reporter.NewRegisteredTimer("kafka.producer."+config.ClientID+".messages", -1),
+		errors:   reporter.NewRegisteredTimer("kafka.producer."+config.ClientID+".errors", -1),
 	}
 
 	if config == nil {

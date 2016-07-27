@@ -1,6 +1,8 @@
-hash: bcee542ae0ef222c600b21660dff8e1734590069882f503acd152bf28a32565b
-updated: 2016-04-26T16:25:18.420747446+02:00
+hash: d9e76728a869b865ce751a9422e25d103efa8957561d08a0cadca72002b464d0
+updated: 2016-07-27T15:15:15.795940504+02:00
 imports:
+- name: github.com/beeker1121/goque
+  version: 05f8d5f120b3ea8dbd8e52f568c1d0278608fa20
 - name: github.com/cheekybits/genny
   version: 670ed678f7799e3ead194eaf9a0848920a494889
   subpackages:
@@ -13,10 +15,12 @@ imports:
   version: b86b1ec0dd4209a588dc1285cdd471e73525c0b3
   subpackages:
   - breaker
+- name: github.com/eapache/go-xerial-snappy
+  version: bb955e01b9346ac19dc29eb16586c90ded99a98c
 - name: github.com/eapache/queue
   version: ded5959c0d4e360646dc9e9908cff48666781367
 - name: github.com/gin-gonic/gin
-  version: 542be2fe77724f800fcab7eb6c01a4e597fb8506
+  version: f931d1ea80ae95a6fc739213cdd9399bd2967fb6
   subpackages:
   - binding
   - render
@@ -25,7 +29,7 @@ imports:
   subpackages:
   - proto
 - name: github.com/golang/snappy
-  version: ec642410cd033af63620b66a91ccbd3c69c2c59a
+  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
 - name: github.com/heroku/instruments
   version: 28308dce46c98f50b571e34c9cc2e5994163bf6c
   repo: https://github.com/remerge/instruments
@@ -33,13 +37,13 @@ imports:
   subpackages:
   - reporter
 - name: github.com/juju/loggo
-  version: 8477fc936adf0e382d680310047ca27e128a309a
+  version: 0e0537f18a29c2f0a814dad75b1ccc577852538a
 - name: github.com/klauspost/crc32
   version: 19b0b332c9e4516a6370a0456e6182c3b5036720
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/pquerna/ffjson
-  version: 7327d038fae6927740461371efe7f330c23c3e5f
+  version: a16f62ecdaf7d13077d64d3cdb1cc43486119809
   subpackages:
   - fflib/v1
   - fflib/v1/internal
@@ -48,16 +52,32 @@ imports:
 - name: github.com/remerge/rand
   version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
-  version: 92a286e4dde1688175cff3d2ec9b49a02838b447
+  version: e8020bffa1cae3ddf8068cb03416fc53d1627f3d
 - name: github.com/tylerb/graceful
-  version: 9a3d4236b03bb5d26f7951134d248f9d5510d599
+  version: 89f3ebfd85f2b2487db8fa61a29d0f102a4510fc
 - name: golang.org/x/net
   version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
   - context
-  - netutil
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
 - name: gopkg.in/yaml.v2
-  version: a83829b6f1293c91addabc89d0571c246397bbf4
-devImports: []
+  version: e4d366fc3c7938e2958e662b4258c7a89e1f0e3e
+testImports:
+- name: github.com/gopherjs/gopherjs
+  version: 72e303cb5f235b23471872477b57e573dc1c71d0
+  subpackages:
+  - js
+- name: github.com/jtolds/gls
+  version: 8ddce2a84170772b95dd5d576c48d517b22cac63
+- name: github.com/smartystreets/assertions
+  version: 2063fd1cc7c975db70502811a34b06ad034ccdf2
+  subpackages:
+  - internal/go-render/render
+  - internal/oglematchers
+- name: github.com/smartystreets/goconvey
+  version: 4622128e06c77c0174e17a7f0ed2db19a989b473
+  subpackages:
+  - convey
+  - convey/reporting
+  - convey/gotest

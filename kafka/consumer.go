@@ -18,7 +18,7 @@ type Consumer struct {
 }
 
 func (client *Client) NewConsumer(topic string, partition int32, offset int64, config *sarama.Config) (self *Consumer, err error) {
-	name := fmt.Sprintf("kafka.consumer.%s.%s.%d", client.GetId(), topic, partition)
+	name := fmt.Sprintf("kafka.consumer.%s.%s.%d", client.Config().ClientID, topic, partition)
 
 	self = &Consumer{
 		quit: make(chan bool),

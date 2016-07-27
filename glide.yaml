@@ -20,3 +20,4 @@ import:
 - package: github.com/remerge/gobi
 - package: github.com/remerge/rand
 - package: github.com/tylerb/graceful
+- package: github.com/beeker1121/goque

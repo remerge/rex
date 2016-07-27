@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/beeker1121/goque"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/kafka"
 	"github.com/remerge/rex/rollbar"
@@ -21,16 +22,21 @@ type KafkaTracker struct {
 	running     bool
 	quit        chan bool
 	done        chan bool
-	queue       *DiskQueue
+	queue       *goque.Queue
 }
 
 func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err error) {
+	queue, err := goque.OpenQueue("cache/tracker")
+	if err != nil {
+		return nil, err
+	}
+
 	self := &KafkaTracker{
 		BaseTracker: NewBaseTracker(metadata),
 		FastTimeout: 10 * time.Millisecond,
 		SafeTimeout: 100 * time.Millisecond,
 		log:         loggo.GetLogger("rex.tracker"),
-		queue:       NewDiskQueue("tracker.v2", "cache", 128*1024*1024, 5000, 1*time.Second),
+		queue:       queue,
 		quit:        make(chan bool),
 		done:        make(chan bool),
 	}
@@ -73,7 +79,7 @@ func (self *KafkaTracker) Close() {
 		self.Fast.Shutdown()
 	}
 	rollbar.Error(rollbar.WARN, self.Client.Close())
-	rollbar.Error(rollbar.WARN, self.queue.Close())
+	self.queue.Close()
 	self.log.Infof("tracker is stopped")
 }
 
@@ -121,7 +127,7 @@ var safeQueueDelim = []byte{0x0}
 func (self *KafkaTracker) enqueue(topic string, value []byte) error {
 	msg := append([]byte(topic), safeQueueDelim...)
 	msg = append(msg, value...)
-	return self.queue.Put(msg)
+	return self.queue.Enqueue(goque.NewItem(msg))
 }
 
 func (self *KafkaTracker) processSafeMessage(msg []byte) error {
@@ -140,10 +146,15 @@ func (self *KafkaTracker) start() {
 
 	for {
 		select {
-		case bytes := <-self.queue.ReadChan():
-			if err := self.processSafeMessage(bytes); err != nil {
+		default:
+			item, err := self.queue.Dequeue()
+			if err == goque.ErrEmpty {
+				time.Sleep(100 * time.Millisecond)
+			} else if err != nil {
 				rollbar.Error(rollbar.ERR, err)
-				self.queue.Put(bytes)
+			} else if err = self.processSafeMessage(item.Value); err != nil {
+				rollbar.Error(rollbar.ERR, err)
+				self.queue.Enqueue(item)
 			}
 		case <-self.quit:
 			self.running = false
