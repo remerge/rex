@@ -73,6 +73,7 @@ type Service struct {
 	TlsServer     *graceful.Server
 	DebugEngine   *gin.Engine
 	DebugServer   *graceful.Server
+	GinRecovery   gin.HandlerFunc
 }
 
 func (service *Service) InitLogger() {
@@ -116,14 +117,24 @@ func (service *Service) InitDefaultFlags() {
 }
 
 func (service *Service) InitEngine() {
+	if service.GinRecovery == nil {
+		service.GinRecovery = NewGinRecovery(service)
+	}
+
 	if service.Engine == nil {
 		service.Engine = gin.New()
-		service.Engine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)))
+		service.Engine.Use(
+			service.GinRecovery,
+			GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)),
+		)
 	}
 
 	if service.DebugEngine == nil {
 		service.DebugEngine = gin.New()
-		service.DebugEngine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)))
+		service.DebugEngine.Use(
+			service.GinRecovery,
+			GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)),
+		)
 	}
 }
 
