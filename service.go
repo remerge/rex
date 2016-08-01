@@ -73,6 +73,7 @@ type Service struct {
 	TlsServer     *graceful.Server
 	DebugEngine   *gin.Engine
 	DebugServer   *graceful.Server
+	GinRecovery   gin.HandlerFunc
 }
 
 func (service *Service) InitLogger() {
@@ -118,12 +119,18 @@ func (service *Service) InitDefaultFlags() {
 func (service *Service) InitEngine() {
 	if service.Engine == nil {
 		service.Engine = gin.New()
-		service.Engine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)))
+		service.Engine.Use(
+			GinRecovery(),
+			GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)),
+		)
 	}
 
 	if service.DebugEngine == nil {
 		service.DebugEngine = gin.New()
-		service.DebugEngine.Use(gin.Recovery(), GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)))
+		service.DebugEngine.Use(
+			GinRecovery(),
+			GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)),
+		)
 	}
 }
 
@@ -270,6 +277,10 @@ func (service *Service) ServeDebug() {
 		}
 		runtime.SetBlockProfileRate(r)
 		c.String(http.StatusOK, "new rate %d", r)
+	})
+
+	service.DebugEngine.GET("/panic", func(c *gin.Context) {
+		panic(fmt.Errorf("test panic"))
 	})
 
 	service.DebugServer = &graceful.Server{
