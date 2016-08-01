@@ -117,14 +117,10 @@ func (service *Service) InitDefaultFlags() {
 }
 
 func (service *Service) InitEngine() {
-	if service.GinRecovery == nil {
-		service.GinRecovery = NewGinRecovery(service)
-	}
-
 	if service.Engine == nil {
 		service.Engine = gin.New()
 		service.Engine.Use(
-			service.GinRecovery,
+			GinRecovery(),
 			GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)),
 		)
 	}
@@ -132,7 +128,7 @@ func (service *Service) InitEngine() {
 	if service.DebugEngine == nil {
 		service.DebugEngine = gin.New()
 		service.DebugEngine.Use(
-			service.GinRecovery,
+			GinRecovery(),
 			GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)),
 		)
 	}
@@ -281,6 +277,10 @@ func (service *Service) ServeDebug() {
 		}
 		runtime.SetBlockProfileRate(r)
 		c.String(http.StatusOK, "new rate %d", r)
+	})
+
+	service.DebugEngine.GET("/panic", func(c *gin.Context) {
+		panic(fmt.Errorf("test panic"))
 	})
 
 	service.DebugServer = &graceful.Server{

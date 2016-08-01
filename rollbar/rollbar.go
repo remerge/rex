@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"hash/adler32"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/exec"
@@ -116,6 +117,8 @@ func ErrorWithStackSkip(level string, err error, skip int, fields ...*Field) {
 // ErrorWithStack asynchronously sends and error to Rollbar with the given
 // stacktrace and (optionally) custom Fields to be passed on to Rollbar.
 func ErrorWithStack(level string, err error, stack Stack, fields ...*Field) {
+	loggo.GetLogger("rollbar").Errorf("%s", err.Error())
+	fmt.Printf("\n%s\n\n", stack.String())
 	buildAndPushError(level, err, stack, fields...)
 }
 
@@ -142,6 +145,9 @@ func RequestErrorWithStackSkip(level string, r *http.Request, err error, skip in
 // http.Request, and a custom Stack. You You can pass, optionally, custom
 // Fields to be passed on to Rollbar.
 func RequestErrorWithStack(level string, r *http.Request, err error, stack Stack, fields ...*Field) {
+	loggo.GetLogger("rollbar").Errorf("%s", err.Error())
+	requestDump, _ := httputil.DumpRequest(r, false)
+	fmt.Printf("\n%s%s\n\n", requestDump, stack.String())
 	buildAndPushError(level, err, stack, &Field{Name: "request", Data: errorRequest(r)})
 }
 
@@ -301,32 +307,9 @@ func errorClass(err error) string {
 
 // Queue the given JSON body to be POSTed to Rollbar.
 func push(body map[string]interface{}) {
-
-	if Environment == "development" || Environment == "test" {
-		logReadableRollbarMessage(body)
-	} else {
-		logRollbarMessage(body)
-	}
-
 	if len(bodyChannel) < Buffer {
 		waitGroup.Add(1)
 		bodyChannel <- body
-	}
-}
-
-// Sends the rollbar message as-is to the log interface
-func logRollbarMessage(body map[string]interface{}) {
-	loggo.GetLogger("rollbar.message").Errorf("%#v", body)
-}
-
-// Attempts to pretty-print the rollbar message to the log interface
-func logReadableRollbarMessage(body map[string]interface{}) {
-	readableBody, err := json.MarshalIndent(body, "", "  ")
-
-	if err != nil {
-		logRollbarMessage(body)
-	} else {
-		loggo.GetLogger("rollbar.message").Errorf(string(readableBody))
 	}
 }
 
