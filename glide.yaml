@@ -14,9 +14,6 @@ import:
   subpackages:
   - reporter
 - package: github.com/juju/loggo
-- package: github.com/pquerna/ffjson
-  subpackages:
-  - fflib/v1
 - package: github.com/remerge/gobi
 - package: github.com/remerge/rand
 - package: github.com/tylerb/graceful
