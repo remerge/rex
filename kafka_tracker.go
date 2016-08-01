@@ -127,7 +127,8 @@ var safeQueueDelim = []byte{0x0}
 func (self *KafkaTracker) enqueue(topic string, value []byte) error {
 	msg := append([]byte(topic), safeQueueDelim...)
 	msg = append(msg, value...)
-	return self.queue.Enqueue(goque.NewItem(msg))
+	_, err := self.queue.Enqueue(msg)
+	return err
 }
 
 func (self *KafkaTracker) processSafeMessage(msg []byte) error {
@@ -154,7 +155,7 @@ func (self *KafkaTracker) start() {
 				rollbar.Error(rollbar.ERR, err)
 			} else if err = self.processSafeMessage(item.Value); err != nil {
 				rollbar.Error(rollbar.ERR, err)
-				self.queue.Enqueue(item)
+				self.queue.Enqueue(item.Value)
 			}
 		case <-self.quit:
 			self.running = false

@@ -1,8 +1,8 @@
 hash: d9e76728a869b865ce751a9422e25d103efa8957561d08a0cadca72002b464d0
-updated: 2016-07-27T15:15:15.795940504+02:00
+updated: 2016-08-01T09:33:07.535743175+02:00
 imports:
 - name: github.com/beeker1121/goque
-  version: 05f8d5f120b3ea8dbd8e52f568c1d0278608fa20
+  version: e1e63ca63c14b41209e160f54c8e7669564eacc4
 - name: github.com/cheekybits/genny
   version: 670ed678f7799e3ead194eaf9a0848920a494889
   subpackages:
@@ -43,7 +43,7 @@ imports:
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/pquerna/ffjson
-  version: a16f62ecdaf7d13077d64d3cdb1cc43486119809
+  version: 5b79949af5378123d6b0672afc88d3b214bb4f9f
   subpackages:
   - fflib/v1
   - fflib/v1/internal
@@ -53,6 +53,21 @@ imports:
   version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
   version: e8020bffa1cae3ddf8068cb03416fc53d1627f3d
+- name: github.com/syndtr/goleveldb
+  version: ab8b5dcf1042e818ab68e770d465112a899b668e
+  subpackages:
+  - leveldb
+  - leveldb/util
+  - leveldb/cache
+  - leveldb/comparer
+  - leveldb/errors
+  - leveldb/filter
+  - leveldb/iterator
+  - leveldb/journal
+  - leveldb/memdb
+  - leveldb/opt
+  - leveldb/storage
+  - leveldb/table
 - name: github.com/tylerb/graceful
   version: 89f3ebfd85f2b2487db8fa61a29d0f102a4510fc
 - name: golang.org/x/net
