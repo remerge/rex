@@ -76,9 +76,21 @@ type Service struct {
 	GinRecovery   gin.HandlerFunc
 }
 
+func (service *Service) loggoFormatter(entry loggo.Entry) string {
+	return fmt.Sprintf(
+		"%s[%d] [%s] %s (at %s:%d)",
+		service.BaseConfig.Service,
+		os.Getpid(),
+		entry.Module,
+		entry.Message,
+		filepath.Base(entry.Filename),
+		entry.Line,
+	)
+}
+
 func (service *Service) InitLogger() {
 	config := service.BaseConfig
-	_, err := loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, &LogFormat{Service: config.Service}))
+	_, err := loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, service.loggoFormatter))
 	MayPanic(err)
 	rootLogger := loggo.GetLogger("")
 	rootLogger.SetLogLevel(loggo.INFO)
@@ -391,14 +403,4 @@ func readArgs() []string {
 	}
 
 	return args
-}
-
-type LogFormat struct {
-	Service string
-}
-
-func (self *LogFormat) Format(level loggo.Level, module, filename string, line int, timestamp time.Time, message string) string {
-	// Just get the basename from the filename
-	filename = filepath.Base(filename)
-	return fmt.Sprintf("%s[%d] [%s] %s (at %s:%d)", self.Service, os.Getpid(), module, message, filename, line)
 }
