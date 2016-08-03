@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"runtime/debug"
 	"sync"
 	"sync/atomic"
 
@@ -105,6 +106,9 @@ func putBufioWriter(bw *bufio.Writer) {
 func (c *Connection) Serve() {
 	defer func() {
 		if err := recover(); err != nil {
+			fmt.Printf("unhandled panic: %v\n", err)
+			debug.PrintStack()
+
 			switch err.(type) {
 			case error:
 				rollbar.Error(rollbar.CRIT, err.(error), &rollbar.Field{
