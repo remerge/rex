@@ -1,12 +1,20 @@
-hash: 0e2682807bcbf1ec897e31317461da07361993323fa07757d9099476d8a8430b
-updated: 2016-08-02T13:29:01.162983815+02:00
+hash: a6c4d71f3ef79bde695443701b5b59ce49b962ae4c607cd5b84bc32680c55932
+updated: 2016-08-12T12:44:58.042284458+02:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
+- name: github.com/cavaliercoder/grab
+  version: 2e3d93bfd60c32b49139f0f4175d457d726d0ea8
 - name: github.com/cheekybits/genny
   version: 670ed678f7799e3ead194eaf9a0848920a494889
   subpackages:
   - generic
+- name: github.com/colinmarc/hdfs
+  version: 1fe2183ac9dd50a9950cd146cc34350c18ddfcec
+  subpackages:
+  - protocol/hadoop_common
+  - protocol/hadoop_hdfs
+  - rpc
 - name: github.com/davecgh/go-spew
   version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
   subpackages:
@@ -48,6 +56,8 @@ imports:
   - jwriter
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
+- name: github.com/remerge/dfc
+  version: 102eaee9f04da93872b3edf3262e175da10fd8ae
 - name: github.com/remerge/gobi
   version: 9f28b2d2ea10d1e63f0ad2faabeb901f4b569e9b
 - name: github.com/remerge/rand
