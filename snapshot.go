@@ -13,6 +13,7 @@ import (
 
 	"github.com/cheekybits/genny/generic"
 	"github.com/remerge/gobi"
+	"github.com/remerge/dfc"
 )
 
 type _T_ generic.Type
@@ -206,6 +207,10 @@ func (self *SnapshoterFor_T_) Filename(date time.Time) string {
 	return fmt.Sprintf("%s.%s", date.Format(self.timeLayout), self.ext)
 }
 
+func (self *SnapshoterFor_T_) DFCType() string {
+	return fmt.Sprintf("%s-snapshot", self.ext)
+}
+
 func (self *SnapshoterFor_T_) AbsFilename(date time.Time) string {
 	return self.Path(self.Filename(date))
 }
@@ -245,6 +250,32 @@ func (self *_G_) SnapshotToFile(filename string) error {
 		return err
 	}
 	return nil
+}
+
+func (self *_G_) SnapshotToDFC(filename string, dfcClient *dfc.Client) error {
+	typeName := self.DFCType()
+	ft := dfcClient.GetType(typeName)
+
+	tmpFile, tmpErr := ioutil.TempFile("", typeName)
+
+	if tmpErr != nil {
+		return tmpErr
+	}
+
+	tmpFileName := tmpFileName.Name()
+	tmpFile.Close()
+
+	snapErr := self.SnapshotToFile(tmpFileName)
+
+	if snapErr != nil {
+		return snapErr
+	}
+
+	defer func() {
+		_MayPanic(os.Remove(tmpFileName))
+	}()
+
+	return ft.Put(tmpFileName, filename)
 }
 
 func (self *_G_) Snapshot() []byte {
