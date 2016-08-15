@@ -54,11 +54,12 @@ func BuildStack(skip int) Stack {
 		if file != lastFile {
 			data, readErr := ioutil.ReadFile(file)
 
-			if readErr != nil {
-				continue
+			if readErr == nil {
+				lines = bytes.Split(data, []byte{'\n'})
+			} else {
+				lines = make([][]byte, 0)
 			}
 
-			lines = bytes.Split(data, []byte{'\n'})
 			lastFile = file
 		}
 
