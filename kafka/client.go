@@ -12,9 +12,12 @@ type Client struct {
 	brokers []string
 }
 
-func NewClient(id string, broker_list string) (client *Client, err error) {
+func WrapSaramaLogger() {
 	sarama.Logger = loggerWrapper{loggo.GetLogger("sarama")}
+}
 
+func NewClient(id string, broker_list string) (client *Client, err error) {
+	WrapSaramaLogger()
 	client = &Client{
 		brokers: strings.Split(broker_list, ","),
 	}
