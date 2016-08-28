@@ -18,10 +18,6 @@ func (client *Client) NewConsumerGroup(group string, topic string, offsets map[i
 		log:       loggo.GetLogger("kafka.consumer.group." + group),
 	}
 
-	if config == nil {
-		config = client.Config()
-	}
-
 	partitions, err := client.Partitions(topic)
 	if err != nil {
 		return nil, err
