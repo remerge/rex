@@ -1,5 +1,5 @@
-hash: 0e2682807bcbf1ec897e31317461da07361993323fa07757d9099476d8a8430b
-updated: 2016-08-02T13:29:01.162983815+02:00
+hash: 736a014af9e4555ba798ab9a4dcc406b89bddfb2dfccb30008077072d86f3b15
+updated: 2016-09-01T09:44:09.998746302+02:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -36,6 +36,8 @@ imports:
   vcs: git
   subpackages:
   - reporter
+- name: github.com/jinzhu/now
+  version: d9861969c7a7e84746d341c09020c2ef8a617f8f
 - name: github.com/juju/loggo
   version: b4e8621d64b3058d86abcd85e470b32dd5cedc12
 - name: github.com/klauspost/crc32
