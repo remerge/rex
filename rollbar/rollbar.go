@@ -154,8 +154,9 @@ func RequestErrorWithStack(level string, r *http.Request, err error, stack Stack
 func buildError(level string, err error, stack Stack, fields ...*Field) map[string]interface{} {
 	body := buildBody(level, err.Error())
 	data := body["data"].(map[string]interface{})
-	errBody := errorBody(err, stack)
+	errBody, fingerprint := errorBody(err, stack)
 	data["body"] = errBody
+	data["fingerprint"] = fingerprint
 
 	for _, field := range fields {
 		data[field.Name] = field.Data
@@ -224,7 +225,8 @@ func buildBody(level, title string) map[string]interface{} {
 }
 
 // errorBody generates a Rollbar error body with a given stack trace.
-func errorBody(err error, stack Stack) map[string]interface{} {
+func errorBody(err error, stack Stack) (map[string]interface{}, string) {
+	fingerprint := stack.Fingerprint()
 	errBody := map[string]interface{}{
 		"trace": map[string]interface{}{
 			"frames": stack,
@@ -234,7 +236,7 @@ func errorBody(err error, stack Stack) map[string]interface{} {
 			},
 		},
 	}
-	return errBody
+	return errBody, fingerprint
 }
 
 // errorRequest extracts details from a Request in a format that Rollbar
