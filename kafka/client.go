@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/Shopify/sarama"
-	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 )
 
 type Client struct {
@@ -13,7 +13,7 @@ type Client struct {
 }
 
 func WrapSaramaLogger() {
-	sarama.Logger = loggerWrapper{loggo.GetLogger("sarama")}
+	sarama.Logger = loggerWrapper{log.GetLogger("sarama")}
 }
 
 func NewClient(id string, broker_list string) (client *Client, err error) {

@@ -3,6 +3,7 @@ package kafka
 import (
 	"github.com/Shopify/sarama"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 )
 
 type ConsumerGroup struct {
@@ -15,7 +16,7 @@ func (client *Client) NewConsumerGroup(group string, topic string, offsets map[i
 	self := &ConsumerGroup{
 		Events:    make(chan *sarama.ConsumerMessage),
 		consumers: make([]*Consumer, 0),
-		log:       loggo.GetLogger("kafka.consumer.group." + group),
+		log:       log.GetLogger("kafka.consumer.group." + group),
 	}
 
 	partitions, err := client.Partitions(topic)

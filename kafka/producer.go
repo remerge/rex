@@ -9,6 +9,7 @@ import (
 	"github.com/heroku/instruments"
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 )
 
@@ -31,7 +32,7 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 
 	if cb == nil {
 		cb = func(err *sarama.ProducerError) {
-			loggo.GetLogger(config.ClientID).Errorf("%v", err)
+			log.GetLogger(config.ClientID).Errorf("%v", err)
 		}
 	}
 
@@ -40,7 +41,7 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 		config:   config,
 		quit:     make(chan bool),
 		done:     make(chan bool),
-		log:      loggo.GetLogger(config.ClientID),
+		log:      log.GetLogger(config.ClientID),
 		messages: reporter.NewRegisteredTimer("kafka.producer."+config.ClientID+".messages", -1),
 		errors:   reporter.NewRegisteredTimer("kafka.producer."+config.ClientID+".errors", -1),
 	}

@@ -8,6 +8,7 @@ import (
 	"github.com/beeker1121/goque"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/kafka"
+	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 )
 
@@ -35,7 +36,7 @@ func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err err
 		BaseTracker: NewBaseTracker(metadata),
 		FastTimeout: 10 * time.Millisecond,
 		SafeTimeout: 100 * time.Millisecond,
-		log:         loggo.GetLogger("rex.tracker"),
+		log:         log.GetLogger("rex.tracker"),
 		queue:       queue,
 		quit:        make(chan bool),
 		done:        make(chan bool),

@@ -7,7 +7,7 @@ import (
 
 	"github.com/heroku/instruments"
 	"github.com/heroku/instruments/reporter"
-	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 )
 
 type MetricEvent struct {
@@ -75,10 +75,10 @@ func (self *MetricsTicker) Start() {
 }
 
 func (self *MetricsTicker) Stop() {
-	loggo.GetLogger("rex.metrics").Infof("stopping metrics ticker")
+	log.GetLogger("rex.metrics").Infof("stopping metrics ticker")
 	self.quit <- true
 	<-self.done
-	loggo.GetLogger("rex.metrics").Infof("stopped metrics ticker")
+	log.GetLogger("rex.metrics").Infof("stopped metrics ticker")
 }
 
 func (self *MetricsTicker) Track() {

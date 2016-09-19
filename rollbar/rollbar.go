@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 )
 
 const (
@@ -117,7 +117,7 @@ func ErrorWithStackSkip(level string, err error, skip int, fields ...*Field) {
 // ErrorWithStack asynchronously sends and error to Rollbar with the given
 // stacktrace and (optionally) custom Fields to be passed on to Rollbar.
 func ErrorWithStack(level string, err error, stack Stack, fields ...*Field) {
-	loggo.GetLogger("rollbar").Errorf("%s", err.Error())
+	log.GetLogger("rollbar").Errorf("%s", err.Error())
 	fmt.Printf("\n%s\n\n", stack.String())
 	buildAndPushError(level, err, stack, fields...)
 }
@@ -145,7 +145,7 @@ func RequestErrorWithStackSkip(level string, r *http.Request, err error, skip in
 // http.Request, and a custom Stack. You You can pass, optionally, custom
 // Fields to be passed on to Rollbar.
 func RequestErrorWithStack(level string, r *http.Request, err error, stack Stack, fields ...*Field) {
-	loggo.GetLogger("rollbar").Errorf("%s", err.Error())
+	log.GetLogger("rollbar").Errorf("%s", err.Error())
 	requestDump, _ := httputil.DumpRequest(r, false)
 	fmt.Printf("\n%s%s\n\n", requestDump, stack.String())
 	buildAndPushError(level, err, stack, &Field{Name: "request", Data: errorRequest(r)})

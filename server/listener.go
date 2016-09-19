@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 )
 
 type Listener struct {
@@ -19,7 +20,7 @@ type Listener struct {
 func NewListener(port int) (listener *Listener, err error) {
 	listener = &Listener{}
 
-	listener.log = loggo.GetLogger(fmt.Sprintf("listener:%d", port))
+	listener.log = log.GetLogger(fmt.Sprintf("listener:%d", port))
 	listener.log.Infof("start listen on port %d", port)
 
 	listener.Listener, err = net.Listen("tcp", fmt.Sprintf(":%d", port))

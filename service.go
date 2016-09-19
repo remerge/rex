@@ -8,7 +8,6 @@ import (
 	"net/http/pprof"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"runtime"
 	rp "runtime/pprof"
 	"strconv"
@@ -18,6 +17,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/env"
+	. "github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 	"github.com/tylerb/graceful"
 )
@@ -76,25 +77,8 @@ type Service struct {
 	GinRecovery   gin.HandlerFunc
 }
 
-func (service *Service) loggoFormatter(entry loggo.Entry) string {
-	return fmt.Sprintf(
-		"%s[%d] [%s] %s (at %s:%d)",
-		service.BaseConfig.Service,
-		os.Getpid(),
-		entry.Module,
-		entry.Message,
-		filepath.Base(entry.Filename),
-		entry.Line,
-	)
-}
-
 func (service *Service) InitLogger() {
-	config := service.BaseConfig
-	_, err := loggo.ReplaceDefaultWriter(loggo.NewSimpleWriter(os.Stdout, service.loggoFormatter))
-	MayPanic(err)
-	rootLogger := loggo.GetLogger("")
-	rootLogger.SetLogLevel(loggo.INFO)
-	service.Log = loggo.GetLogger(config.Service)
+	service.Log = GetLogger(service.BaseConfig.Service)
 }
 
 func (service *Service) InitCommandLine() {
@@ -173,7 +157,7 @@ func (service *Service) ReadArgs() {
 	service.Log.Infof("using %d cores for go routines", runtime.GOMAXPROCS(0))
 
 	// set environment for children
-	MayPanic(os.Setenv("REX_ENV", service.BaseConfig.Environment))
+	env.Set(service.BaseConfig.Environment)
 
 	// setup rollbar
 	rollbar.Environment = service.BaseConfig.Environment
@@ -183,7 +167,7 @@ func (service *Service) ReadArgs() {
 	service.BaseConfig.EventMetadata.Release = rollbar.CodeVersion
 
 	// configure log levels
-	MayPanic(loggo.ConfigureLoggers(service.BaseConfig.LogSpec))
+	MayPanic(ConfigureLoggers(service.BaseConfig.LogSpec))
 }
 
 func (service *Service) Run() {
@@ -210,7 +194,7 @@ func (service *Service) Run() {
 }
 
 func GinLogger(name string) gin.HandlerFunc {
-	log := loggo.GetLogger(name)
+	log := GetLogger(name)
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()

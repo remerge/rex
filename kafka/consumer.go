@@ -5,6 +5,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 )
 
@@ -23,7 +24,7 @@ func (client *Client) NewConsumer(topic string, partition int32, offset int64, c
 	self = &Consumer{
 		quit: make(chan bool),
 		done: make(chan bool),
-		log:  loggo.GetLogger(name),
+		log:  log.GetLogger(name),
 	}
 
 	if config == nil {

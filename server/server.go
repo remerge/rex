@@ -9,6 +9,7 @@ import (
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex"
+	"github.com/remerge/rex/log"
 )
 
 type Server struct {
@@ -33,7 +34,7 @@ func NewServer(port int) (server *Server, err error) {
 		Port: port,
 	}
 
-	server.Log = loggo.GetLogger(server.Id)
+	server.Log = log.GetLogger(server.Id)
 	server.Log.Infof("new server on port %d", port)
 
 	server.acceptRate = reporter.NewRegisteredRate(fmt.Sprintf("server.accept:%d", port))
