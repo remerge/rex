@@ -64,7 +64,7 @@ func (w *loggoWriter) Write(entry loggo.Entry) {
 
 	fmt.Fprintf(
 		writer,
-		"%s [%s] %s %s:%d\n",
+		"%s [%s] %s (in %s:%d)\n",
 		entry.Level.Short(),
 		entry.Module,
 		entry.Message,
