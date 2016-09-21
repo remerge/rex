@@ -118,12 +118,13 @@ func (c *Connection) Serve() {
 					},
 				})
 			default:
-				rollbar.Message(rollbar.CRIT, fmt.Sprintf("unhandled error: %v", err), &rollbar.Field{
-					Name: "person",
-					Data: map[string]string{
+				rollbar.Message(rollbar.CRIT,
+					"unhandled server connection error",
+					&rollbar.Field{Name: "error", Data: err},
+					&rollbar.Field{Name: "person", Data: map[string]string{
 						"id": c.Conn.RemoteAddr().String(),
-					},
-				})
+					}},
+				)
 			}
 		}
 		c.Close()
