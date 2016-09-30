@@ -26,28 +26,30 @@ func (client *Client) NewConsumerGroup(group string, topic string, offsets map[i
 
 	self.log.Infof("topic=%s partitions=%d partitions=%v", topic, len(partitions), partitions)
 	for _, p := range partitions {
-		earliest, err := client.GetGroupOffset(group, topic, p, sarama.OffsetOldest)
+		earliest, err := client.Client.GetOffset(topic, p, sarama.OffsetOldest)
 		if err != nil {
 			self.Shutdown()
 			return nil, err
 		}
 
-		latest, err := client.GetGroupOffset(group, topic, p, sarama.OffsetNewest)
+		latest, err := client.Client.GetOffset(topic, p, sarama.OffsetNewest)
 		if err != nil {
 			self.Shutdown()
 			return nil, err
 		}
 
-		resumeFrom := offsets[p] + 1
+		resumeFrom := offsets[p]
 		if earliest == latest && earliest == 0 {
 			resumeFrom = 0
 		}
 
 		if earliest > resumeFrom {
+			self.log.Infof("resume from corrected from=%v to %v", resumeFrom, earliest)
 			resumeFrom = earliest
 		}
 
 		if resumeFrom > latest {
+			self.log.Infof("resume from corrected from=%v to %v", resumeFrom, latest)
 			resumeFrom = latest
 		}
 
