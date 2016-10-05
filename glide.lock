@@ -1,5 +1,5 @@
-hash: 736a014af9e4555ba798ab9a4dcc406b89bddfb2dfccb30008077072d86f3b15
-updated: 2016-09-19T11:39:03.00733395+02:00
+hash: 71c60574a6f5a2b52681dd67d663f1ed9e7d66507a9e148dcf32d727c1e9ad10
+updated: 2016-10-05T14:48:10.31373247Z
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -60,14 +60,14 @@ imports:
   version: ed8eb9e318d7a84ce5915b495b7d35e0cfe7b5a8
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
-- name: github.com/rcrowley/go-metrics
-  version: b71dba47c7bf0374dfe3b67da7b5b702fa160a15
 - name: github.com/remerge/gobi
   version: 9f28b2d2ea10d1e63f0ad2faabeb901f4b569e9b
 - name: github.com/remerge/rand
   version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
-  version: 482c471fbf73dc2ac66945187f811581f008c24a
+  version: 48fa3ed6a6f66ebfb2ad256811550d25e909acf7
+  repo: https://github.com/remerge/sarama
+  vcs: git
 - name: github.com/syndtr/goleveldb
   version: 6ae1797c0b42b9323fc27ff7dcf568df88f2f33d
   subpackages:
