@@ -9,6 +9,7 @@ import (
 
 	"github.com/Shopify/sarama"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 )
 
@@ -94,7 +95,7 @@ func NewGroupProcessor(config *GroupProcessorConfig, loadSaver LoadSaver) (*Grou
 		changeReaderDone: NewTerminator(),
 		saveWorkerDone:   NewTerminator(),
 		processed:        make(chan PartitionOffset),
-		log:              loggo.GetLogger(config.Name + ".groupprocessor." + config.Topic),
+		log:              log.GetLogger(config.Name + ".groupprocessor." + config.Topic),
 		loadSaver:        loadSaver,
 	}
 
