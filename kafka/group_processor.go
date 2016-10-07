@@ -17,8 +17,11 @@ type GroupProcessable interface {
 	Msg() *sarama.ConsumerMessage
 }
 
-type LoadSaver interface {
+type Loader interface {
 	Load(*sarama.ConsumerMessage) (GroupProcessable, error)
+}
+
+type Saver interface {
 	Save(GroupProcessable) error
 }
 
@@ -46,7 +49,8 @@ type GroupProcessor struct {
 	saveWorkerDone   *Terminator
 	changeReaderDone *Terminator
 
-	loadSaver LoadSaver
+	loaders []Loader
+	savers  []Saver
 }
 
 type PartitionOffset struct {
@@ -64,7 +68,7 @@ func NewGroupProcessorConfig(name, brokers, topic string) *GroupProcessorConfig 
 	}
 }
 
-func NewGroupProcessor(config *GroupProcessorConfig, loadSaver LoadSaver) (*GroupProcessor, error) {
+func NewGroupProcessor(config *GroupProcessorConfig, newLoaderFunc func(int) Loader, newSaverFunc func(int) Saver) (*GroupProcessor, error) {
 	// TODO - this should be somewhere else
 	WrapSaramaLogger()
 
@@ -96,7 +100,14 @@ func NewGroupProcessor(config *GroupProcessorConfig, loadSaver LoadSaver) (*Grou
 		saveWorkerDone:   NewTerminator(),
 		processed:        make(chan PartitionOffset),
 		log:              log.GetLogger(config.Name + ".groupprocessor." + config.Topic),
-		loadSaver:        loadSaver,
+	}
+
+	for i := 0; i < config.NumChangeReader; i++ {
+		gp.loaders = append(gp.loaders, newLoaderFunc(i))
+	}
+
+	for i := 0; i < config.NumSaveWorker; i++ {
+		gp.savers = append(gp.savers, newSaverFunc(i))
 	}
 
 	return gp, nil
@@ -163,7 +174,7 @@ func (gp *GroupProcessor) logProgess() {
 
 func (gp *GroupProcessor) runChangeReader() {
 	for i := 0; i < gp.Config.NumChangeReader; i++ {
-		go func() {
+		go func(i int) {
 			gp.changeReaderDone.Add(1)
 			defer gp.changeReaderDone.Done()
 			for {
@@ -172,7 +183,7 @@ func (gp *GroupProcessor) runChangeReader() {
 					if !ok {
 						continue
 					}
-					processable, err := gp.loadSaver.Load(msg)
+					processable, err := gp.loaders[i].Load(msg)
 					if err != nil {
 						continue
 					}
@@ -183,7 +194,7 @@ func (gp *GroupProcessor) runChangeReader() {
 					return
 				}
 			}
-		}()
+		}(i)
 	}
 }
 
@@ -194,7 +205,7 @@ func (gp *GroupProcessor) runSaveWorker() {
 	// we want to process the user grouped per id
 	for i := 0; i < gp.Config.NumSaveWorker; i++ {
 		gp.saveWorkerChannels[i] = make(chan GroupProcessable)
-		go func(ch chan GroupProcessable) {
+		go func(i int, ch chan GroupProcessable) {
 			gp.saveWorkerDone.Add(1)
 			defer gp.saveWorkerDone.Done()
 			for {
@@ -205,7 +216,7 @@ func (gp *GroupProcessor) runSaveWorker() {
 					if !ok {
 						continue
 					}
-					err := gp.loadSaver.Save(processable)
+					err := gp.savers[i].Save(processable)
 					if err != nil {
 						continue
 					}
@@ -216,7 +227,7 @@ func (gp *GroupProcessor) runSaveWorker() {
 					gp.processed <- PartitionOffset{msg.Partition, msg.Offset}
 				}
 			}
-		}(gp.saveWorkerChannels[i])
+		}(i, gp.saveWorkerChannels[i])
 	}
 }
 
