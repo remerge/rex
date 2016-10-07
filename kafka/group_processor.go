@@ -19,10 +19,12 @@ type GroupProcessable interface {
 
 type Loader interface {
 	Load(*sarama.ConsumerMessage) (GroupProcessable, error)
+	Close()
 }
 
 type Saver interface {
 	Save(GroupProcessable) error
+	Close()
 }
 
 type GroupProcessorConfig struct {
@@ -238,11 +240,22 @@ func (gp *GroupProcessor) Run() {
 }
 
 func (gp *GroupProcessor) Close() {
-	// terminate change readers
+	// terminate readers/loaders
 	gp.log.Infof("closing change readers")
 	gp.changeReaderDone.Close(gp.Config.NumChangeReader)
+	gp.log.Infof("closing loaders")
+	for i := 0; i < gp.Config.NumChangeReader; i++ {
+		gp.loaders[i].Close()
+	}
+
+	// terminate workers/savers
 	gp.log.Infof("closing save workers")
 	gp.saveWorkerDone.Close(gp.Config.NumSaveWorker)
+	gp.log.Infof("closing closing savers")
+	for i := 0; i < gp.Config.NumSaveWorker; i++ {
+		gp.savers[i].Close()
+	}
+
 	// terminate progress logging
 	gp.log.Infof("closing logging")
 	close(gp.processed)
