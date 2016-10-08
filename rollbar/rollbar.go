@@ -100,55 +100,61 @@ func init() {
 
 // Error asynchronously sends an error to Rollbar with the given severity
 // level. You can pass, optionally, custom Fields to be passed on to Rollbar.
-func Error(level string, err error, fields ...*Field) {
+func Error(level string, err error, fields ...*Field) error {
 	if err != nil {
 		ErrorWithStackSkip(level, err, 1, fields...)
 	}
+	return err
 }
 
 // ErrorWithStackSkip asynchronously sends an error to Rollbar with the given
 // severity level and a given number of stack trace frames skipped. You can
 // pass, optionally, custom Fields to be passed on to Rollbar.
-func ErrorWithStackSkip(level string, err error, skip int, fields ...*Field) {
+func ErrorWithStackSkip(level string, err error, skip int, fields ...*Field) error {
 	stack := BuildStack(2 + skip)
 	ErrorWithStack(level, err, stack, fields...)
+	return err
 }
 
 // ErrorWithStack asynchronously sends and error to Rollbar with the given
 // stacktrace and (optionally) custom Fields to be passed on to Rollbar.
-func ErrorWithStack(level string, err error, stack Stack, fields ...*Field) {
+func ErrorWithStack(level string, err error, stack Stack, fields ...*Field) error {
 	log.GetLogger("rollbar").Errorf("%s", err.Error())
 	fmt.Printf("\n%s\n\n", stack.String())
 	buildAndPushError(level, err, stack, fields...)
+	return err
 }
 
 // RequestError asynchronously sends an error to Rollbar with the given
 // severity level and request-specific information. You can pass, optionally,
 // custom Fields to be passed on to Rollbar.
-func RequestError(level string, r *http.Request, err error, fields ...*Field) {
+func RequestError(level string, r *http.Request, err error, fields ...*Field) error {
 	if err != nil {
 		RequestErrorWithStackSkip(level, r, err, 1, fields...)
 	}
+	return err
 }
 
 // RequestErrorWithStackSkip asynchronously sends an error to Rollbar with the
 // given severity level and a given number of stack trace frames skipped, in
 // addition to extra request-specific information. You can pass, optionally,
 // custom Fields to be passed on to Rollbar.
-func RequestErrorWithStackSkip(level string, r *http.Request, err error, skip int, fields ...*Field) {
+func RequestErrorWithStackSkip(level string, r *http.Request, err error, skip int, fields ...*Field) error {
 	stack := BuildStack(2 + skip)
 	RequestErrorWithStack(level, r, err, stack, fields...)
+	return err
 }
 
 // RequestErrorWithStack asynchronously sends an error to Rollbar with the
 // given severity level, request-specific information provided by the given
 // http.Request, and a custom Stack. You You can pass, optionally, custom
 // Fields to be passed on to Rollbar.
-func RequestErrorWithStack(level string, r *http.Request, err error, stack Stack, fields ...*Field) {
+func RequestErrorWithStack(level string, r *http.Request, err error, stack Stack, fields ...*Field) error {
 	log.GetLogger("rollbar").Errorf("%s", err.Error())
 	requestDump, _ := httputil.DumpRequest(r, false)
 	fmt.Printf("\n%s%s\n\n", requestDump, stack.String())
 	buildAndPushError(level, err, stack, &Field{Name: "request", Data: errorRequest(r)})
+	return err
 }
 
 func buildError(level string, err error, stack Stack, fields ...*Field) map[string]interface{} {
