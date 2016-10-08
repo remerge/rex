@@ -2,22 +2,26 @@ package: github.com/remerge/rex
 import:
 - package: github.com/Shopify/sarama
   repo: https://github.com/remerge/sarama
-  vcs: git
+- package: github.com/beeker1121/goque
 - package: github.com/cheekybits/genny
   subpackages:
   - generic
-- package: github.com/eapache/go-resiliency
-  subpackages:
-  - breaker
 - package: github.com/gin-gonic/gin
 - package: github.com/heroku/instruments
-  vcs: git
   repo: https://github.com/remerge/instruments
   subpackages:
   - reporter
+- package: github.com/jinzhu/now
+- package: github.com/juju/ansiterm
 - package: github.com/juju/loggo
+- package: github.com/mailru/easyjson
+  subpackages:
+  - jlexer
+  - jwriter
 - package: github.com/remerge/gobi
 - package: github.com/remerge/rand
 - package: github.com/tylerb/graceful
-- package: github.com/beeker1121/goque
-- package: github.com/jinzhu/now
+testImport:
+- package: github.com/smartystreets/goconvey
+  subpackages:
+  - convey

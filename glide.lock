@@ -1,5 +1,5 @@
-hash: 71c60574a6f5a2b52681dd67d663f1ed9e7d66507a9e148dcf32d727c1e9ad10
-updated: 2016-10-05T14:48:10.31373247Z
+hash: 119c414858d051629e5bbfadd9b0275b2c325b611ff2f30683478cba6ac6f40a
+updated: 2016-10-08T12:39:38.444603236+02:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -33,7 +33,6 @@ imports:
 - name: github.com/heroku/instruments
   version: 28308dce46c98f50b571e34c9cc2e5994163bf6c
   repo: https://github.com/remerge/instruments
-  vcs: git
   subpackages:
   - reporter
 - name: github.com/jinzhu/now
@@ -49,7 +48,7 @@ imports:
 - name: github.com/lunixbochs/vtclean
   version: 4fbf7632a2c6d3fbdb9931439bdbbeded02cbe36
 - name: github.com/mailru/easyjson
-  version: e978125a7e335d8f4db746a9ac5b44643f27416b
+  version: 2ea6ed0ea8d20091ff80b30ab47e206e776e7c53
   subpackages:
   - buffer
   - jlexer
@@ -57,7 +56,7 @@ imports:
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-colorable
-  version: ed8eb9e318d7a84ce5915b495b7d35e0cfe7b5a8
+  version: 6c903ff4aa50920ca86087a280590b36b3152b9c
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
 - name: github.com/remerge/gobi
@@ -65,11 +64,10 @@ imports:
 - name: github.com/remerge/rand
   version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
-  version: 48fa3ed6a6f66ebfb2ad256811550d25e909acf7
+  version: b10b39c02d8177370c19eb127291ce5ffb8e2441
   repo: https://github.com/remerge/sarama
-  vcs: git
 - name: github.com/syndtr/goleveldb
-  version: 6ae1797c0b42b9323fc27ff7dcf568df88f2f33d
+  version: 8d31aaf25e3fff25a66d0e116a4453ad7ccc7b76
   subpackages:
   - leveldb
   - leveldb/cache
@@ -90,16 +88,16 @@ imports:
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 8f0908ab3b2457e2e15403d3697c9ef5cb4b57a9
+  version: 8d1157a435470616f975ff9bb013bea8d0962067
   subpackages:
   - unix
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
 - name: gopkg.in/yaml.v2
-  version: 31c299268d302dd0aa9a0dcf765a3d58971ac83f
+  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: f2fc182abb28925c7aa40502db839c6ebd7f7171
+  version: 00f306e07eaaaab04ea5dba605cd0e1eff9c6fb7
   subpackages:
   - js
 - name: github.com/jtolds/gls
@@ -110,7 +108,7 @@ testImports:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: 5db88ed452e937f2fd557de6f4f1af7f2eabed0b
+  version: 7befa7fd6e2e8ca28d2b94f2d39111929904b08d
   subpackages:
   - convey
   - convey/gotest
