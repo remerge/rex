@@ -251,7 +251,7 @@ func (gp *GroupProcessor) Close() {
 	// terminate workers/savers
 	gp.log.Infof("closing save workers")
 	gp.saveWorkerDone.Close(gp.Config.NumSaveWorker)
-	gp.log.Infof("closing closing savers")
+	gp.log.Infof("closing savers")
 	for i := 0; i < gp.Config.NumSaveWorker; i++ {
 		gp.savers[i].Close()
 	}
