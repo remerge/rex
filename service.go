@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/env"
 	. "github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 	"github.com/spf13/viper"
@@ -66,12 +67,17 @@ func (service *Service) InitEngine() {
 
 func (service *Service) Init() {
 	service.Log = GetLogger(service.Name)
-	service.EventMetadata.Release = CodeVersion
 
 	viper.SetDefault("cluster", "development")
 	viper.SetDefault("server.shutdown.timeout", 30*time.Second)
 	viper.SetDefault("server.connection.timeout", 2*time.Minute)
 	viper.SetDefault("tracker.kafka.connect", "0.0.0.0:9092")
+
+	service.EventMetadata.Service = service.Name
+	service.EventMetadata.Environment = env.Env
+	service.EventMetadata.Cluster = viper.GetString("cluster")
+	service.EventMetadata.Host = GetFQDN()
+	service.EventMetadata.Release = CodeVersion
 
 	service.InitEngine()
 }
