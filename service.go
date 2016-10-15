@@ -152,10 +152,6 @@ func (service *Service) ReadArgs() {
 		os.Exit(0)
 	}
 
-	service.Log.Infof("code version=%v build=%v", service.CodeVersion, service.CodeBuild)
-	service.Log.Infof("command line arguments=%q", readArgs())
-	service.Log.Infof("using %d cores for go routines", runtime.GOMAXPROCS(0))
-
 	// set environment for children
 	env.Set(service.BaseConfig.Environment)
 
@@ -168,6 +164,10 @@ func (service *Service) ReadArgs() {
 
 	// configure log levels
 	MayPanic(ConfigureLoggers(service.BaseConfig.LogSpec))
+
+	service.Log.Infof("code version=%v build=%v", service.CodeVersion, service.CodeBuild)
+	service.Log.Infof("command line arguments=%q", readArgs())
+	service.Log.Infof("using %d cores for go routines", runtime.GOMAXPROCS(0))
 }
 
 func (service *Service) Run() {
