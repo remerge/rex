@@ -62,7 +62,7 @@ func initConfig() {
 		viper.SetConfigFile(cfgFile)
 	}
 
-	viper.SetConfigName(fmt.Sprintf("%s.yml", envName))
+	viper.SetConfigName(envName)
 	viper.AddConfigPath("./config")
 	viper.AutomaticEnv()
 	viper.ReadInConfig()
