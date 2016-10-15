@@ -7,9 +7,9 @@ type MockTracker struct {
 	Messages map[string][][]byte
 }
 
-func NewMockTracker(config *Config) *MockTracker {
+func NewMockTracker(metadata EventMetadata) *MockTracker {
 	self := &MockTracker{}
-	self.EventMetadata = &config.EventMetadata
+	self.EventMetadata = &metadata
 	self.Messages = make(map[string][][]byte)
 	return self
 }
