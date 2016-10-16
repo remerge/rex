@@ -1,4 +1,4 @@
-cluster: eu1
+cluster: example
 server:
   port: 9990
   debug:
