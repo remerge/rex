@@ -2,13 +2,13 @@ package kafka
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/Shopify/sarama"
 	"github.com/heroku/instruments"
 	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
+	"github.com/remerge/rex/env"
 	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 )
@@ -46,6 +46,8 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 		errors:   reporter.NewRegisteredTimer("kafka.producer."+config.ClientID+".errors", -1),
 	}
 
+	self.log.Infof("starting producer with clientId=%v", config.ClientID)
+
 	if config == nil {
 		self.AsyncProducer, err = sarama.NewAsyncProducerFromClient(client)
 	} else {
@@ -66,7 +68,7 @@ func (client *Client) newFastProducer(name string, config *sarama.Config, cb Pro
 	config.Producer.Return.Errors = true
 	config.Producer.RequiredAcks = sarama.NoResponse
 	config.ChannelBufferSize = 131072 // buffer 128k messages
-	if os.Getenv("REX_ENV") != "development" {
+	if env.IsProd() {
 		config.Producer.Flush.Frequency = 1 * time.Second
 	}
 	return client.NewProducer(name, config, cb)

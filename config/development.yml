@@ -1,0 +1,4 @@
+cluster: development
+server:
+  debug:
+    #port: 9999

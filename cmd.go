@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/remerge/rex/env"
-	. "github.com/remerge/rex/log"
+	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -18,7 +18,6 @@ var RootCmd = &cobra.Command{
 	Short: "rex: remerge extensions",
 
 	Run: func(cmd *cobra.Command, args []string) {
-		viper.SetDefault("port", 9990)
 		service := &Service{Name: "rex"}
 		service.Init()
 		go service.Run()
@@ -57,22 +56,22 @@ func initConfig() {
 	// setup env
 	env.Set(envName)
 
-	// load config file
-	if cfgFile != "" {
-		viper.SetConfigFile(cfgFile)
-	}
-
-	viper.SetConfigName(envName)
-	viper.AddConfigPath("./config")
-	viper.AutomaticEnv()
-	viper.ReadInConfig()
-
 	// configure logger
-	ConfigureLoggers(logSpec)
+	log.ConfigureLoggers(logSpec)
 
 	// configure rollbar
 	rollbar.Environment = envName
 	rollbar.CodeVersion = CodeVersion
+
+	// load config file
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	} else {
+		viper.SetConfigName(envName)
+		viper.AddConfigPath("./config")
+	}
+
+	MayPanic(viper.ReadInConfig())
 
 	// use all cores by default
 	if os.Getenv("GOMAXPROCS") == "" {
@@ -86,6 +85,10 @@ func initConfig() {
 	case "test", "testing":
 		gin.SetMode("test")
 	default:
-		gin.SetMode("debug")
+		if log.GetLogger("").IsTraceEnabled() {
+			gin.SetMode("debug")
+		} else {
+			gin.SetMode("release")
+		}
 	}
 }

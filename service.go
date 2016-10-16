@@ -15,7 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/env"
-	. "github.com/remerge/rex/log"
+	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 	"github.com/spf13/viper"
 	"github.com/tylerb/graceful"
@@ -66,7 +66,7 @@ func (service *Service) InitEngine() {
 }
 
 func (service *Service) Init() {
-	service.Log = GetLogger(service.Name)
+	service.Log = log.GetLogger(service.Name)
 
 	viper.SetDefault("cluster", "development")
 	viper.SetDefault("server.shutdown.timeout", 30*time.Second)
@@ -79,10 +79,24 @@ func (service *Service) Init() {
 	service.EventMetadata.Host = GetFQDN()
 	service.EventMetadata.Release = CodeVersion
 
+	service.Log.Infof(
+		"initializing service %s in env=%v cluster=%v host=%v",
+		service.EventMetadata.Service,
+		service.EventMetadata.Environment,
+		service.EventMetadata.Cluster,
+		service.EventMetadata.Host,
+	)
+
+	service.Log.Infof("code release=%v build=%v", CodeVersion, CodeBuild)
+
 	service.InitEngine()
 }
 
 func (service *Service) Run() {
+	if log.GetLogger("").IsTraceEnabled() {
+		viper.Debug()
+	}
+
 	var err error
 	service.Tracker, err = NewKafkaTracker(viper.GetString("tracker.kafka.connect"), &service.EventMetadata)
 	MayPanic(err)
@@ -90,13 +104,23 @@ func (service *Service) Run() {
 	service.MetricsTicker = NewMetricsTicker(service.Tracker)
 	go service.MetricsTicker.Start()
 
-	if viper.GetInt("port") > 0 {
-		go service.ServeDebug()
+	debugPort := viper.GetInt("server.debug.port")
+
+	// fallback to server port + 9
+	if debugPort < 1 {
+		debugPort = viper.GetInt("server.port")
+		if debugPort > 0 {
+			debugPort += 9
+		}
+	}
+
+	if debugPort > 0 {
+		go service.ServeDebug(debugPort)
 	}
 }
 
 func GinLogger(name string) gin.HandlerFunc {
-	log := GetLogger(name)
+	log := log.GetLogger(name)
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
@@ -120,7 +144,7 @@ func (service *Service) Serve(handler http.Handler) {
 		NoSignalHandling: true,
 		Server: &http.Server{
 			Handler: handler,
-			Addr:    fmt.Sprintf(":%d", viper.GetInt("port")),
+			Addr:    fmt.Sprintf(":%d", viper.GetInt("server.port")),
 		},
 	}
 
@@ -140,7 +164,7 @@ func (service *Service) ServeTLS(handler http.Handler) {
 		Timeout: viper.GetDuration("server.shutdown.timeout"),
 		Server: &http.Server{
 			Handler: handler,
-			Addr:    fmt.Sprintf(":%d", viper.GetInt("tls.port")),
+			Addr:    fmt.Sprintf(":%d", viper.GetInt("server.tls.port")),
 		},
 		NoSignalHandling: true,
 	}
@@ -149,10 +173,10 @@ func (service *Service) ServeTLS(handler http.Handler) {
 	service.TlsServer.WriteTimeout = viper.GetDuration("server.connection.timeout")
 
 	service.Log.Infof("start tls server listen %s", service.TlsServer.Server.Addr)
-	MayPanic(service.TlsServer.ListenAndServeTLS(viper.GetString("tls.cert"), viper.GetString("tls.key")))
+	MayPanic(service.TlsServer.ListenAndServeTLS(viper.GetString("server.tls.cert"), viper.GetString("server.tls.key")))
 }
 
-func (service *Service) ServeDebug() {
+func (service *Service) ServeDebug(port int) {
 	service.DebugEngine.GET("/loggo", getLoggoSpec)
 	service.DebugEngine.POST("/loggo", setLoggoSpec)
 
@@ -186,12 +210,9 @@ func (service *Service) ServeDebug() {
 		NoSignalHandling: true,
 		Server: &http.Server{
 			Handler: service.DebugEngine,
-			Addr:    fmt.Sprintf(":%d", viper.GetInt("port")+9),
+			Addr:    fmt.Sprintf(":%d", port),
 		},
 	}
-
-	service.DebugServer.ReadTimeout = viper.GetDuration("server.connection.timeout")
-	service.DebugServer.WriteTimeout = viper.GetDuration("server.connection.timeout")
 
 	service.Log.Infof("start debug server listen %s", service.DebugServer.Server.Addr)
 	MayPanic(service.DebugServer.ListenAndServe())
