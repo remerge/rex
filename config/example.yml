@@ -1,0 +1,13 @@
+cluster: example
+server:
+  port: 9990
+  debug:
+    port: 9999
+  tls:
+    port: 9991
+    cert: config/server.crt
+    key: config/server.key
+  connection:
+    timeout: 30s
+  shutdown:
+    timeout: 2m
