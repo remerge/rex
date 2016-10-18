@@ -21,7 +21,6 @@ import:
 - package: github.com/remerge/gobi
 - package: github.com/remerge/rand
 - package: github.com/tylerb/graceful
-- package: github.com/spf13/cobra
 testImport:
 - package: github.com/smartystreets/goconvey
   subpackages:

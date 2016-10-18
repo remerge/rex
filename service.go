@@ -1,7 +1,9 @@
 package rex
 
 import (
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -9,20 +11,46 @@ import (
 	"runtime"
 	rp "runtime/pprof"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/env"
-	"github.com/remerge/rex/log"
+	. "github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
-	"github.com/spf13/viper"
 	"github.com/tylerb/graceful"
 )
 
 var CodeVersion = "unknown"
 var CodeBuild = "unknown"
+
+type Config struct {
+	EventMetadata
+	LogSpec                 string
+	KafkaBroker             string
+	Port                    int
+	TlsPort                 int
+	TlsKey                  string
+	TlsCert                 string
+	ServerShutdownTimeout   time.Duration
+	ServerConnectionTimeout time.Duration
+}
+
+func NewConfig(name string, port int) *Config {
+	config := &Config{}
+	config.Service = name
+	config.Environment = "development"
+	config.Cluster = "development"
+	config.Host = GetFQDN()
+	config.LogSpec = "<root>=INFO"
+	config.KafkaBroker = "0.0.0.0:9092"
+	config.Port = port
+	config.ServerShutdownTimeout = 30 * time.Second
+	config.ServerConnectionTimeout = 2 * time.Minute
+	return config
+}
 
 const (
 	SIGHUP  = syscall.SIGHUP
@@ -34,11 +62,13 @@ const (
 )
 
 type Service struct {
-	Name          string
 	Log           loggo.Logger
+	Flags         flag.FlagSet
 	Tracker       Tracker
 	MetricsTicker *MetricsTicker
-	EventMetadata EventMetadata
+	BaseConfig    *Config
+	CodeVersion   string
+	CodeBuild     string
 	Engine        *gin.Engine
 	Server        *graceful.Server
 	TlsServer     *graceful.Server
@@ -47,12 +77,47 @@ type Service struct {
 	GinRecovery   gin.HandlerFunc
 }
 
+func (service *Service) InitLogger() {
+	service.Log = GetLogger(service.BaseConfig.Service)
+}
+
+func (service *Service) InitCommandLine() {
+	config := service.BaseConfig
+	if os.Getenv("GOMAXPROCS") == "" {
+		runtime.GOMAXPROCS(runtime.NumCPU())
+	}
+	service.Flags.Init(os.Args[0], flag.ExitOnError)
+	service.Flags.StringVar(&config.LogSpec, "loggo", config.LogSpec, "initial loggo spec")
+}
+
+func (service *Service) InitDefaultFlags() {
+	config := service.BaseConfig
+
+	// listen port for service
+	service.Flags.IntVar(&config.Port, "port", config.Port, "listen port")
+
+	// TLS options
+	service.Flags.IntVar(&config.TlsPort, "tls-port", config.TlsPort, "listen port for TLS")
+	service.Flags.StringVar(&config.TlsKey, "tls-key", config.TlsKey, "TLS certificate key")
+	service.Flags.StringVar(&config.TlsCert, "tls-cert", config.TlsCert, "TLS certificate")
+
+	// event metadata
+	service.Flags.StringVar(&config.Environment, "environment", config.Environment, "Evironment to run in")
+	service.Flags.StringVar(&config.Cluster, "cluster", config.Cluster, "Cluster to run in")
+
+	// tracker options
+	service.Flags.StringVar(&config.KafkaBroker, "kafka", config.KafkaBroker, "Initial Kafka Broker")
+
+	// rollbar options
+	service.Flags.StringVar(&rollbar.Token, "rollbar-token", rollbar.Token, "Rollbar API Token")
+}
+
 func (service *Service) InitEngine() {
 	if service.Engine == nil {
 		service.Engine = gin.New()
 		service.Engine.Use(
 			GinRecovery(),
-			GinLogger(fmt.Sprintf("%s.engine", service.Name)),
+			GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)),
 		)
 	}
 
@@ -60,67 +125,76 @@ func (service *Service) InitEngine() {
 		service.DebugEngine = gin.New()
 		service.DebugEngine.Use(
 			GinRecovery(),
-			GinLogger(fmt.Sprintf("%s.debug", service.Name)),
+			GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)),
 		)
 	}
 }
 
 func (service *Service) Init() {
-	service.Log = log.GetLogger(service.Name)
-
-	viper.SetDefault("cluster", "development")
-	viper.SetDefault("server.shutdown.timeout", 30*time.Second)
-	viper.SetDefault("server.connection.timeout", 2*time.Minute)
-	viper.SetDefault("tracker.kafka.connect", "0.0.0.0:9092")
-
-	service.EventMetadata.Service = service.Name
-	service.EventMetadata.Environment = env.Env
-	service.EventMetadata.Cluster = viper.GetString("cluster")
-	service.EventMetadata.Host = GetFQDN()
-	service.EventMetadata.Release = CodeVersion
-
-	service.Log.Infof(
-		"initializing service %s in env=%v cluster=%v host=%v",
-		service.EventMetadata.Service,
-		service.EventMetadata.Environment,
-		service.EventMetadata.Cluster,
-		service.EventMetadata.Host,
-	)
-
-	service.Log.Infof("code release=%v build=%v", CodeVersion, CodeBuild)
-
+	service.InitLogger()
+	service.InitCommandLine()
+	service.InitDefaultFlags()
 	service.InitEngine()
 }
 
-func (service *Service) Run() {
-	if log.GetLogger("").IsTraceEnabled() {
-		viper.Debug()
+func (service *Service) ReadArgs() {
+	// set global version and build info
+	service.CodeVersion = CodeVersion
+	service.CodeBuild = CodeBuild
+
+	// parse command line
+	doVersion := service.Flags.Bool("version", false, "show version and exit")
+	MayPanic(service.Flags.Parse(readArgs()))
+
+	// show version and exit
+	if *doVersion {
+		fmt.Println(service.CodeVersion)
+		os.Exit(0)
 	}
 
+	// set environment for children
+	env.Set(service.BaseConfig.Environment)
+
+	// setup rollbar
+	rollbar.Environment = service.BaseConfig.Environment
+	rollbar.CodeVersion = service.CodeVersion
+
+	// add code version to event metadata
+	service.BaseConfig.EventMetadata.Release = rollbar.CodeVersion
+
+	// configure log levels
+	MayPanic(ConfigureLoggers(service.BaseConfig.LogSpec))
+
+	service.Log.Infof("code version=%v build=%v", service.CodeVersion, service.CodeBuild)
+	service.Log.Infof("command line arguments=%q", readArgs())
+	service.Log.Infof("using %d cores for go routines", runtime.GOMAXPROCS(0))
+}
+
+func (service *Service) Run() {
+	if service.CodeVersion == "" {
+		service.ReadArgs()
+	}
+
+	config := service.BaseConfig
+
 	var err error
-	service.Tracker, err = NewKafkaTracker(viper.GetString("tracker.kafka.connect"), &service.EventMetadata)
+	service.Tracker, err = NewKafkaTracker(config.KafkaBroker, &config.EventMetadata)
 	MayPanic(err)
 
 	service.MetricsTicker = NewMetricsTicker(service.Tracker)
 	go service.MetricsTicker.Start()
 
-	debugPort := viper.GetInt("server.debug.port")
-
-	// fallback to server port + 9
-	if debugPort < 1 {
-		debugPort = viper.GetInt("server.port")
-		if debugPort > 0 {
-			debugPort += 9
-		}
+	if config.Environment == "production" {
+		gin.SetMode("release")
 	}
 
-	if debugPort > 0 {
-		go service.ServeDebug(debugPort)
+	if service.BaseConfig.Port > 0 {
+		go service.ServeDebug()
 	}
 }
 
 func GinLogger(name string) gin.HandlerFunc {
-	log := log.GetLogger(name)
+	log := GetLogger(name)
 	return func(c *gin.Context) {
 		start := time.Now()
 		c.Next()
@@ -140,16 +214,16 @@ func (service *Service) Serve(handler http.Handler) {
 	}
 
 	service.Server = &graceful.Server{
-		Timeout:          viper.GetDuration("server.shutdown.timeout"),
+		Timeout:          service.BaseConfig.ServerShutdownTimeout,
 		NoSignalHandling: true,
 		Server: &http.Server{
 			Handler: handler,
-			Addr:    fmt.Sprintf(":%d", viper.GetInt("server.port")),
+			Addr:    fmt.Sprintf(":%d", service.BaseConfig.Port),
 		},
 	}
 
-	service.Server.ReadTimeout = viper.GetDuration("server.connection.timeout")
-	service.Server.WriteTimeout = viper.GetDuration("server.connection.timeout")
+	service.Server.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
+	service.Server.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
 
 	service.Log.Infof("start server listen %s", service.Server.Server.Addr)
 	MayPanic(service.Server.ListenAndServe())
@@ -161,22 +235,22 @@ func (service *Service) ServeTLS(handler http.Handler) {
 	}
 
 	service.TlsServer = &graceful.Server{
-		Timeout: viper.GetDuration("server.shutdown.timeout"),
+		Timeout: service.BaseConfig.ServerShutdownTimeout,
 		Server: &http.Server{
 			Handler: handler,
-			Addr:    fmt.Sprintf(":%d", viper.GetInt("server.tls.port")),
+			Addr:    fmt.Sprintf(":%d", service.BaseConfig.TlsPort),
 		},
 		NoSignalHandling: true,
 	}
 
-	service.TlsServer.ReadTimeout = viper.GetDuration("server.connection.timeout")
-	service.TlsServer.WriteTimeout = viper.GetDuration("server.connection.timeout")
+	service.TlsServer.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
+	service.TlsServer.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
 
 	service.Log.Infof("start tls server listen %s", service.TlsServer.Server.Addr)
-	MayPanic(service.TlsServer.ListenAndServeTLS(viper.GetString("server.tls.cert"), viper.GetString("server.tls.key")))
+	MayPanic(service.TlsServer.ListenAndServeTLS(service.BaseConfig.TlsCert, service.BaseConfig.TlsKey))
 }
 
-func (service *Service) ServeDebug(port int) {
+func (service *Service) ServeDebug() {
 	service.DebugEngine.GET("/loggo", getLoggoSpec)
 	service.DebugEngine.POST("/loggo", setLoggoSpec)
 
@@ -206,13 +280,16 @@ func (service *Service) ServeDebug(port int) {
 	})
 
 	service.DebugServer = &graceful.Server{
-		Timeout:          viper.GetDuration("server.shutdown.timeout"),
+		Timeout:          service.BaseConfig.ServerShutdownTimeout,
 		NoSignalHandling: true,
 		Server: &http.Server{
 			Handler: service.DebugEngine,
-			Addr:    fmt.Sprintf(":%d", port),
+			Addr:    fmt.Sprintf(":%d", service.BaseConfig.Port+9),
 		},
 	}
+
+	service.DebugServer.ReadTimeout = service.BaseConfig.ServerConnectionTimeout
+	service.DebugServer.WriteTimeout = service.BaseConfig.ServerConnectionTimeout
 
 	service.Log.Infof("start debug server listen %s", service.DebugServer.Server.Addr)
 	MayPanic(service.DebugServer.ListenAndServe())
@@ -224,19 +301,19 @@ func (service *Service) ShutdownServers() {
 	if service.TlsServer != nil {
 		service.Log.Infof("shutting down tls server")
 		tlsServerChan = service.TlsServer.StopChan()
-		service.TlsServer.Stop(viper.GetDuration("server.shutdown.timeout"))
+		service.TlsServer.Stop(service.BaseConfig.ServerShutdownTimeout)
 	}
 
 	if service.Server != nil {
 		service.Log.Infof("shutting down server")
 		serverChan = service.Server.StopChan()
-		service.Server.Stop(viper.GetDuration("server.shutdown.timeout"))
+		service.Server.Stop(service.BaseConfig.ServerShutdownTimeout)
 	}
 
 	if service.DebugServer != nil {
 		service.Log.Infof("shutting down debug server")
 		debugServerChan = service.DebugServer.StopChan()
-		service.DebugServer.Stop(viper.GetDuration("server.shutdown.timeout"))
+		service.DebugServer.Stop(service.BaseConfig.ServerShutdownTimeout)
 	}
 
 	if service.TlsServer != nil {
@@ -294,4 +371,20 @@ func (service *Service) shutdownCheck() {
 	service.Log.Infof("still not dead. dumping dangling go routines")
 	_ = rp.Lookup("goroutine").WriteTo(os.Stdout, 1)
 	go service.shutdownCheck()
+}
+
+func readArgs() []string {
+	var args []string
+
+	contents, err := ioutil.ReadFile(".args")
+	if err == nil {
+		args = strings.Fields(string(contents))
+	}
+
+	// do not leak go test arguments into service
+	if !strings.HasSuffix(os.Args[0], ".test") {
+		args = append(args, os.Args[1:]...)
+	}
+
+	return args
 }

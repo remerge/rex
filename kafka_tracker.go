@@ -36,7 +36,7 @@ func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err err
 		BaseTracker: NewBaseTracker(metadata),
 		FastTimeout: 10 * time.Millisecond,
 		SafeTimeout: 100 * time.Millisecond,
-		log:         log.GetLogger("tracker"),
+		log:         log.GetLogger("rex.tracker"),
 		queue:       queue,
 		quit:        make(chan bool),
 		done:        make(chan bool),

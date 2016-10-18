@@ -1,5 +1,5 @@
-hash: a641999ada0518d9ce47d072c21e78d62062e79fe35d973416f67dce2fe5784e
-updated: 2016-10-15T23:06:44.660973233+02:00
+hash: 119c414858d051629e5bbfadd9b0275b2c325b611ff2f30683478cba6ac6f40a
+updated: 2016-10-08T12:39:38.444603236+02:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -8,7 +8,7 @@ imports:
   subpackages:
   - generic
 - name: github.com/davecgh/go-spew
-  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/eapache/go-resiliency
@@ -19,8 +19,6 @@ imports:
   version: bb955e01b9346ac19dc29eb16586c90ded99a98c
 - name: github.com/eapache/queue
   version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
-- name: github.com/fsnotify/fsnotify
-  version: bd2828f9f176e52d7222e565abb2d338d3f3c103
 - name: github.com/gin-gonic/gin
   version: f931d1ea80ae95a6fc739213cdd9399bd2967fb6
   subpackages:
@@ -32,24 +30,11 @@ imports:
   - proto
 - name: github.com/golang/snappy
   version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
-- name: github.com/hashicorp/hcl
-  version: 6f5bfed9a0a22222fbe4e731ae3481730ba41e93
-  subpackages:
-  - hcl/ast
-  - hcl/parser
-  - hcl/scanner
-  - hcl/strconv
-  - hcl/token
-  - json/parser
-  - json/scanner
-  - json/token
 - name: github.com/heroku/instruments
   version: 28308dce46c98f50b571e34c9cc2e5994163bf6c
   repo: https://github.com/remerge/instruments
   subpackages:
   - reporter
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/now
   version: d9861969c7a7e84746d341c09020c2ef8a617f8f
 - name: github.com/juju/ansiterm
@@ -60,14 +45,10 @@ imports:
   version: 3b7ece48644d35850f4ced4c2cbc2cf8413f58e0
 - name: github.com/klauspost/crc32
   version: 19b0b332c9e4516a6370a0456e6182c3b5036720
-- name: github.com/kr/fs
-  version: 2788f0dbd16903de03cb8186e5c7d97b69ad387b
 - name: github.com/lunixbochs/vtclean
   version: 4fbf7632a2c6d3fbdb9931439bdbbeded02cbe36
-- name: github.com/magiconair/properties
-  version: 0723e352fa358f9322c938cc2dadda874e9151a9
 - name: github.com/mailru/easyjson
-  version: 9dc3521db3580379d6cc493938ef9d2e9782ee7b
+  version: 2ea6ed0ea8d20091ff80b30ab47e206e776e7c53
   subpackages:
   - buffer
   - jlexer
@@ -78,16 +59,6 @@ imports:
   version: 6c903ff4aa50920ca86087a280590b36b3152b9c
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
-- name: github.com/mitchellh/mapstructure
-  version: a6ef2f080c66d0a2e94e97cf74f80f772855da63
-- name: github.com/pelletier/go-buffruneio
-  version: df1e16fde7fc330a0ca68167c23bf7ed6ac31d6d
-- name: github.com/pelletier/go-toml
-  version: 45932ad32dfdd20826f5671da37a5f3ce9f26a8d
-- name: github.com/pkg/errors
-  version: 839d9e913e063e28dfd0e6c7b7512793e0a48be9
-- name: github.com/pkg/sftp
-  version: 4d0e916071f68db74f8a73926335f809396d6b42
 - name: github.com/remerge/gobi
   version: 9f28b2d2ea10d1e63f0ad2faabeb901f4b569e9b
 - name: github.com/remerge/rand
@@ -95,23 +66,8 @@ imports:
 - name: github.com/Shopify/sarama
   version: b10b39c02d8177370c19eb127291ce5ffb8e2441
   repo: https://github.com/remerge/sarama
-- name: github.com/spf13/afero
-  version: 52e4a6cfac46163658bd4f123c49b6ee7dc75f78
-  subpackages:
-  - mem
-  - sftp
-- name: github.com/spf13/cast
-  version: 2580bc98dc0e62908119e4737030cc2fdfc45e4c
-- name: github.com/spf13/cobra
-  version: 856b96dcb49d6427babe192998a35190a12c2230
-- name: github.com/spf13/jwalterweatherman
-  version: 33c24e77fb80341fe7130ee7c594256ff08ccc46
-- name: github.com/spf13/pflag
-  version: bf8481a6aebc13a8aab52e699ffe2e79771f5a3f
-- name: github.com/spf13/viper
-  version: 50515b700e02658272117a72bd641b6b7f1222e5
 - name: github.com/syndtr/goleveldb
-  version: 6b4daa5362b502898ddf367c5c11deb9e7a5c727
+  version: 8d31aaf25e3fff25a66d0e116a4453ad7ccc7b76
   subpackages:
   - leveldb
   - leveldb/cache
@@ -127,26 +83,14 @@ imports:
   - leveldb/util
 - name: github.com/tylerb/graceful
   version: 50a48b6e73fcc75b45e22c05b79629a67c79e938
-- name: golang.org/x/crypto
-  version: 4cd25d65a015cc83d41bf3454e6e8d6c116d16da
-  subpackages:
-  - curve25519
-  - ed25519
-  - ed25519/internal/edwards25519
-  - ssh
 - name: golang.org/x/net
   version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 9bb9f0998d48b31547d975974935ae9b48c7a03c
+  version: 8d1157a435470616f975ff9bb013bea8d0962067
   subpackages:
   - unix
-- name: golang.org/x/text
-  version: c745997bb18563e8788428768ce0f034f2b663df
-  subpackages:
-  - transform
-  - unicode/norm
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
 - name: gopkg.in/yaml.v2
