@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/heroku/instruments"
+	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
@@ -47,6 +49,7 @@ type GroupProcessor struct {
 	changeReaderDone *Terminator
 
 	loadSaver LoadSaver
+	metrics   *groupProcessorMetrics
 }
 
 type PartitionOffset struct {
@@ -97,13 +100,15 @@ func NewGroupProcessor(config *GroupProcessorConfig, loadSaver LoadSaver) (*Grou
 		processed:        make(chan PartitionOffset),
 		log:              log.GetLogger(config.Name + ".groupprocessor." + config.Topic),
 		loadSaver:        loadSaver,
+		metrics:          newGroupProcessorMetrics(config.Name),
 	}
 
 	return gp, nil
 }
 
-// just log some stats
-func (gp *GroupProcessor) logProgess() {
+// log stats and track metrics
+func (gp *GroupProcessor) trackProgess() {
+
 	t := time.NewTicker(1 * time.Minute)
 	last := time.Now()
 	defer t.Stop()
@@ -123,6 +128,7 @@ func (gp *GroupProcessor) logProgess() {
 			if !ok {
 				break
 			}
+			gp.metrics.Processed.Update(1)
 			count++
 			if offsets[po.Partition] < po.Offset {
 				offsets[po.Partition] = po.Offset
@@ -145,6 +151,8 @@ func (gp *GroupProcessor) logProgess() {
 					lag[p] = (latest[p] - 1) - offset // as this is the next offset
 					totalLag = totalLag + lag[p]
 				}
+				gp.metrics.Lag.Update(totalLag)
+
 				deltaT := time.Now().Sub(last)
 				last = time.Now()
 
@@ -152,9 +160,9 @@ func (gp *GroupProcessor) logProgess() {
 				lastCount = count
 
 				tps := float64(deltaCount) / deltaT.Seconds()
-				catchup := time.Duration(float64(totalLag)/tps) * time.Second
+				catchup := time.Duration(float64(totalLag)/float64(tps)) * time.Second
 
-				gp.log.Infof("msgCount=%d latest=%v offsets=%v lag=%v total_lag=%d tps=%v eta=%v", count, latest, offsets, lag, totalLag, tps, catchup)
+				gp.log.Infof("msgCount=%d total_lag=%d tps=%v eta=%v latest_offsets=%v current_offsets=%v lag_per_partition=%v", count, totalLag, tps, catchup, latest, offsets, lag)
 			}
 		}
 	}
@@ -174,6 +182,7 @@ func (gp *GroupProcessor) runChangeReader() {
 					}
 					processable, err := gp.loadSaver.Load(msg)
 					if err != nil {
+						gp.metrics.LoadErrors.Update(1)
 						continue
 					}
 					// id := binary.BigEndian.Uint64(cu.Id)
@@ -207,6 +216,7 @@ func (gp *GroupProcessor) runSaveWorker() {
 					}
 					err := gp.loadSaver.Save(processable)
 					if err != nil {
+						gp.metrics.SaveErrors.Update(1)
 						continue
 					}
 					// seems to be ok
@@ -221,7 +231,7 @@ func (gp *GroupProcessor) runSaveWorker() {
 }
 
 func (gp *GroupProcessor) Run() {
-	go gp.logProgess()
+	go gp.trackProgess()
 	gp.runSaveWorker()
 	gp.runChangeReader()
 }
@@ -260,4 +270,21 @@ func (t *Terminator) Close(n int) {
 		t.C <- true
 	}
 	t.Wait()
+}
+
+type groupProcessorMetrics struct {
+	Lag        *instruments.Gauge
+	Tps        *instruments.Rate
+	Processed  *instruments.Rate
+	LoadErrors *instruments.Rate
+	SaveErrors *instruments.Rate
+}
+
+func newGroupProcessorMetrics(name string) *groupProcessorMetrics {
+	return &groupProcessorMetrics{
+		Lag:        reporter.NewRegisteredGauge(name+".lag", -1),
+		Processed:  reporter.NewRegisteredRate(name + ".processed"),
+		LoadErrors: reporter.NewRegisteredRate(name + ".errors.load"),
+		SaveErrors: reporter.NewRegisteredRate(name + ".errors.save"),
+	}
 }
