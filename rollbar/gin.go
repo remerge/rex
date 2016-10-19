@@ -1,16 +1,11 @@
-package rex
+package rollbar
 
 import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/remerge/rex/rollbar"
 )
 
-/**
- * Custom gin recovery middleware that logs to both rollbar and the host
- * service's logger.
- */
 func GinRecovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
@@ -28,7 +23,7 @@ func GinRecovery() gin.HandlerFunc {
 			}
 
 			for _, err := range c.Errors {
-				rollbar.RequestErrorWithStackSkip(rollbar.ERR, c.Request, err, 3)
+				RequestErrorWithStackSkip(ERR, c.Request, err, 3)
 			}
 
 			c.JSON(500, gin.H{

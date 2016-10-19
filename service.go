@@ -18,13 +18,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/env"
-	. "github.com/remerge/rex/log"
+	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 	"github.com/tylerb/graceful"
 )
-
-var CodeVersion = "unknown"
-var CodeBuild = "unknown"
 
 type Config struct {
 	EventMetadata
@@ -78,7 +75,7 @@ type Service struct {
 }
 
 func (service *Service) InitLogger() {
-	service.Log = GetLogger(service.BaseConfig.Service)
+	service.Log = log.GetLogger(service.BaseConfig.Service)
 }
 
 func (service *Service) InitCommandLine() {
@@ -116,16 +113,16 @@ func (service *Service) InitEngine() {
 	if service.Engine == nil {
 		service.Engine = gin.New()
 		service.Engine.Use(
-			GinRecovery(),
-			GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)),
+			rollbar.GinRecovery(),
+			log.GinLogger(fmt.Sprintf("%s.engine", service.BaseConfig.Service)),
 		)
 	}
 
 	if service.DebugEngine == nil {
 		service.DebugEngine = gin.New()
 		service.DebugEngine.Use(
-			GinRecovery(),
-			GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)),
+			rollbar.GinRecovery(),
+			log.GinLogger(fmt.Sprintf("%s.debug", service.BaseConfig.Service)),
 		)
 	}
 }
@@ -163,7 +160,7 @@ func (service *Service) ReadArgs() {
 	service.BaseConfig.EventMetadata.Release = rollbar.CodeVersion
 
 	// configure log levels
-	MayPanic(ConfigureLoggers(service.BaseConfig.LogSpec))
+	MayPanic(log.ConfigureLoggers(service.BaseConfig.LogSpec))
 
 	service.Log.Infof("code version=%v build=%v", service.CodeVersion, service.CodeBuild)
 	service.Log.Infof("command line arguments=%q", readArgs())
@@ -190,21 +187,6 @@ func (service *Service) Run() {
 
 	if service.BaseConfig.Port > 0 {
 		go service.ServeDebug()
-	}
-}
-
-func GinLogger(name string) gin.HandlerFunc {
-	log := GetLogger(name)
-	return func(c *gin.Context) {
-		start := time.Now()
-		c.Next()
-		log.Debugf("%s %s -> %d in %v %s",
-			c.Request.Method,
-			c.Request.URL.Path,
-			c.Writer.Status(),
-			time.Now().Sub(start),
-			c.Errors.String(),
-		)
 	}
 }
 
@@ -251,8 +233,8 @@ func (service *Service) ServeTLS(handler http.Handler) {
 }
 
 func (service *Service) ServeDebug() {
-	service.DebugEngine.GET("/loggo", getLoggoSpec)
-	service.DebugEngine.POST("/loggo", setLoggoSpec)
+	service.DebugEngine.GET("/loggo", log.GetLoggoSpec)
+	service.DebugEngine.POST("/loggo", log.SetLoggoSpec)
 
 	service.DebugEngine.GET("/debug/pprof/", gin.WrapF(pprof.Index))
 	service.DebugEngine.GET("/debug/pprof/block", gin.WrapF(pprof.Index))
