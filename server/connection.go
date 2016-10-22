@@ -96,7 +96,7 @@ func newBufioWriter(w io.Writer) *bufio.Writer {
 		bw.Reset(w)
 		return bw
 	}
-	return bufio.NewWriterSize(w, 4096)
+	return bufio.NewWriterSize(w, 32768)
 }
 
 func putBufioWriter(bw *bufio.Writer) {
