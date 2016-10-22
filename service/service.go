@@ -60,18 +60,58 @@ type Service struct {
 }
 
 func NewService(name string, port int) *Service {
-	service := &Service{
-		Name: name,
-		Log:  log.GetLogger(name),
-	}
-
+	service := &Service{}
+	service.Name = name
+	service.Log = log.GetLogger(name)
 	service.Command = service.buildCommand()
-	service.Command.Run = func(cmd *cobra.Command, args []string) {
-		go service.Run()
-		service.Wait(service.Shutdown)
-	}
+	service.Server.Port = port
+	return service
+}
 
-	flags := service.Command.Flags()
+func (service *Service) Execute() {
+	if err := service.Command.Execute(); err != nil {
+		os.Exit(-1)
+	}
+}
+
+func (service *Service) buildCommand() *cobra.Command {
+	cmd := &cobra.Command{}
+
+	cmd.Use = service.Name
+	cmd.Short = fmt.Sprintf("%s: %s", service.Name, service.Description)
+
+	// global flags for all commands
+	flags := cmd.PersistentFlags()
+
+	flags.StringVar(
+		&env.Env,
+		"environment",
+		"development",
+		"environment to run in (development, test, production)",
+	)
+
+	flags.StringVar(
+		&service.Tracker.EventMetadata.Cluster,
+		"cluster",
+		"development",
+		"cluster to run in (eu, us, etc)",
+	)
+
+	flags.StringVar(
+		&rollbar.Token,
+		"rollbar",
+		"",
+		"rollbar token",
+	)
+
+	logSpec := flags.String(
+		"log",
+		"<root>=INFO",
+		"logger configuration",
+	)
+
+	// local service flags
+	flags = cmd.Flags()
 
 	flags.StringVar(
 		&service.Tracker.Connect,
@@ -81,7 +121,7 @@ func NewService(name string, port int) *Service {
 
 	flags.IntVar(
 		&service.Server.Port,
-		"server-port", port,
+		"server-port", service.Server.Port,
 		"HTTP server port",
 	)
 
@@ -121,50 +161,7 @@ func NewService(name string, port int) *Service {
 		"HTTPS server certificate key",
 	)
 
-	return service
-}
-
-func (service *Service) Execute() {
-	if err := service.Command.Execute(); err != nil {
-		os.Exit(-1)
-	}
-}
-
-func (service *Service) buildCommand() *cobra.Command {
-	cmd := &cobra.Command{}
-
-	cmd.Use = service.Name
-	cmd.Short = fmt.Sprintf("%s: %s", service.Name, service.Description)
-
-	flags := cmd.PersistentFlags()
-
-	flags.StringVar(
-		&env.Env,
-		"environment",
-		"development",
-		"environment to run in (development, test, production)",
-	)
-
-	flags.StringVar(
-		&service.Tracker.EventMetadata.Cluster,
-		"cluster",
-		"development",
-		"cluster to run in (eu, us, etc)",
-	)
-
-	flags.StringVar(
-		&rollbar.Token,
-		"rollbar",
-		"",
-		"rollbar token",
-	)
-
-	logSpec := flags.String(
-		"log",
-		"<root>=INFO",
-		"logger configuration",
-	)
-
+	// version command for deployment
 	cmd.AddCommand(&cobra.Command{
 		Use:   "version",
 		Short: "display version and exit",
