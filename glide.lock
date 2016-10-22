@@ -1,5 +1,5 @@
-hash: 119c414858d051629e5bbfadd9b0275b2c325b611ff2f30683478cba6ac6f40a
-updated: 2016-10-08T12:39:38.444603236+02:00
+hash: 2c0337c7596696c37c26e351dae5c8281acbb2af80adbb0c0b55a5d02c73b3d9
+updated: 2016-10-22T20:56:06.301070572+02:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -20,7 +20,7 @@ imports:
 - name: github.com/eapache/queue
   version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
 - name: github.com/gin-gonic/gin
-  version: f931d1ea80ae95a6fc739213cdd9399bd2967fb6
+  version: 3900df04d2a88e22beaf6a2970c63648b9e1b0e1
   subpackages:
   - binding
   - render
@@ -35,6 +35,8 @@ imports:
   repo: https://github.com/remerge/instruments
   subpackages:
   - reporter
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/now
   version: d9861969c7a7e84746d341c09020c2ef8a617f8f
 - name: github.com/juju/ansiterm
@@ -44,11 +46,11 @@ imports:
 - name: github.com/juju/loggo
   version: 3b7ece48644d35850f4ced4c2cbc2cf8413f58e0
 - name: github.com/klauspost/crc32
-  version: 19b0b332c9e4516a6370a0456e6182c3b5036720
+  version: cb6bfca970f6908083f26f39a79009d608efd5cd
 - name: github.com/lunixbochs/vtclean
   version: 4fbf7632a2c6d3fbdb9931439bdbbeded02cbe36
 - name: github.com/mailru/easyjson
-  version: 2ea6ed0ea8d20091ff80b30ab47e206e776e7c53
+  version: 9dc3521db3580379d6cc493938ef9d2e9782ee7b
   subpackages:
   - buffer
   - jlexer
@@ -64,10 +66,14 @@ imports:
 - name: github.com/remerge/rand
   version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
-  version: b10b39c02d8177370c19eb127291ce5ffb8e2441
+  version: 8385cb2da9a9cba0488d2d4dba55e1e143e4ecad
   repo: https://github.com/remerge/sarama
+- name: github.com/spf13/cobra
+  version: 856b96dcb49d6427babe192998a35190a12c2230
+- name: github.com/spf13/pflag
+  version: dabebe21bf790f782ea4c7bbd2efc430de182afd
 - name: github.com/syndtr/goleveldb
-  version: 8d31aaf25e3fff25a66d0e116a4453ad7ccc7b76
+  version: 6b4daa5362b502898ddf367c5c11deb9e7a5c727
   subpackages:
   - leveldb
   - leveldb/cache
@@ -88,7 +94,7 @@ imports:
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 8d1157a435470616f975ff9bb013bea8d0962067
+  version: 002cbb5f952456d0c50e0d2aff17ea5eca716979
   subpackages:
   - unix
 - name: gopkg.in/go-playground/validator.v8
@@ -97,7 +103,7 @@ imports:
   version: a5b47d31c556af34a302ce5d659e6fea44d90de0
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 00f306e07eaaaab04ea5dba605cd0e1eff9c6fb7
+  version: c79d0a5dbbdaf21092548246e69886a08f5a8e31
   subpackages:
   - js
 - name: github.com/jtolds/gls
