@@ -99,13 +99,13 @@ func (service *Service) buildCommand() *cobra.Command {
 
 	flags.StringVar(
 		&rollbar.Token,
-		"rollbar",
+		"rollbar-token",
 		"",
 		"rollbar token",
 	)
 
 	logSpec := flags.String(
-		"log",
+		"log-spec",
 		"<root>=INFO",
 		"logger configuration",
 	)
