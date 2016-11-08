@@ -156,7 +156,7 @@ func (service *Service) buildCommand() *cobra.Command {
 	)
 
 	flags.StringVar(
-		&service.Server.TLS.Cert,
+		&service.Server.TLS.Key,
 		"server-tls-key", "",
 		"HTTPS server certificate key",
 	)
