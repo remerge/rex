@@ -168,8 +168,10 @@ func (self *SnapshoterFor_T_) LoadNewestFromFileAsInterface() (result interface{
 	return self.LoadNewestFromFile()
 }
 
-func (self *SnapshoterFor_T_) BytesToFileNamedByTime(b []byte) (filename string, err error) {
-	err = self.BytesToFile(b, _T_Snapshoter.CurrentTimeBasedFilename())
+func (self *SnapshoterFor_T_) BytesToFileNamedByTime(b []byte) (string, error) {
+	filename := _T_Snapshoter.CurrentTimeBasedFilename()
+	err := self.BytesToFile(b, _T_Snapshoter.CurrentTimeBasedFilename())
+
 	return filename, err
 }
 
