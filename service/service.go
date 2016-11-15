@@ -313,7 +313,7 @@ func (service *Service) ServeDebug(port int) {
 	service.Server.Debug.Engine.GET("/debug/pprof/cmdline", gin.WrapF(pprof.Cmdline))
 	service.Server.Debug.Engine.GET("/debug/pprof/goroutine", gin.WrapF(pprof.Index))
 	service.Server.Debug.Engine.GET("/debug/pprof/heap", gin.WrapF(pprof.Index))
-	//service.Server.Debug.Engine.GET("/debug/pprof/profile", gin.WrapF(pprof.Profile))
+	service.Server.Debug.Engine.GET("/debug/pprof/profile", gin.WrapF(pprof.Profile))
 	service.Server.Debug.Engine.GET("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
 	service.Server.Debug.Engine.POST("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
 	service.Server.Debug.Engine.GET("/debug/pprof/threadcreate", gin.WrapF(pprof.Index))
