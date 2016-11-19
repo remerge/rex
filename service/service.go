@@ -15,6 +15,8 @@ import (
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/juju/loggo"
+	metrics "github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics/exp"
 	"github.com/remerge/rex"
 	"github.com/remerge/rex/env"
 	"github.com/remerge/rex/log"
@@ -229,8 +231,12 @@ func (service *Service) Run() {
 	service.Tracker.Tracker, err = rex.NewKafkaTracker(service.Tracker.Connect, &service.Tracker.EventMetadata)
 	rex.MayPanic(err)
 
+	// TODO: remove once we've moved to go-metrics
 	service.Tracker.MetricsTicker = rex.NewMetricsTicker(service.Tracker.Tracker)
 	go service.Tracker.MetricsTicker.Start()
+
+	// background jobs for go-metrics
+	go service.flushMetrics(10 * time.Second)
 
 	// fallback to server port + 9
 	if service.Server.Debug.Port < 1 && service.Server.Port > 0 {
@@ -305,19 +311,25 @@ func (service *Service) ServeDebug(port int) {
 		)
 	}
 
+	// dynamic loggo configuration
 	service.Server.Debug.Engine.GET("/loggo", log.GetLoggoSpec)
 	service.Server.Debug.Engine.POST("/loggo", log.SetLoggoSpec)
 
-	service.Server.Debug.Engine.GET("/debug/pprof/", gin.WrapF(pprof.Index))
-	service.Server.Debug.Engine.GET("/debug/pprof/block", gin.WrapF(pprof.Index))
-	service.Server.Debug.Engine.GET("/debug/pprof/cmdline", gin.WrapF(pprof.Cmdline))
-	service.Server.Debug.Engine.GET("/debug/pprof/goroutine", gin.WrapF(pprof.Index))
-	service.Server.Debug.Engine.GET("/debug/pprof/heap", gin.WrapF(pprof.Index))
-	service.Server.Debug.Engine.GET("/debug/pprof/profile", gin.WrapF(pprof.Profile))
-	service.Server.Debug.Engine.GET("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
-	service.Server.Debug.Engine.POST("/debug/pprof/symbol", gin.WrapF(pprof.Symbol))
-	service.Server.Debug.Engine.GET("/debug/pprof/threadcreate", gin.WrapF(pprof.Index))
-	service.Server.Debug.Engine.GET("/debug/pprof/trace", gin.WrapF(pprof.Trace))
+	// expvar & go-metrics
+	service.Server.Debug.Engine.GET("/vars", gin.WrapH(exp.ExpHandler(metrics.DefaultRegistry)))
+	service.Server.Debug.Engine.GET("/metrics", gin.WrapH(exp.ExpHandler(metrics.DefaultRegistry)))
+
+	// wrap pprof in gin
+	service.Server.Debug.Engine.GET("/pprof/", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/block", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/cmdline", gin.WrapF(pprof.Cmdline))
+	service.Server.Debug.Engine.GET("/pprof/goroutine", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/heap", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/profile", gin.WrapF(pprof.Profile))
+	service.Server.Debug.Engine.GET("/pprof/symbol", gin.WrapF(pprof.Symbol))
+	service.Server.Debug.Engine.POST("/pprof/symbol", gin.WrapF(pprof.Symbol))
+	service.Server.Debug.Engine.GET("/pprof/threadcreate", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/trace", gin.WrapF(pprof.Trace))
 
 	service.Server.Debug.Engine.GET("/blockprof/:rate", func(c *gin.Context) {
 		r, err := strconv.Atoi(c.Param("rate"))

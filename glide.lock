@@ -1,5 +1,5 @@
-hash: 2c0337c7596696c37c26e351dae5c8281acbb2af80adbb0c0b55a5d02c73b3d9
-updated: 2016-10-24T15:35:00.502171325+02:00
+hash: 02ecb9d959008375fe2c7e9cfbcadd75950adcdff1b2b86fcba5d0549b22d482
+updated: 2016-11-17T14:16:25.521387924+01:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -61,6 +61,10 @@ imports:
   version: 6c903ff4aa50920ca86087a280590b36b3152b9c
 - name: github.com/mattn/go-isatty
   version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+- name: github.com/rcrowley/go-metrics
+  version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
+  subpackages:
+  - exp
 - name: github.com/remerge/gobi
   version: 9f28b2d2ea10d1e63f0ad2faabeb901f4b569e9b
 - name: github.com/remerge/rand

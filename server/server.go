@@ -3,44 +3,47 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
-	"sync/atomic"
 
-	"github.com/heroku/instruments"
-	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
+	metrics "github.com/rcrowley/go-metrics"
 	"github.com/remerge/rex"
 	"github.com/remerge/rex/log"
 )
 
 type Server struct {
-	Id          string
-	Port        int
-	TlsPort     int
-	TlsConfig   *tls.Config
-	Log         loggo.Logger
+	Id         string
+	Port       int
+	TlsPort    int
+	TlsConfig  *tls.Config
+	MaxConns   int64
+	BufferSize int
+
+	Log     loggo.Logger
+	Handler Handler
+
 	listener    *Listener
 	tlsListener *Listener
-	Handler     Handler
-	acceptRate  *instruments.Rate
-	closeRate   *instruments.Rate
-	numConns    *instruments.Reservoir
-	tlsErrors   *instruments.Rate
-	MaxConns    int64
+
+	accepts   metrics.Counter
+	closes    metrics.Counter
+	numConns  metrics.Counter
+	tlsErrors metrics.Counter
 }
 
 func NewServer(port int) (server *Server, err error) {
-	server = &Server{
-		Id:   fmt.Sprintf("server:%d", port),
-		Port: port,
-	}
+	server = &Server{}
+
+	server.Id = fmt.Sprintf("server:%d", port)
+	server.Port = port
+	server.BufferSize = 32768
 
 	server.Log = log.GetLogger(server.Id)
 	server.Log.Infof("new server on port %d", port)
 
-	server.acceptRate = reporter.NewRegisteredRate(fmt.Sprintf("server.accept:%d", port))
-	server.closeRate = reporter.NewRegisteredRate(fmt.Sprintf("server.close:%d", port))
-	server.numConns = reporter.NewRegisteredReservoir(fmt.Sprintf("server.connections:%d", port), -1)
-	server.tlsErrors = reporter.NewRegisteredRate(fmt.Sprintf("server.tls.errors:%d", port))
+	server.accepts = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d accept", port), nil)
+	server.closes = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d close", port), nil)
+	server.numConns = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d connection", port), nil)
+	server.tlsErrors = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d tls_error", port), nil)
 
 	return server, nil
 }
@@ -144,11 +147,11 @@ func (server *Server) serve(listener *Listener) error {
 			return err
 		}
 
-		server.acceptRate.Update(1)
+		server.accepts.Inc(1)
 
-		if server.MaxConns > 0 && atomic.LoadInt64(connectionCount) >= server.MaxConns {
+		if server.MaxConns > 0 && server.numConns.Count() >= server.MaxConns {
 			// too many connections
-			server.closeRate.Update(1)
+			server.closes.Inc(1)
 			conn.Close()
 		} else {
 			go server.NewConnection(conn).Serve()

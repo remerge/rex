@@ -8,7 +8,6 @@ import (
 	"net"
 	"runtime/debug"
 	"sync"
-	"sync/atomic"
 
 	"github.com/remerge/rex/rollbar"
 )
@@ -24,7 +23,6 @@ type Connection struct {
 const NoLimit int64 = (1 << 63) - 1
 
 var connectionPool sync.Pool
-var connectionCount *int64 = new(int64)
 
 func (server *Server) NewConnection(conn net.Conn) *Connection {
 	c := newConnection()
@@ -34,12 +32,12 @@ func (server *Server) NewConnection(conn net.Conn) *Connection {
 	c.LimitReader.R = conn
 	c.LimitReader.N = NoLimit
 
-	br := newBufioReader(&c.LimitReader)
-	bw := newBufioWriter(conn)
+	br := newBufioReader(&c.LimitReader, server.BufferSize)
+	bw := newBufioWriter(conn, server.BufferSize)
 	c.Buffer.Reader = br
 	c.Buffer.Writer = bw
 
-	c.Server.numConns.Update(atomic.AddInt64(connectionCount, 1))
+	c.Server.numConns.Inc(1)
 	return c
 }
 
@@ -51,7 +49,7 @@ func newConnection() *Connection {
 }
 
 func putConnection(c *Connection) {
-	c.Server.numConns.Update(atomic.AddInt64(connectionCount, -1))
+	c.Server.numConns.Dec(1)
 
 	c.Conn = nil
 	c.Server = nil
@@ -76,13 +74,13 @@ var (
 	bufioWriterPool sync.Pool
 )
 
-func newBufioReader(r io.Reader) *bufio.Reader {
+func newBufioReader(r io.Reader, size int) *bufio.Reader {
 	if v := bufioReaderPool.Get(); v != nil {
 		br := v.(*bufio.Reader)
 		br.Reset(r)
 		return br
 	}
-	return bufio.NewReader(r)
+	return bufio.NewReaderSize(r, size)
 }
 
 func putBufioReader(br *bufio.Reader) {
@@ -90,19 +88,20 @@ func putBufioReader(br *bufio.Reader) {
 	bufioReaderPool.Put(br)
 }
 
-func newBufioWriter(w io.Writer) *bufio.Writer {
+func newBufioWriter(w io.Writer, size int) *bufio.Writer {
 	if v := bufioWriterPool.Get(); v != nil {
 		bw := v.(*bufio.Writer)
 		bw.Reset(w)
 		return bw
 	}
-	return bufio.NewWriterSize(w, 32768)
+	return bufio.NewWriterSize(w, size)
 }
 
 func putBufioWriter(bw *bufio.Writer) {
 	bw.Reset(nil)
 	bufioWriterPool.Put(bw)
 }
+
 func (c *Connection) Serve() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -132,7 +131,7 @@ func (c *Connection) Serve() {
 
 	if tlsConn, ok := c.Conn.(*tls.Conn); ok {
 		if err := tlsConn.Handshake(); err != nil {
-			c.Server.tlsErrors.Update(1)
+			c.Server.tlsErrors.Inc(1)
 			return
 		}
 	}
@@ -147,7 +146,7 @@ func (c *Connection) Close() {
 	}
 
 	if c.Server != nil {
-		c.Server.closeRate.Update(1)
+		c.Server.closes.Inc(1)
 	}
 
 	// flush write buffer before close

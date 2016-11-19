@@ -25,6 +25,7 @@ import:
 - package: github.com/remerge/rand
 - package: github.com/spf13/cobra
 - package: github.com/tylerb/graceful
+- package: github.com/rcrowley/go-metrics
 testImport:
 - package: github.com/smartystreets/goconvey
   subpackages:
