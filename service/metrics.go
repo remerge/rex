@@ -218,10 +218,10 @@ func (service *Service) flushMetrics(freq time.Duration) {
 	RegisterRuntimeMemStats(metrics.DefaultRegistry)
 	go CaptureRuntimeMemStats(metrics.DefaultRegistry, freq)
 
-	raddr, err := net.ResolveUDPAddr("udp", "nagios.remerge.io:8092")
+	raddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:8092")
 	rex.MayPanic(err)
 
-	laddr, err := net.ResolveUDPAddr("udp", ":0")
+	laddr, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
 	rex.MayPanic(err)
 
 	conn, err := net.DialUDP("udp", laddr, raddr)
