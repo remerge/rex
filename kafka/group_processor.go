@@ -8,9 +8,8 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/heroku/instruments"
-	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
+	metrics "github.com/rcrowley/go-metrics"
 	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
 )
@@ -128,7 +127,7 @@ func (gp *GroupProcessor) trackProgess() {
 			if !ok {
 				break
 			}
-			gp.metrics.Processed.Update(1)
+			gp.metrics.Processed.Inc(1)
 			count++
 			if offsets[po.Partition] < po.Offset {
 				offsets[po.Partition] = po.Offset
@@ -182,7 +181,7 @@ func (gp *GroupProcessor) runChangeReader() {
 					}
 					processable, err := gp.loadSaver.Load(msg)
 					if err != nil {
-						gp.metrics.LoadErrors.Update(1)
+						gp.metrics.LoadErrors.Inc(1)
 						continue
 					}
 					// id := binary.BigEndian.Uint64(cu.Id)
@@ -216,7 +215,7 @@ func (gp *GroupProcessor) runSaveWorker() {
 					}
 					err := gp.loadSaver.Save(processable)
 					if err != nil {
-						gp.metrics.SaveErrors.Update(1)
+						gp.metrics.SaveErrors.Inc(1)
 						continue
 					}
 					// seems to be ok
@@ -273,18 +272,17 @@ func (t *Terminator) Close(n int) {
 }
 
 type groupProcessorMetrics struct {
-	Lag        *instruments.Gauge
-	Tps        *instruments.Rate
-	Processed  *instruments.Rate
-	LoadErrors *instruments.Rate
-	SaveErrors *instruments.Rate
+	Lag        metrics.Gauge
+	Processed  metrics.Counter
+	LoadErrors metrics.Counter
+	SaveErrors metrics.Counter
 }
 
 func newGroupProcessorMetrics(name string) *groupProcessorMetrics {
 	return &groupProcessorMetrics{
-		Lag:        reporter.NewRegisteredGauge(name+".lag", -1),
-		Processed:  reporter.NewRegisteredRate(name + ".processed"),
-		LoadErrors: reporter.NewRegisteredRate(name + ".errors.load"),
-		SaveErrors: reporter.NewRegisteredRate(name + ".errors.save"),
+		Lag:        metrics.GetOrRegisterGauge("rex.group_processor,name="+name+" lag", nil),
+		Processed:  metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" msg", nil),
+		LoadErrors: metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" load_error", nil),
+		SaveErrors: metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" save_error", nil),
 	}
 }

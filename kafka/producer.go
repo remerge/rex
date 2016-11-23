@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/heroku/instruments"
-	"github.com/heroku/instruments/reporter"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
@@ -23,8 +21,6 @@ type Producer struct {
 	quit     chan bool
 	done     chan bool
 	log      loggo.Logger
-	messages *instruments.Timer
-	errors   *instruments.Timer
 }
 
 func (client *Client) NewProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (self *Producer, err error) {
@@ -42,8 +38,6 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 		quit:     make(chan bool),
 		done:     make(chan bool),
 		log:      log.GetLogger(config.ClientID),
-		messages: reporter.NewRegisteredTimer("kafka.producer."+config.ClientID+".messages", -1),
-		errors:   reporter.NewRegisteredTimer("kafka.producer."+config.ClientID+".errors", -1),
 	}
 
 	if config == nil {
@@ -124,8 +118,6 @@ func (self *Producer) Shutdown() {
 }
 
 func (self *Producer) SendMessage(msg *sarama.ProducerMessage) (err error) {
-	start := time.Now()
-
 	defer func() {
 		// we might have tried to write to a closed channel during shutdown
 		// recover and return the error to the caller
@@ -135,7 +127,6 @@ func (self *Producer) SendMessage(msg *sarama.ProducerMessage) (err error) {
 			if !ok {
 				err = fmt.Errorf("unknown error: %v", r)
 			}
-			self.errors.Update(time.Since(start))
 		}
 	}()
 
@@ -145,13 +136,11 @@ func (self *Producer) SendMessage(msg *sarama.ProducerMessage) (err error) {
 	if self.config.Producer.Return.Successes == true {
 		select {
 		case err := <-self.Errors():
-			self.errors.Update(time.Since(start))
 			return err.Err
 		case <-self.Successes():
 			// do nothing
 		}
 	}
 
-	self.messages.Update(time.Since(start))
 	return nil
 }
