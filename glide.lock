@@ -1,5 +1,5 @@
-hash: 2a035a3f0b18180d2fe50159dc9d08cc4f12933745aca929c825ceaf3621cbc6
-updated: 2016-11-21T10:54:30.487407729+01:00
+hash: fd1f526107bcc3d6fda608201752b4e00c82aed962605444afe69eeeb13462fa
+updated: 2016-11-24T09:28:16.004092993+01:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -30,11 +30,6 @@ imports:
   - proto
 - name: github.com/golang/snappy
   version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
-- name: github.com/heroku/instruments
-  version: 28308dce46c98f50b571e34c9cc2e5994163bf6c
-  repo: https://github.com/remerge/instruments
-  subpackages:
-  - reporter
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/now
@@ -60,7 +55,7 @@ imports:
 - name: github.com/mattn/go-colorable
   version: d228849504861217f796da67fae4f6e347643f15
 - name: github.com/mattn/go-isatty
-  version: 66b8e73f3f5cda9f96b69efd03dd3d7fc4a5cdb8
+  version: 30a891c33c7cde7b02a981314b4228ec99380cca
 - name: github.com/rcrowley/go-metrics
   version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
   subpackages:
@@ -98,7 +93,7 @@ imports:
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: b699b7032584f0953262cb2788a0ca19bb494703
+  version: 30237cf4eefd639b184d1f2cb77a581ea0be8947
   subpackages:
   - unix
 - name: gopkg.in/go-playground/validator.v8

@@ -10,10 +10,6 @@ import:
   subpackages:
   - spew
 - package: github.com/gin-gonic/gin
-- package: github.com/heroku/instruments
-  repo: https://github.com/remerge/instruments
-  subpackages:
-  - reporter
 - package: github.com/jinzhu/now
 - package: github.com/juju/ansiterm
 - package: github.com/juju/loggo
@@ -21,11 +17,13 @@ import:
   subpackages:
   - jlexer
   - jwriter
+- package: github.com/rcrowley/go-metrics
+  subpackages:
+  - exp
 - package: github.com/remerge/gobi
 - package: github.com/remerge/rand
 - package: github.com/spf13/cobra
 - package: github.com/tylerb/graceful
-- package: github.com/rcrowley/go-metrics
 testImport:
 - package: github.com/smartystreets/goconvey
   subpackages:
