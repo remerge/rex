@@ -60,7 +60,7 @@ dep:
 	go get -u github.com/Masterminds/glide
 	go get -u github.com/smartystreets/goconvey
 	go get -u github.com/alecthomas/gometalinter
-	gometalinter --install --update
+	gometalinter --install
 	cd $(GOSRCDIR) && glide install
 
 init:
