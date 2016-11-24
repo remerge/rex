@@ -35,7 +35,6 @@ type Service struct {
 		Connect       string
 		Tracker       rex.Tracker
 		EventMetadata rex.EventMetadata
-		MetricsTicker *rex.MetricsTicker
 	}
 
 	Server struct {
@@ -231,10 +230,6 @@ func (service *Service) Run() {
 	service.Tracker.Tracker, err = rex.NewKafkaTracker(service.Tracker.Connect, &service.Tracker.EventMetadata)
 	rex.MayPanic(err)
 
-	// TODO: remove once we've moved to go-metrics
-	service.Tracker.MetricsTicker = rex.NewMetricsTicker(service.Tracker.Tracker)
-	go service.Tracker.MetricsTicker.Start()
-
 	// background jobs for go-metrics
 	go service.flushMetrics(10 * time.Second)
 
@@ -402,11 +397,6 @@ func (service *Service) Shutdown() {
 	service.Log.Infof("service shutdown")
 
 	service.ShutdownServers()
-
-	if service.Tracker.MetricsTicker != nil {
-		service.Log.Infof("shutting down metrics ticker")
-		service.Tracker.MetricsTicker.Stop()
-	}
 
 	if service.Tracker.Tracker != nil {
 		service.Log.Infof("shutting down tracker")
