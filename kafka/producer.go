@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/log"
 	"github.com/remerge/rex/rollbar"
@@ -28,7 +29,7 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 
 	if cb == nil {
 		cb = func(err *sarama.ProducerError) {
-			log.GetLogger(config.ClientID).Errorf("%v", err)
+			log.GetLogger(config.ClientID).Errorf("failed to produce to topic=%#v err=%v msg=%s", err.Msg.Topic, err.Err, spew.Sdump(err.Msg))
 		}
 	}
 
