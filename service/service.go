@@ -87,7 +87,7 @@ func (service *Service) buildCommand() *cobra.Command {
 	flags.StringVar(
 		&env.Env,
 		"environment",
-		"development",
+		env.Env,
 		"environment to run in (development, test, production)",
 	)
 
