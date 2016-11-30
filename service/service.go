@@ -26,10 +26,11 @@ import (
 )
 
 type Service struct {
-	Name        string
-	Description string
-	Log         loggo.Logger
-	Command     *cobra.Command
+	Name          string
+	Description   string
+	Log           loggo.Logger
+	Command       *cobra.Command
+	CleanShutdown bool
 
 	Tracker struct {
 		Connect       string
@@ -65,6 +66,7 @@ func NewService(name string, port int) *Service {
 	service.Name = name
 	service.Log = log.GetLogger(name)
 	service.Command = service.buildCommand()
+	service.CleanShutdown = true
 	service.Server.Port = port
 	return service
 }
@@ -226,7 +228,19 @@ func (service *Service) Run() {
 
 	service.Log.Infof("code release=%v build=%v", rex.CodeVersion, rex.CodeBuild)
 
-	var err error
+	_, err := os.Stat("cache/.started")
+	if err == nil {
+		_, err := os.Stat("cache/.shutdown_done")
+		if err != nil {
+			// unclean shutdown
+			service.CleanShutdown = false
+			rollbar.Message(rollbar.CRIT, "found unclean service shutdown. check log file for previous panic.")
+		}
+	}
+
+	os.Remove("cache/.shutdown_done")
+	os.Create("cache/.started")
+
 	service.Tracker.Tracker, err = rex.NewKafkaTracker(service.Tracker.Connect, &service.Tracker.EventMetadata)
 	rex.MayPanic(err)
 
@@ -405,6 +419,9 @@ func (service *Service) Shutdown() {
 
 	service.Log.Infof("waiting for rollbar")
 	rollbar.Wait()
+
+	service.Log.Infof("shutdown done")
+	os.Create("cache/.shutdown_done")
 }
 
 const (
