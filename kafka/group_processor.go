@@ -121,7 +121,12 @@ func (gp *GroupProcessor) trackProgess() {
 			// on rebalance flush offsets
 			if ok {
 				gp.log.Infof("rebalanced added=%v current=%v released=%v", n.Claimed, n.Current, n.Released)
+
+				// setup offsets
 				offsets = make(map[int32]int64)
+				for _, p := range n.Current[gp.Config.Topic] {
+					offsets[p] = 0
+				}
 			}
 		case po, ok := <-gp.processed:
 			if !ok {
@@ -129,7 +134,10 @@ func (gp *GroupProcessor) trackProgess() {
 			}
 			gp.metrics.Processed.Inc(1)
 			count++
-			if offsets[po.Partition] < po.Offset {
+
+			// only count current offsets
+			_, offsetOk := offsets[po.Partition]
+			if offsetOk && offsets[po.Partition] < po.Offset {
 				offsets[po.Partition] = po.Offset
 			}
 		case _, ok := <-t.C:
