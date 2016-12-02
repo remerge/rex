@@ -99,7 +99,7 @@ func NewGroupProcessor(config *GroupProcessorConfig, loadSaver LoadSaver) (*Grou
 		processed:        make(chan PartitionOffset),
 		log:              log.GetLogger(config.Name + ".groupprocessor." + config.Topic),
 		loadSaver:        loadSaver,
-		metrics:          newGroupProcessorMetrics(config.Name),
+		metrics:          newGroupProcessorMetrics(config.Name, config.Topic),
 	}
 
 	return gp, nil
@@ -286,11 +286,12 @@ type groupProcessorMetrics struct {
 	SaveErrors metrics.Counter
 }
 
-func newGroupProcessorMetrics(name string) *groupProcessorMetrics {
+func newGroupProcessorMetrics(name string, topic string) *groupProcessorMetrics {
+	base := fmt.Sprintf("rex.group_processor,name=%s,topic=%s ", name, topic)
 	return &groupProcessorMetrics{
-		Lag:        metrics.GetOrRegisterGauge("rex.group_processor,name="+name+" lag", nil),
-		Processed:  metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" msg", nil),
-		LoadErrors: metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" load_error", nil),
-		SaveErrors: metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" save_error", nil),
+		Lag:        metrics.GetOrRegisterGauge(base+"lag", nil),
+		Processed:  metrics.GetOrRegisterCounter(base+"msg", nil),
+		LoadErrors: metrics.GetOrRegisterCounter(base+"load_error", nil),
+		SaveErrors: metrics.GetOrRegisterCounter(base+"save_error", nil),
 	}
 }
