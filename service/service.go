@@ -103,7 +103,7 @@ func (service *Service) buildCommand() *cobra.Command {
 	flags.StringVar(
 		&rollbar.Token,
 		"rollbar-token",
-		"",
+		rollbar.Token,
 		"rollbar token",
 	)
 
