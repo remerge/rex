@@ -99,7 +99,7 @@ func NewGroupProcessor(config *GroupProcessorConfig, loadSaver LoadSaver) (*Grou
 		processed:        make(chan PartitionOffset),
 		log:              log.GetLogger(config.Name + ".groupprocessor." + config.Topic),
 		loadSaver:        loadSaver,
-		metrics:          newGroupProcessorMetrics(config.Name),
+		metrics:          newGroupProcessorMetrics(config.Name, config.Topic),
 	}
 
 	return gp, nil
@@ -121,7 +121,12 @@ func (gp *GroupProcessor) trackProgess() {
 			// on rebalance flush offsets
 			if ok {
 				gp.log.Infof("rebalanced added=%v current=%v released=%v", n.Claimed, n.Current, n.Released)
+
+				// setup offsets
 				offsets = make(map[int32]int64)
+				for _, p := range n.Current[gp.Config.Topic] {
+					offsets[p] = 0
+				}
 			}
 		case po, ok := <-gp.processed:
 			if !ok {
@@ -129,7 +134,10 @@ func (gp *GroupProcessor) trackProgess() {
 			}
 			gp.metrics.Processed.Inc(1)
 			count++
-			if offsets[po.Partition] < po.Offset {
+
+			// only count current offsets
+			_, offsetOk := offsets[po.Partition]
+			if offsetOk && offsets[po.Partition] < po.Offset {
 				offsets[po.Partition] = po.Offset
 			}
 		case _, ok := <-t.C:
@@ -278,11 +286,12 @@ type groupProcessorMetrics struct {
 	SaveErrors metrics.Counter
 }
 
-func newGroupProcessorMetrics(name string) *groupProcessorMetrics {
+func newGroupProcessorMetrics(name string, topic string) *groupProcessorMetrics {
+	base := fmt.Sprintf("rex.group_processor,name=%s,topic=%s ", name, topic)
 	return &groupProcessorMetrics{
-		Lag:        metrics.GetOrRegisterGauge("rex.group_processor,name="+name+" lag", nil),
-		Processed:  metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" msg", nil),
-		LoadErrors: metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" load_error", nil),
-		SaveErrors: metrics.GetOrRegisterCounter("rex.group_processor,name="+name+" save_error", nil),
+		Lag:        metrics.GetOrRegisterGauge(base+"lag", nil),
+		Processed:  metrics.GetOrRegisterCounter(base+"msg", nil),
+		LoadErrors: metrics.GetOrRegisterCounter(base+"load_error", nil),
+		SaveErrors: metrics.GetOrRegisterCounter(base+"save_error", nil),
 	}
 }
