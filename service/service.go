@@ -330,14 +330,14 @@ func (service *Service) ServeDebug(port int) {
 
 	// wrap pprof in gin
 	service.Server.Debug.Engine.GET("/pprof/", gin.WrapF(pprof.Index))
-	service.Server.Debug.Engine.GET("/pprof/block", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/block", gin.WrapH(pprof.Handler("block")))
 	service.Server.Debug.Engine.GET("/pprof/cmdline", gin.WrapF(pprof.Cmdline))
-	service.Server.Debug.Engine.GET("/pprof/goroutine", gin.WrapF(pprof.Index))
-	service.Server.Debug.Engine.GET("/pprof/heap", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/goroutine", gin.WrapH(pprof.Handler("goroutine")))
+	service.Server.Debug.Engine.GET("/pprof/heap", gin.WrapH(pprof.Handler("heap")))
 	service.Server.Debug.Engine.GET("/pprof/profile", gin.WrapF(pprof.Profile))
 	service.Server.Debug.Engine.GET("/pprof/symbol", gin.WrapF(pprof.Symbol))
 	service.Server.Debug.Engine.POST("/pprof/symbol", gin.WrapF(pprof.Symbol))
-	service.Server.Debug.Engine.GET("/pprof/threadcreate", gin.WrapF(pprof.Index))
+	service.Server.Debug.Engine.GET("/pprof/threadcreate", gin.WrapH(pprof.Handler("threadcreate")))
 	service.Server.Debug.Engine.GET("/pprof/trace", gin.WrapF(pprof.Trace))
 
 	service.Server.Debug.Engine.GET("/blockprof/:rate", func(c *gin.Context) {
