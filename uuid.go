@@ -21,10 +21,16 @@ func ValidateUUID(uuid string) bool {
 
 // IsiOSUUID returns true if uuid matches the iOS specifc UUID regexp
 func IsiOSUUID(uuid string) bool {
+	if !FastValidateUUID(uuid) {
+		return false
+	}
 	return uuidRegexiOS.MatchString(uuid)
 }
 
 // IsAndroidUUID returns true if uuid matches the Android specifc UUID regexp
 func IsAndroidUUID(uuid string) bool {
+	if !FastValidateUUID(uuid) {
+		return false
+	}
 	return uuidRegexAndroid.MatchString(uuid)
 }
