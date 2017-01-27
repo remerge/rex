@@ -1,5 +1,5 @@
 hash: fd1f526107bcc3d6fda608201752b4e00c82aed962605444afe69eeeb13462fa
-updated: 2016-11-24T09:28:16.004092993+01:00
+updated: 2017-01-27T23:25:57.00316338+01:00
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -20,7 +20,7 @@ imports:
 - name: github.com/eapache/queue
   version: 44cc805cf13205b55f69e14bcb69867d1ae92f98
 - name: github.com/gin-gonic/gin
-  version: bb159f9260a262fccbdbd6f37f8575d1e7e6aaa0
+  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
   subpackages:
   - binding
   - render
@@ -29,11 +29,11 @@ imports:
   subpackages:
   - proto
 - name: github.com/golang/snappy
-  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+  version: 7db9049039a047d955fe8c19b83c8ff5abd765c7
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/now
-  version: d9861969c7a7e84746d341c09020c2ef8a617f8f
+  version: 95f61531f9021a162633b50777cc1263d3064641
 - name: github.com/juju/ansiterm
   version: 35c59b9e0fe275705a71bf5d58ee293f27efbbc4
   subpackages:
@@ -45,9 +45,8 @@ imports:
 - name: github.com/lunixbochs/vtclean
   version: 4fbf7632a2c6d3fbdb9931439bdbbeded02cbe36
 - name: github.com/mailru/easyjson
-  version: 159cdb893c982e3d1bc6450322fedd514f9c9de3
+  version: edd3ef1dab48f1cc831d78c0602a79be7a7b1a5e
   subpackages:
-  - buffer
   - jlexer
   - jwriter
 - name: github.com/manucorporat/sse
@@ -57,7 +56,7 @@ imports:
 - name: github.com/mattn/go-isatty
   version: 30a891c33c7cde7b02a981314b4228ec99380cca
 - name: github.com/rcrowley/go-metrics
-  version: ab2277b1c5d15c3cba104e9cbddbdfc622df5ad8
+  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
   subpackages:
   - exp
 - name: github.com/remerge/gobi
@@ -68,11 +67,11 @@ imports:
   version: 8385cb2da9a9cba0488d2d4dba55e1e143e4ecad
   repo: https://github.com/remerge/sarama
 - name: github.com/spf13/cobra
-  version: 9495bc009a56819bdb0ddbc1a373e29c140bc674
+  version: c29ece4386f74084680e5e6d02d7b943ae630f63
 - name: github.com/spf13/pflag
-  version: 5ccb023bc27df288a957c5e994cd44fd19619465
+  version: a9a634f3de0a7529baded7ad6b0c7467d5c6eca7
 - name: github.com/syndtr/goleveldb
-  version: 6b4daa5362b502898ddf367c5c11deb9e7a5c727
+  version: 23851d93a2292dcc56e71a18ec9e0624d84a0f65
   subpackages:
   - leveldb
   - leveldb/cache
@@ -87,33 +86,33 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/tylerb/graceful
-  version: 4df1190835320af7076dfcf27b3d071fd3612caf
+  version: 0e9129e9c6d47da90dc0c188b26bd7bb1dab53cd
 - name: golang.org/x/net
   version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: 30237cf4eefd639b184d1f2cb77a581ea0be8947
+  version: d75a52659825e75fff6158388dddc6a5b04f9ba5
   subpackages:
   - unix
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
 - name: gopkg.in/yaml.v2
-  version: a5b47d31c556af34a302ce5d659e6fea44d90de0
+  version: 4c78c975fe7c825c6d1466c42be594d1d6f3aba6
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: e34a5cd6a1bc7c4fde759f2d3039852fc68b5fcc
+  version: 2967252ace8b112e63a5b5879e92de915fe731f4
   subpackages:
   - js
 - name: github.com/jtolds/gls
-  version: 8ddce2a84170772b95dd5d576c48d517b22cac63
+  version: bb0351aa7eb6f322f32667d51375f26a2bca6628
 - name: github.com/smartystreets/assertions
-  version: e60cfa771e3f4d18723a4119f1833898c9c62066
+  version: 26acb9229f421449ac63d014995b282d59261a8b
   subpackages:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: 3c2572876754c4669ae7417b219f0b30a29b32c7
+  version: 3bd662eac601ad6436e64776af2e112069eb2edc
   subpackages:
   - convey
   - convey/gotest
