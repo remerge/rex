@@ -41,6 +41,7 @@ func NewServer(port int) (server *Server, err error) {
 	server.Log.Infof("new server on port %d", port)
 
 	server.accepts = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d accept", port), nil)
+	server.tooManyConns = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d too_many_connection", port), nil)
 	server.closes = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d close", port), nil)
 	server.numConns = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d connection", port), nil)
 	server.tlsErrors = metrics.GetOrRegisterCounter(fmt.Sprintf("rex.server,port=%d tls_error", port), nil)
@@ -151,7 +152,7 @@ func (server *Server) serve(listener *Listener) error {
 
 		if server.MaxConns > 0 && server.numConns.Count() >= server.MaxConns {
 			// too many connections
-			server.closes.Inc(1)
+			server.tooManyConns.Inc(1)
 			conn.Close()
 		} else {
 			go server.NewConnection(conn).Serve()
