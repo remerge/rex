@@ -24,10 +24,11 @@ type Server struct {
 	listener    *Listener
 	tlsListener *Listener
 
-	accepts   metrics.Counter
-	closes    metrics.Counter
-	numConns  metrics.Counter
-	tlsErrors metrics.Counter
+	accepts      metrics.Counter
+	tooManyConns metrics.Counter
+	closes       metrics.Counter
+	numConns     metrics.Counter
+	tlsErrors    metrics.Counter
 }
 
 func NewServer(port int) (server *Server, err error) {
