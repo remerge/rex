@@ -170,7 +170,7 @@ func RegisterRuntimeMemStats(r metrics.Registry) {
 	runtimeMetrics.MemStats.NextGC = metrics.NewGauge()
 	runtimeMetrics.MemStats.NumGC = metrics.NewGauge()
 	runtimeMetrics.MemStats.GCCPUFraction = metrics.NewGaugeFloat64()
-	runtimeMetrics.MemStats.PauseNs = metrics.NewHistogram(metrics.NewExpDecaySample(1028, 0.015))
+	runtimeMetrics.MemStats.PauseNs = metrics.NewHistogram(NewLockFreeSample(1028))
 	runtimeMetrics.MemStats.PauseTotalNs = metrics.NewGauge()
 	runtimeMetrics.MemStats.StackInuse = metrics.NewGauge()
 	runtimeMetrics.MemStats.StackSys = metrics.NewGauge()
@@ -179,7 +179,7 @@ func RegisterRuntimeMemStats(r metrics.Registry) {
 	runtimeMetrics.NumCgoCall = metrics.NewGauge()
 	runtimeMetrics.NumGoroutine = metrics.NewGauge()
 	runtimeMetrics.NumThread = metrics.NewGauge()
-	runtimeMetrics.ReadMemStats = metrics.NewTimer()
+	runtimeMetrics.ReadMemStats = NewLockFreeTimer()
 
 	r.Register("go.runtime mem_stat_alloc", runtimeMetrics.MemStats.Alloc)
 	r.Register("go.runtime mem_stat_buck_hash_sys", runtimeMetrics.MemStats.BuckHashSys)
