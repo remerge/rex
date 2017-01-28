@@ -18,16 +18,18 @@ func GetOrRegisterLockFreeTimer(name string, r metrics.Registry) metrics.Timer {
 
 func NewLockFreeTimer() metrics.Timer {
 	return &LockFreeTimer{
+		counter:   metrics.NewCounter(),
 		histogram: metrics.NewHistogram(NewLockFreeSample(1028)),
 	}
 }
 
 type LockFreeTimer struct {
+	counter   metrics.Counter
 	histogram metrics.Histogram
 }
 
 func (t *LockFreeTimer) Count() int64 {
-	return t.histogram.Count()
+	return t.counter.Count()
 }
 
 func (t *LockFreeTimer) Max() int64 {
@@ -87,11 +89,12 @@ func (t *LockFreeTimer) Time(f func()) {
 }
 
 func (t *LockFreeTimer) Update(d time.Duration) {
+	t.counter.Inc(1)
 	t.histogram.Update(int64(d))
 }
 
 func (t *LockFreeTimer) UpdateSince(ts time.Time) {
-	t.histogram.Update(int64(time.Since(ts)))
+	t.Update(time.Since(ts))
 }
 
 func (t *LockFreeTimer) Variance() float64 {
