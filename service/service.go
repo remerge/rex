@@ -101,7 +101,7 @@ func (service *Service) buildCommand() *cobra.Command {
 	)
 
 	flags.StringVar(
-		&rollbar.Token,
+		&rollbar.GlobalConfig.Token,
 		"rollbar-token",
 		"",
 		"rollbar token",
@@ -181,8 +181,8 @@ func (service *Service) buildCommand() *cobra.Command {
 		log.ConfigureLoggers(*logSpec)
 
 		// configure rollbar
-		rollbar.Environment = env.Env
-		rollbar.CodeVersion = rex.CodeVersion
+		rollbar.GlobalConfig.Environment = env.Env
+		rollbar.GlobalConfig.CodeVersion = rex.CodeVersion
 
 		// configure tracker
 		service.Tracker.EventMetadata.Service = service.Name
