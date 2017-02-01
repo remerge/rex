@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 	"testing"
+
+	. "github.com/smartystreets/goconvey/convey"
 )
 
 type CustomError struct {
@@ -39,15 +41,15 @@ func TestErrorClass(t *testing.T) {
 	}
 
 	for expected, err := range errors {
-		if errorClass(err) != expected {
-			t.Error("Got:", errorClass(err), "Expected:", expected)
+		if globalClient.errorClass(err) != expected {
+			t.Error("Got:", globalClient.errorClass(err), "Expected:", expected)
 		}
 	}
 }
 
 func TestEverything(t *testing.T) {
-	Token = os.Getenv("TOKEN")
-	Environment = "test"
+	GlobalConfig.Token = os.Getenv("TOKEN")
+	GlobalConfig.Environment = "test"
 
 	Error("critical", errors.New("Normal critical error"))
 	Error("error", &CustomError{"This is a custom error"})
@@ -74,7 +76,7 @@ func TestErrorRequest(t *testing.T) {
 	r, _ := http.NewRequest("GET", "http://foo.com/somethere?param1=true", nil)
 	r.RemoteAddr = "1.1.1.1:123"
 
-	object := errorRequest(r)
+	object := globalClient.errorRequest(r)
 
 	if object["url"] != "http://foo.com/somethere?param1=true" {
 		t.Errorf("wrong url, got %v", object["url"])
@@ -96,7 +98,7 @@ func TestFilterParams(t *testing.T) {
 		"access_token": {"one"},
 	}
 
-	clean := filterParams(values)
+	clean := globalClient.filterParams(values)
 	if clean["password"][0] != FILTERED {
 		t.Error("should filter password parameter")
 	}
@@ -116,7 +118,7 @@ func TestFlattenValues(t *testing.T) {
 		"b": {"one", "two"},
 	}
 
-	flattened := flattenValues(values)
+	flattened := globalClient.flattenValues(values)
 	if flattened["a"].(string) != "one" {
 		t.Error("should flatten single parameter to string")
 	}
@@ -127,7 +129,7 @@ func TestFlattenValues(t *testing.T) {
 }
 
 func TestCustomField(t *testing.T) {
-	body := buildError(ERR, errors.New("test-custom"), BuildStack(0), &Field{
+	body := globalClient.buildError(ERR, errors.New("test-custom"), BuildStack(0), &Field{
 		Name: "custom",
 		Data: map[string]string{
 			"NAME1": "VALUE1",
@@ -162,4 +164,12 @@ func TestCustomField(t *testing.T) {
 	if val != "VALUE1" {
 		t.Error("should be VALUE1")
 	}
+}
+
+func TestNewClientFromGlobal(t *testing.T) {
+	Convey("overrides global config values correctly", t, func() {
+		c := NewClientFromGlobal(&Config{Token: "1df23546vnf"})
+		So(c.config.Token, ShouldNotEqual, globalClient.config.Token)
+		So(c.config.Endpoint, ShouldEqual, globalClient.config.Endpoint)
+	})
 }
