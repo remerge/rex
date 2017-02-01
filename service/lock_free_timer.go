@@ -70,6 +70,7 @@ func (t *LockFreeTimer) RateMean() float64 {
 
 func (t *LockFreeTimer) Snapshot() metrics.Timer {
 	return &LockFreeTimerSnapshot{
+		counter:   t.counter.Snapshot().(metrics.CounterSnapshot),
 		histogram: t.histogram.Snapshot().(*metrics.HistogramSnapshot),
 	}
 }
@@ -102,10 +103,11 @@ func (t *LockFreeTimer) Variance() float64 {
 }
 
 type LockFreeTimerSnapshot struct {
+	counter   metrics.CounterSnapshot
 	histogram *metrics.HistogramSnapshot
 }
 
-func (t *LockFreeTimerSnapshot) Count() int64 { return t.histogram.Count() }
+func (t *LockFreeTimerSnapshot) Count() int64 { return t.counter.Count() }
 
 func (t *LockFreeTimerSnapshot) Max() int64 { return t.histogram.Max() }
 
