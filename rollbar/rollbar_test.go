@@ -41,8 +41,8 @@ func TestErrorClass(t *testing.T) {
 	}
 
 	for expected, err := range errors {
-		if globalClient.errorClass(err) != expected {
-			t.Error("Got:", globalClient.errorClass(err), "Expected:", expected)
+		if GlobalClient.errorClass(err) != expected {
+			t.Error("Got:", GlobalClient.errorClass(err), "Expected:", expected)
 		}
 	}
 }
@@ -76,7 +76,7 @@ func TestErrorRequest(t *testing.T) {
 	r, _ := http.NewRequest("GET", "http://foo.com/somethere?param1=true", nil)
 	r.RemoteAddr = "1.1.1.1:123"
 
-	object := globalClient.errorRequest(r)
+	object := GlobalClient.errorRequest(r)
 
 	if object["url"] != "http://foo.com/somethere?param1=true" {
 		t.Errorf("wrong url, got %v", object["url"])
@@ -98,7 +98,7 @@ func TestFilterParams(t *testing.T) {
 		"access_token": {"one"},
 	}
 
-	clean := globalClient.filterParams(values)
+	clean := GlobalClient.filterParams(values)
 	if clean["password"][0] != FILTERED {
 		t.Error("should filter password parameter")
 	}
@@ -118,7 +118,7 @@ func TestFlattenValues(t *testing.T) {
 		"b": {"one", "two"},
 	}
 
-	flattened := globalClient.flattenValues(values)
+	flattened := GlobalClient.flattenValues(values)
 	if flattened["a"].(string) != "one" {
 		t.Error("should flatten single parameter to string")
 	}
@@ -129,7 +129,7 @@ func TestFlattenValues(t *testing.T) {
 }
 
 func TestCustomField(t *testing.T) {
-	body := globalClient.buildError(ERR, errors.New("test-custom"), BuildStack(0), &Field{
+	body := GlobalClient.buildError(ERR, errors.New("test-custom"), BuildStack(0), &Field{
 		Name: "custom",
 		Data: map[string]string{
 			"NAME1": "VALUE1",
@@ -169,7 +169,7 @@ func TestCustomField(t *testing.T) {
 func TestNewClientFromGlobal(t *testing.T) {
 	Convey("overrides global config values correctly", t, func() {
 		c := NewClientFromGlobal(&Config{Token: "1df23546vnf"})
-		So(c.config.Token, ShouldNotEqual, globalClient.config.Token)
-		So(c.config.Endpoint, ShouldEqual, globalClient.config.Endpoint)
+		So(c.config.Token, ShouldNotEqual, GlobalClient.config.Token)
+		So(c.config.Endpoint, ShouldEqual, GlobalClient.config.Endpoint)
 	})
 }

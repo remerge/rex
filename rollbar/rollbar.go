@@ -129,39 +129,39 @@ type Client struct {
 }
 
 // Global Rollbar client
-var globalClient = NewClient(GlobalConfig)
+var GlobalClient = NewClient(GlobalConfig)
 
 // Dispatch to global client
 func Error(level string, err error, fields ...*Field) error {
-	return globalClient.Error(level, err, fields...)
+	return GlobalClient.Error(level, err, fields...)
 }
 
 func ErrorWithStackSkip(level string, err error, skip int, fields ...*Field) error {
-	return globalClient.ErrorWithStackSkip(level, err, skip, fields...)
+	return GlobalClient.ErrorWithStackSkip(level, err, skip, fields...)
 }
 
 func ErrorWithStack(level string, err error, stack Stack, fields ...*Field) error {
-	return globalClient.ErrorWithStack(level, err, stack, fields...)
+	return GlobalClient.ErrorWithStack(level, err, stack, fields...)
 }
 
 func RequestError(level string, r *http.Request, err error, fields ...*Field) error {
-	return globalClient.RequestError(level, r, err, fields...)
+	return GlobalClient.RequestError(level, r, err, fields...)
 }
 
 func RequestErrorWithStackSkip(level string, r *http.Request, err error, skip int, fields ...*Field) error {
-	return globalClient.RequestErrorWithStackSkip(level, r, err, skip, fields...)
+	return GlobalClient.RequestErrorWithStackSkip(level, r, err, skip, fields...)
 }
 
 func RequestErrorWithStack(level string, r *http.Request, err error, stack Stack, fields ...*Field) error {
-	return globalClient.RequestErrorWithStack(level, r, err, stack, fields...)
+	return GlobalClient.RequestErrorWithStack(level, r, err, stack, fields...)
 }
 
 func Message(level string, msg string, fields ...*Field) {
-	globalClient.Message(level, msg, fields...)
+	GlobalClient.Message(level, msg, fields...)
 }
 
 func Wait() {
-	globalClient.Wait()
+	GlobalClient.Wait()
 }
 
 // Fields can be used to pass arbitrary data to the Rollbar API.
