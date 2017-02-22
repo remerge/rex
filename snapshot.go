@@ -42,7 +42,11 @@ func (self *SnapshoterFor_T_) Path(name string) string {
 }
 
 func (self *SnapshoterFor_T_) Glob() ([]string, error) {
-	return filepath.Glob(self.Path("*." + self.ext))
+	if len(self.ext) > 0 {
+		return filepath.Glob(self.Path("*." + self.ext))
+	} else {
+		return filepath.Glob(self.Path("*"))
+	}
 }
 
 func (self *SnapshoterFor_T_) Newest() (string, error) {
