@@ -21,7 +21,6 @@ import:
   subpackages:
   - exp
 - package: github.com/remerge/gobi
-  version: 1026-increase-size-limit
 - package: github.com/remerge/rand
 - package: github.com/spf13/cobra
 - package: github.com/tylerb/graceful

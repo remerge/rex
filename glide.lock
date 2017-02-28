@@ -1,5 +1,5 @@
-hash: 856adef2efc86f652714c22dbfd77d9de43a127ae09b517eeee42e73cbe1d097
-updated: 2017-02-24T18:03:00.503122453Z
+hash: fd1f526107bcc3d6fda608201752b4e00c82aed962605444afe69eeeb13462fa
+updated: 2017-02-28T12:48:23.842908229Z
 imports:
 - name: github.com/beeker1121/goque
   version: e1e63ca63c14b41209e160f54c8e7669564eacc4
@@ -45,7 +45,7 @@ imports:
 - name: github.com/lunixbochs/vtclean
   version: 4428d67a89b36ecae7998e983e5814d0d9c45a04
 - name: github.com/mailru/easyjson
-  version: d89c33ca38a143e5190297c6252fcc75f01694ed
+  version: 44f6bc771e3cad4b8ce3ca4e357f17c4121af6b8
   subpackages:
   - jlexer
   - jwriter
@@ -60,7 +60,7 @@ imports:
   subpackages:
   - exp
 - name: github.com/remerge/gobi
-  version: 6e44e88cba58c6662e3ae3e4c5adead71fa4c3fd
+  version: 443b88220b0471433f47e47f76fd71ea70280e1e
 - name: github.com/remerge/rand
   version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
@@ -101,7 +101,7 @@ imports:
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: b9bcb1da229a59cc1e1d168401662cb6450aae08
+  version: 7d94d732be268c4904141f8b8604eb2d6d6544a1
   subpackages:
   - js
 - name: github.com/jtolds/gls
