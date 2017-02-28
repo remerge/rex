@@ -25,6 +25,9 @@ type SnapshoterFor_T_ struct {
 	timeLayout string
 }
 
+var _T_EncodeGauge = ""
+var _T_DecodeGauge = ""
+
 var _T_Snapshoter *SnapshoterFor_T_ = NewSnapshoterFor_T_("_basePath", "_ext", "_timeLayout")
 
 func NewSnapshoterFor_T_(basePath, ext, timeLayout string) *SnapshoterFor_T_ {
@@ -137,6 +140,8 @@ func (self *SnapshoterFor_T_) Load(b []byte) (*_G_, error) {
 
 func (self *SnapshoterFor_T_) LoadFromReader(r io.Reader) (result *_G_, err error) {
 	dec := gobi.NewDecoder(r)
+	dec.SetupSizeMetrics(_T_DecodeGauge)
+
 	result = new(_G_)
 	err = dec.Decode(result)
 	if err != nil {
@@ -228,6 +233,8 @@ func (self *_G_) SnapshotToFileNamedByTime() (filename string, err error) {
 
 func (self *_G_) SnapshotToWriter(w io.Writer) {
 	enc := gobi.NewEncoder(w)
+	enc.SetupSizeMetrics(_T_EncodeGauge)
+
 	err := enc.Encode(self)
 	_MayPanic(err)
 }
