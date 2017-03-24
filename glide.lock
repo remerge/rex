@@ -1,8 +1,8 @@
-hash: fd1f526107bcc3d6fda608201752b4e00c82aed962605444afe69eeeb13462fa
-updated: 2017-02-28T12:48:23.842908229Z
+hash: e672955beda0ab0fc8a79b9bbfaccf89c940e71e8dd41db3f93db10c483b54d9
+updated: 2017-03-24T07:08:45.108290609Z
 imports:
 - name: github.com/beeker1121/goque
-  version: e1e63ca63c14b41209e160f54c8e7669564eacc4
+  version: 4044bc29b28064db4f08e947c4972d5ca3e0f3c8
 - name: github.com/cheekybits/genny
   version: e8e29e67948b15c64e60d6617182c18cf7eead7f
   subpackages:
@@ -30,6 +30,8 @@ imports:
   - proto
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
+- name: github.com/google/uuid
+  version: 6a5e28554805e78ea6141142aba763936c4761c0
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/now
@@ -45,16 +47,22 @@ imports:
 - name: github.com/lunixbochs/vtclean
   version: 4428d67a89b36ecae7998e983e5814d0d9c45a04
 - name: github.com/mailru/easyjson
-  version: 44f6bc771e3cad4b8ce3ca4e357f17c4121af6b8
+  version: db58e6f9072c545a3a24b8d44c51d81fff6dcb51
   subpackages:
   - jlexer
   - jwriter
 - name: github.com/manucorporat/sse
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-colorable
-  version: d898aa9fb31c91f35dd28ca75db377eff023c076
+  version: a392f450ea64cee2b268dfaacdc2502b50a22b18
 - name: github.com/mattn/go-isatty
-  version: dda3de49cbfcec471bd7a70e6cc01fcc3ff90109
+  version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
+- name: github.com/pierrec/lz4
+  version: 90290f74b1b4d9c097f0a3b3c7eba2ef3875c699
+- name: github.com/pierrec/xxHash
+  version: 5a004441f897722c627870a981d02b29924215fa
+  subpackages:
+  - xxHash32
 - name: github.com/rcrowley/go-metrics
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
   subpackages:
@@ -64,14 +72,14 @@ imports:
 - name: github.com/remerge/rand
   version: 115b299c404a9d1cf33c6a586794f3b4a2a240af
 - name: github.com/Shopify/sarama
-  version: 8385cb2da9a9cba0488d2d4dba55e1e143e4ecad
+  version: e975cc7021bc8388a52464ac71ec454ff75fffbe
   repo: https://github.com/remerge/sarama
 - name: github.com/spf13/cobra
-  version: 92ea23a837e66f46ac9e7d04fa826602b7b0a42d
+  version: 7be4beda01ec05d0b93d80b3facd2b6f44080d94
 - name: github.com/spf13/pflag
   version: 9ff6c6923cfffbcd502984b8e0c80539a94968b7
 - name: github.com/syndtr/goleveldb
-  version: 23851d93a2292dcc56e71a18ec9e0624d84a0f65
+  version: 3c5717caf1475fd25964109a0fc640bd150fce43
   subpackages:
   - leveldb
   - leveldb/cache
@@ -92,7 +100,7 @@ imports:
   subpackages:
   - context
 - name: golang.org/x/sys
-  version: e4594059fe4cde2daf423055a596c2cd1e6c9adf
+  version: 8fd966b47dbdd4faa03de0d06e3d733baeb9a1a9
   subpackages:
   - unix
 - name: gopkg.in/go-playground/validator.v8
@@ -101,7 +109,7 @@ imports:
   version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports:
 - name: github.com/gopherjs/gopherjs
-  version: 7d94d732be268c4904141f8b8604eb2d6d6544a1
+  version: 0cc212b4ef1943b61e894a7d56490575b3216439
   subpackages:
   - js
 - name: github.com/jtolds/gls

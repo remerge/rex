@@ -9,7 +9,8 @@ type EventMetadata struct {
 }
 
 type Event struct {
-	Ts string `form:"ts" json:"ts,omitempty"`
+	Ts   string `form:"ts" json:"ts,omitempty"`
+	UUID string `json:"_uuid,omitempty"`
 	EventMetadata
 }
 
