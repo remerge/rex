@@ -56,7 +56,9 @@ func (client *Client) NewProducer(name string, config *sarama.Config, cb Produce
 	return self, nil
 }
 
-func (client *Client) newFastProducer(name string, config *sarama.Config, cb ProducerErrorCallback) (*Producer, error) {
+func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, error) {
+	config := sarama.NewConfig()
+	config.Producer.Compression = sarama.CompressionSnappy
 	config.Producer.Return.Successes = false
 	config.Producer.Return.Errors = true
 	config.Producer.RequiredAcks = sarama.NoResponse
@@ -64,21 +66,12 @@ func (client *Client) newFastProducer(name string, config *sarama.Config, cb Pro
 	if os.Getenv("REX_ENV") != "development" {
 		config.Producer.Flush.Frequency = 1 * time.Second
 	}
-	return client.NewProducer(name, config, cb)
-}
-
-func (client *Client) NewCompressingFastProducer(cb ProducerErrorCallback) (*Producer, error) {
-	config := sarama.NewConfig()
-	config.Producer.Compression = sarama.CompressionSnappy
-	return client.newFastProducer("fast_compressing", config, cb)
-}
-
-func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, error) {
-	return client.newFastProducer("fast", sarama.NewConfig(), cb)
+	return client.NewProducer("fast", config, cb)
 }
 
 func (client *Client) NewSafeProducer() (*Producer, error) {
 	config := sarama.NewConfig()
+	config.Producer.Compression = sarama.CompressionSnappy
 	config.Producer.Return.Successes = true
 	config.Producer.Return.Errors = true
 	config.Producer.RequiredAcks = sarama.WaitForLocal
