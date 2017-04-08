@@ -1,10 +1,6 @@
 package rex
 
-import (
-	"encoding/json"
-
-	"github.com/google/uuid"
-)
+import "encoding/json"
 
 type BaseTracker struct {
 	*EventMetadata
@@ -31,7 +27,7 @@ func (self *BaseTracker) AddMetadata(e EventBase, full bool) {
 
 	if event.Ts == "" {
 		event.Ts = GetTimestampNowFormat()
-		event.UUID = uuid.Must(uuid.NewUUID()).String()
+		//event.UUID = uuid.Must(uuid.NewUUID()).String()
 
 		if full == true {
 			event.Service = self.Service
