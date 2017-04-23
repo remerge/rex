@@ -1,11 +1,9 @@
 package rex
 
 import (
-	"bytes"
 	"time"
 
 	"github.com/Shopify/sarama"
-	"github.com/beeker1121/goque"
 	"github.com/juju/loggo"
 	"github.com/remerge/rex/kafka"
 	"github.com/remerge/rex/log"
@@ -20,26 +18,14 @@ type KafkaTracker struct {
 	Safe        *kafka.Producer
 	SafeTimeout time.Duration
 	log         loggo.Logger
-	running     bool
-	quit        chan bool
-	done        chan bool
-	queue       *goque.Queue
 }
 
 func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err error) {
-	queue, err := goque.OpenQueue("cache/tracker")
-	if err != nil {
-		return nil, err
-	}
-
 	self := &KafkaTracker{
 		BaseTracker: NewBaseTracker(metadata),
 		FastTimeout: 10 * time.Millisecond,
 		SafeTimeout: 100 * time.Millisecond,
 		log:         log.GetLogger("rex.tracker"),
-		queue:       queue,
-		quit:        make(chan bool),
-		done:        make(chan bool),
 	}
 
 	self.Client, err = kafka.NewClient("tracker", broker)
@@ -59,18 +45,10 @@ func NewKafkaTracker(broker string, metadata *EventMetadata) (_ Tracker, err err
 		return nil, err
 	}
 
-	go self.start()
-
 	return self, nil
 }
 
 func (self *KafkaTracker) Close() {
-	if self.running {
-		self.log.Infof("shutting down tracker")
-		close(self.quit)
-		self.log.Infof("waiting for run loop")
-		<-self.done
-	}
 	if self.Safe != nil {
 		self.log.Infof("shutting down safe producer")
 		self.Safe.Shutdown()
@@ -80,7 +58,6 @@ func (self *KafkaTracker) Close() {
 		self.Fast.Shutdown()
 	}
 	rollbar.Error(rollbar.WARN, self.Client.Close())
-	self.queue.Close()
 	self.log.Infof("tracker is stopped")
 }
 
@@ -108,7 +85,10 @@ func (self *KafkaTracker) SafeMessage(topic string, value []byte) error {
 	if self.log.IsTraceEnabled() {
 		self.log.Tracef("topic=%s value=%s", topic, string(value))
 	}
-	return self.enqueue(topic, value)
+	return self.Safe.SendMessage(&sarama.ProducerMessage{
+		Topic: topic,
+		Value: sarama.ByteEncoder(value),
+	})
 }
 
 func (self *KafkaTracker) SafeEvent(topic string, event EventBase, full bool) error {
@@ -119,49 +99,4 @@ func (self *KafkaTracker) SafeEvent(topic string, event EventBase, full bool) er
 func (self *KafkaTracker) SafeEventMap(topic string, event map[string]interface{}, full bool) error {
 	self.AddMetadataMap(event, full)
 	return self.SafeMessage(topic, self.EncodeMap(event))
-}
-
-// fail-safe disk queue worker
-
-var safeQueueDelim = []byte{0x0}
-
-func (self *KafkaTracker) enqueue(topic string, value []byte) error {
-	msg := append([]byte(topic), safeQueueDelim...)
-	msg = append(msg, value...)
-	_, err := self.queue.Enqueue(msg)
-	return err
-}
-
-func (self *KafkaTracker) processSafeMessage(msg []byte) error {
-	idx := bytes.Index(msg, safeQueueDelim)
-	topic := string(msg[0:idx])
-	value := msg[idx+1:]
-
-	return self.Safe.SendMessage(&sarama.ProducerMessage{
-		Topic: topic,
-		Value: sarama.ByteEncoder(value),
-	})
-}
-
-func (self *KafkaTracker) start() {
-	self.running = true
-
-	for {
-		select {
-		default:
-			item, err := self.queue.Dequeue()
-			if err == goque.ErrEmpty {
-				time.Sleep(100 * time.Millisecond)
-			} else if err != nil {
-				rollbar.Error(rollbar.ERR, err)
-			} else if err = self.processSafeMessage(item.Value); err != nil {
-				rollbar.Error(rollbar.ERR, err)
-				self.queue.Enqueue(item.Value)
-			}
-		case <-self.quit:
-			self.running = false
-			close(self.done)
-			return
-		}
-	}
 }

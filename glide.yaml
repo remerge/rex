@@ -2,7 +2,6 @@ package: github.com/remerge/rex
 import:
 - package: github.com/Shopify/sarama
   repo: https://github.com/remerge/sarama
-- package: github.com/beeker1121/goque
 - package: github.com/cheekybits/genny
   subpackages:
   - generic
