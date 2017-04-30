@@ -3,11 +3,13 @@ package server
 import (
 	"crypto/tls"
 	"fmt"
+	"time"
 
 	"github.com/juju/loggo"
 	metrics "github.com/rcrowley/go-metrics"
 	"github.com/remerge/rex"
 	"github.com/remerge/rex/log"
+	"github.com/tsenart/tb"
 )
 
 type Server struct {
@@ -17,6 +19,10 @@ type Server struct {
 	TlsConfig  *tls.Config
 	MaxConns   int64
 	BufferSize int
+
+	AcceptsPerSecond int64
+	AcceptDelay      time.Duration
+	acceptBucket     *tb.Bucket
 
 	Log     loggo.Logger
 	Handler Handler
@@ -37,6 +43,9 @@ func NewServer(port int) (server *Server, err error) {
 	server.Id = fmt.Sprintf("server:%d", port)
 	server.Port = port
 	server.BufferSize = 32768
+
+	server.AcceptsPerSecond = 1000
+	server.AcceptDelay = 10 * time.Millisecond
 
 	server.Log = log.GetLogger(server.Id)
 	server.Log.Infof("new server on port %d", port)
@@ -139,6 +148,14 @@ func (server *Server) serve(listener *Listener) error {
 	for {
 		if listener.IsStopped() {
 			return nil
+		}
+
+		// throttle accepts
+		if server.AcceptsPerSecond > 0 {
+			if server.acceptBucket == nil {
+				server.acceptBucket = tb.NewBucket(server.AcceptsPerSecond, server.AcceptDelay)
+			}
+			server.acceptBucket.Wait(1)
 		}
 
 		conn, err := listener.Accept()
