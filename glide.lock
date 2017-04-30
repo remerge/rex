@@ -1,12 +1,12 @@
-hash: 6a37daa13b02b528677c96efd8199b66c73d66d14af739e480841172b9552b28
-updated: 2017-04-30T21:54:45.228806488Z
+hash: f38f7e672327d9341f49de752cb31110ba6e4f87d3c9dec69818b60e5f59c699
+updated: 2017-04-23T06:46:02.1560166Z
 imports:
 - name: github.com/cheekybits/genny
   version: 9127e812e1e9e501ce899a18121d316ecb52e4ba
   subpackages:
   - generic
 - name: github.com/davecgh/go-spew
-  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  version: 346938d642f2ec3594ed81d874461961cd0faa76
   subpackages:
   - spew
 - name: github.com/eapache/go-resiliency
@@ -73,11 +73,9 @@ imports:
   version: a69155709624ba4cd1ea3463093ed4a8799cbff3
   repo: https://github.com/remerge/sarama
 - name: github.com/spf13/cobra
-  version: 681a777b18d132e530fd4f9f65fb6b29388bf08d
+  version: 10f6b9d7e1631a54ad07c5c0fb71c28a1abfd3c2
 - name: github.com/spf13/pflag
   version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
-- name: github.com/tsenart/tb
-  version: 19f4c3d79d2bd67d0911b2e310b999eeea4454c1
 - name: github.com/tylerb/graceful
   version: d72b0151351a13d0421b763b88f791469c4f5dc7
 - name: golang.org/x/net

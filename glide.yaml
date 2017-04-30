@@ -24,7 +24,6 @@ import:
 - package: github.com/spf13/cobra
 - package: github.com/tylerb/graceful
 - package: github.com/google/uuid
-- package: github.com/tsenart/tb
 testImport:
 - package: github.com/smartystreets/goconvey
   subpackages:
