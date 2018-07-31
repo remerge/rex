@@ -28,6 +28,8 @@ type LockFreeTimer struct {
 	histogram metrics.Histogram
 }
 
+func (t *LockFreeTimer) Stop() {}
+
 func (t *LockFreeTimer) Count() int64 {
 	return t.counter.Count()
 }
@@ -106,6 +108,8 @@ type LockFreeTimerSnapshot struct {
 	counter   metrics.CounterSnapshot
 	histogram *metrics.HistogramSnapshot
 }
+
+func (t *LockFreeTimerSnapshot) Stop() {}
 
 func (t *LockFreeTimerSnapshot) Count() int64 { return t.counter.Count() }
 

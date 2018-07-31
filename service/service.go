@@ -326,7 +326,6 @@ func (service *Service) ServeDebug(port int) {
 
 	// expvar & go-metrics
 	service.Server.Debug.Engine.GET("/vars", gin.WrapH(exp.ExpHandler(metrics.DefaultRegistry)))
-	service.Server.Debug.Engine.GET("/metrics", gin.WrapH(exp.ExpHandler(metrics.DefaultRegistry)))
 
 	// wrap pprof in gin
 	service.Server.Debug.Engine.GET("/pprof/", gin.WrapF(pprof.Index))
