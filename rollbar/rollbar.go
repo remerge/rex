@@ -256,7 +256,7 @@ func (c *Client) RequestErrorWithStack(level string, r *http.Request, err error,
 	log.GetLogger("rollbar").Errorf("%s", err.Error())
 	requestDump, _ := httputil.DumpRequest(r, false)
 	fmt.Printf("\n%s%s\n\n", requestDump, stack.String())
-	c.buildAndPushError(level, err, stack, &Field{Name: "request", Data: c.errorRequest(r)})
+	c.buildAndPushError(level, err, stack, append(fields, &Field{Name: "request", Data: c.errorRequest(r)})...)
 	return err
 }
 
