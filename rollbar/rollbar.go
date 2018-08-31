@@ -222,9 +222,11 @@ func (c *Client) ErrorWithStackSkip(level string, err error, skip int, fields ..
 // ErrorWithStack asynchronously sends and error to Rollbar with the given
 // stacktrace and (optionally) custom Fields to be passed on to Rollbar.
 func (c *Client) ErrorWithStack(level string, err error, stack Stack, fields ...*Field) error {
-	log.GetLogger("rollbar").Errorf("%s", err.Error())
-	fmt.Printf("\n%s\n\n", stack.String())
-	c.buildAndPushError(level, err, stack, fields...)
+	if c.config.Environment != "development" && c.config.Environment != "test" {
+		log.GetLogger("rollbar").Errorf("%s", err.Error())
+		fmt.Printf("\n%s\n\n", stack.String())
+		c.buildAndPushError(level, err, stack, fields...)
+	}
 	return err
 }
 
@@ -253,10 +255,12 @@ func (c *Client) RequestErrorWithStackSkip(level string, r *http.Request, err er
 // http.Request, and a custom Stack. You You can pass, optionally, custom
 // Fields to be passed on to Rollbar.
 func (c *Client) RequestErrorWithStack(level string, r *http.Request, err error, stack Stack, fields ...*Field) error {
-	log.GetLogger("rollbar").Errorf("%s", err.Error())
-	requestDump, _ := httputil.DumpRequest(r, false)
-	fmt.Printf("\n%s%s\n\n", requestDump, stack.String())
-	c.buildAndPushError(level, err, stack, &Field{Name: "request", Data: c.errorRequest(r)})
+	if c.config.Environment != "development" && c.config.Environment != "test" {
+		log.GetLogger("rollbar").Errorf("%s", err.Error())
+		requestDump, _ := httputil.DumpRequest(r, false)
+		fmt.Printf("\n%s%s\n\n", requestDump, stack.String())
+		c.buildAndPushError(level, err, stack, &Field{Name: "request", Data: c.errorRequest(r)})
+	}
 	return err
 }
 
