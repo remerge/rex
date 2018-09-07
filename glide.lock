@@ -64,7 +64,7 @@ imports:
   subpackages:
   - xxHash32
 - name: github.com/rcrowley/go-metrics
-  version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
+  version: e2704e165165ec55d062f5919b4b29494e9fa790
   subpackages:
   - exp
 - name: github.com/remerge/go-lock_free_timer

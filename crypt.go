@@ -8,6 +8,9 @@ import (
 
 func DecryptHmacXorWithIntegrity(message, encrypt_key, integrity_key []byte) ([]byte, error) {
 	size := len(message)
+	if size < 21 {
+		return nil, fmt.Errorf(`can't decrypt message "%x": size %d < 21'`, message, size)
+	}
 	initialization_vector := message[0:16]
 	ciphertext := message[16 : size-4]
 	integrity_signature := message[size-4 : size]
