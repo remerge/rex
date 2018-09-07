@@ -67,6 +67,10 @@ imports:
   version: 1f30fe9094a513ce4c700b9a54458bbb0c96996c
   subpackages:
   - exp
+- name: github.com/remerge/go-lock_free_timer
+  version: e11930a8ebb53bbe5f9cce08a7bf41124bcca809
+- name: github.com/remerge/go-xorshift
+  version: 38a062789887270f4b85fd03a1756560552eed97
 - name: github.com/remerge/gobi
   version: 443b88220b0471433f47e47f76fd71ea70280e1e
 - name: github.com/remerge/rand
@@ -98,14 +102,18 @@ testImports:
   subpackages:
   - js
 - name: github.com/jtolds/gls
-  version: bb0351aa7eb6f322f32667d51375f26a2bca6628
+  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
 - name: github.com/smartystreets/assertions
-  version: c9ee7d9e9a2aeec0bee7c4a516f3e0ad7cb7e558
+  version: 9c0ea8acbc1d8ad689f9e6fe0c1fa5838e0cabc2
   subpackages:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: 3bd662eac601ad6436e64776af2e112069eb2edc
+  version: e5b2b7c9111590d019a696c7800593f666e1a7f4
   subpackages:
   - convey
   - convey/gotest

@@ -8,7 +8,8 @@ import (
 	"strings"
 	"time"
 
-	metrics "github.com/rcrowley/go-metrics"
+	"github.com/rcrowley/go-metrics"
+	"github.com/remerge/go-lock_free_timer"
 	"github.com/remerge/rex"
 )
 
@@ -170,7 +171,7 @@ func RegisterRuntimeMemStats(r metrics.Registry) {
 	runtimeMetrics.MemStats.NextGC = metrics.NewGauge()
 	runtimeMetrics.MemStats.NumGC = metrics.NewGauge()
 	runtimeMetrics.MemStats.GCCPUFraction = metrics.NewGaugeFloat64()
-	runtimeMetrics.MemStats.PauseNs = metrics.NewHistogram(NewLockFreeSample(1028))
+	runtimeMetrics.MemStats.PauseNs = metrics.NewHistogram(lft.NewLockFreeSample(1028))
 	runtimeMetrics.MemStats.PauseTotalNs = metrics.NewGauge()
 	runtimeMetrics.MemStats.StackInuse = metrics.NewGauge()
 	runtimeMetrics.MemStats.StackSys = metrics.NewGauge()
@@ -179,7 +180,7 @@ func RegisterRuntimeMemStats(r metrics.Registry) {
 	runtimeMetrics.NumCgoCall = metrics.NewGauge()
 	runtimeMetrics.NumGoroutine = metrics.NewGauge()
 	runtimeMetrics.NumThread = metrics.NewGauge()
-	runtimeMetrics.ReadMemStats = NewLockFreeTimer()
+	runtimeMetrics.ReadMemStats = lft.NewLockFreeTimer()
 
 	r.Register("go.runtime mem_stat_alloc", runtimeMetrics.MemStats.Alloc)
 	r.Register("go.runtime mem_stat_buck_hash_sys", runtimeMetrics.MemStats.BuckHashSys)
@@ -232,7 +233,7 @@ func (service *Service) flushMetrics(freq time.Duration) {
 	write := func(format string, a ...interface{}) {
 		msg := fmt.Sprintf(format, a...)
 		conn.Write([]byte(msg))
-		//fmt.Printf(msg)
+		// fmt.Printf(msg)
 	}
 
 	for range time.Tick(freq) {
