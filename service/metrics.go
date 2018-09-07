@@ -233,7 +233,6 @@ func (service *Service) flushMetrics(freq time.Duration) {
 	write := func(format string, a ...interface{}) {
 		msg := fmt.Sprintf(format, a...)
 		conn.Write([]byte(msg))
-		// fmt.Printf(msg)
 	}
 
 	for range time.Tick(freq) {
