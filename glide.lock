@@ -1,6 +1,8 @@
 hash: f38f7e672327d9341f49de752cb31110ba6e4f87d3c9dec69818b60e5f59c699
 updated: 2017-04-23T06:46:02.1560166Z
 imports:
+- name: bitbucket.org/pkg/inflect
+  version: 8961c3750a47b8c0b3e118d52513b97adf85a7e8
 - name: github.com/cheekybits/genny
   version: 9127e812e1e9e501ce899a18121d316ecb52e4ba
   subpackages:

@@ -1,5 +1,6 @@
 package: github.com/remerge/rex
 import:
+- package: bitbucket.org/pkg/inflect
 - package: github.com/Shopify/sarama
   repo: https://github.com/remerge/sarama
 - package: github.com/cheekybits/genny
