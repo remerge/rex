@@ -12,13 +12,7 @@ import (
 	"github.com/remerge/go-lock_free_timer"
 )
 
-var (
-	logger         = loggo.GetLogger("gin")
-	ginErrPrefixes = []string{
-		"gin.Error: invalid URL escape",
-		"gin.Error: read tcp",
-	}
-)
+var logger = loggo.GetLogger("gin")
 
 // LogMeteredError writes message to log as well as increases "track_error"
 // metric. First 32 runes of error are used for "reason" label in
@@ -50,30 +44,26 @@ func GinRecovery() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {
-				switch err.(type) {
+				var recoveredError error
+				switch err1 := err.(type) {
 				case error:
-					c.Error(err.(error))
+					recoveredError = err1
 				default:
-					c.Error(fmt.Errorf("unknown error: %v", err))
+					recoveredError = fmt.Errorf("unknown error: %v", err)
 				}
+				c.Error(recoveredError)
+				RequestErrorWithStackSkip(ERR, c.Request, recoveredError, 3)
 			}
 
 			if len(c.Errors) == 0 {
 				return
 			}
 
-		errReportLoop:
 			for _, err := range c.Errors {
 				LogMeteredError(err,
 					"m+partner="+c.Request.Form.Get("partner"),
 					"url="+c.Request.URL.String(),
 					"remote_addr="+c.Request.RemoteAddr)
-				for _, prefix := range ginErrPrefixes {
-					if strings.HasPrefix(err.Error(), prefix) {
-						continue errReportLoop
-					}
-				}
-				RequestErrorWithStackSkip(ERR, c.Request, err, 3)
 			}
 
 			c.JSON(500, gin.H{
