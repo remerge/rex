@@ -1,6 +1,8 @@
 hash: f38f7e672327d9341f49de752cb31110ba6e4f87d3c9dec69818b60e5f59c699
 updated: 2017-04-23T06:46:02.1560166Z
 imports:
+- name: bitbucket.org/pkg/inflect
+  version: 8961c3750a47b8c0b3e118d52513b97adf85a7e8
 - name: github.com/cheekybits/genny
   version: 9127e812e1e9e501ce899a18121d316ecb52e4ba
   subpackages:
@@ -65,6 +67,10 @@ imports:
   version: e2704e165165ec55d062f5919b4b29494e9fa790
   subpackages:
   - exp
+- name: github.com/remerge/go-lock_free_timer
+  version: e11930a8ebb53bbe5f9cce08a7bf41124bcca809
+- name: github.com/remerge/go-xorshift
+  version: 38a062789887270f4b85fd03a1756560552eed97
 - name: github.com/remerge/gobi
   version: 443b88220b0471433f47e47f76fd71ea70280e1e
 - name: github.com/remerge/rand
@@ -96,14 +102,18 @@ testImports:
   subpackages:
   - js
 - name: github.com/jtolds/gls
-  version: bb0351aa7eb6f322f32667d51375f26a2bca6628
+  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
 - name: github.com/smartystreets/assertions
-  version: c9ee7d9e9a2aeec0bee7c4a516f3e0ad7cb7e558
+  version: 9c0ea8acbc1d8ad689f9e6fe0c1fa5838e0cabc2
   subpackages:
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey
-  version: 3bd662eac601ad6436e64776af2e112069eb2edc
+  version: e5b2b7c9111590d019a696c7800593f666e1a7f4
   subpackages:
   - convey
   - convey/gotest
