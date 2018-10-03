@@ -61,7 +61,7 @@ func GinRecovery() gin.HandlerFunc {
 
 			for _, err := range c.Errors {
 				LogMeteredError(err,
-					"m+partner="+c.Request.Form.Get("partner"),
+					"partner="+c.Request.Form.Get("partner"),
 					"url="+c.Request.URL.String(),
 					"remote_addr="+c.Request.RemoteAddr)
 			}
