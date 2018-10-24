@@ -38,28 +38,3 @@ func NewClient(id string, broker_list string) (client *Client, err error) {
 func (client *Client) GetGroupOffset(group string, topic string, partition int32, offset int64) (int64, error) {
 	return client.GetOffset(topic, partition, offset)
 }
-
-func (client *Client) GetOffsets(topic string) (earliestMap OffsetMap, latestMap OffsetMap, err error) {
-	earliestMap = make(OffsetMap)
-	latestMap = make(OffsetMap)
-	// TODO : optimize to get this earliest and latest with one kafka call
-	partitions, err := client.Partitions(topic)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	for _, p := range partitions {
-		earliest, err := client.GetOffset(topic, p, sarama.OffsetOldest)
-		if err != nil {
-			return nil, nil, err
-		}
-		earliestMap[p] = earliest
-
-		latest, err := client.GetOffset(topic, p, sarama.OffsetNewest)
-		if err != nil {
-			return nil, nil, err
-		}
-		latestMap[p] = latest
-	}
-	return earliestMap, latestMap, nil
-}

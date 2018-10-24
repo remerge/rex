@@ -70,7 +70,7 @@ imports:
 - name: github.com/remerge/rand
   version: 64a39085c6739b997da1f5d17210b005e17f5e4e
 - name: github.com/Shopify/sarama
-  version: a69155709624ba4cd1ea3463093ed4a8799cbff3
+  version: d7de19a9cb61cc9eee8e8baae5f8902ee9783837
   repo: https://github.com/remerge/sarama
 - name: github.com/spf13/cobra
   version: 10f6b9d7e1631a54ad07c5c0fb71c28a1abfd3c2
@@ -96,7 +96,7 @@ testImports:
   subpackages:
   - js
 - name: github.com/jtolds/gls
-  version: bb0351aa7eb6f322f32667d51375f26a2bca6628
+  version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
 - name: github.com/smartystreets/assertions
   version: c9ee7d9e9a2aeec0bee7c4a516f3e0ad7cb7e558
   subpackages:
