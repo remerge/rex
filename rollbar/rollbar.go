@@ -222,7 +222,7 @@ func (c *Client) ErrorWithStackSkip(level string, err error, skip int, fields ..
 // ErrorWithStack asynchronously sends and error to Rollbar with the given
 // stacktrace and (optionally) custom Fields to be passed on to Rollbar.
 func (c *Client) ErrorWithStack(level string, err error, stack Stack, fields ...*Field) error {
-	log.GetLogger("rollbar").Errorf("%s", err.Error())
+	log.GetLogger("rollbar").Errorf("%v", err)
 	fmt.Printf("\n%s\n\n", stack.String())
 	c.buildAndPushError(level, err, stack, fields...)
 	return err
@@ -253,7 +253,7 @@ func (c *Client) RequestErrorWithStackSkip(level string, r *http.Request, err er
 // http.Request, and a custom Stack. You You can pass, optionally, custom
 // Fields to be passed on to Rollbar.
 func (c *Client) RequestErrorWithStack(level string, r *http.Request, err error, stack Stack, fields ...*Field) error {
-	log.GetLogger("rollbar").Errorf("%s", err.Error())
+	log.GetLogger("rollbar").Errorf("%v", err)
 	requestDump, _ := httputil.DumpRequest(r, false)
 	fmt.Printf("\n%s%s\n\n", requestDump, stack.String())
 	c.buildAndPushError(level, err, stack, append(fields, &Field{Name: "request", Data: c.errorRequest(r)})...)
@@ -261,7 +261,7 @@ func (c *Client) RequestErrorWithStack(level string, r *http.Request, err error,
 }
 
 func (c *Client) buildError(level string, err error, stack Stack, fields ...*Field) map[string]interface{} {
-	body := c.buildBody(level, err.Error())
+	body := c.buildBody(level, fmt.Sprintf("%v", err))
 	data := body["data"].(map[string]interface{})
 	errBody, fingerprint := c.errorBody(err, stack)
 	data["body"] = errBody
@@ -341,7 +341,7 @@ func (c *Client) errorBody(err error, stack Stack) (map[string]interface{}, stri
 			"frames": stack,
 			"exception": map[string]interface{}{
 				"class":   c.errorClass(err),
-				"message": err.Error(),
+				"message": fmt.Sprintf("%v", err),
 			},
 		},
 	}
@@ -407,7 +407,7 @@ func (c *Client) errorClass(err error) string {
 	if class == "" {
 		return "panic"
 	} else if class == "*errors.errorString" {
-		checksum := adler32.Checksum([]byte(err.Error()))
+		checksum := adler32.Checksum([]byte(fmt.Sprint(err)))
 		return fmt.Sprintf("{%x}", checksum)
 	} else {
 		return strings.TrimPrefix(class, "*")
@@ -437,13 +437,13 @@ func (c *Client) post(body map[string]interface{}) {
 
 	jsonBody, err := json.Marshal(body)
 	if err != nil {
-		c.stderr("failed to encode payload: %s", err.Error())
+		c.stderr("failed to encode payload: %v", err)
 		return
 	}
 
 	resp, err := http.Post(c.config.Endpoint, "application/json", bytes.NewReader(jsonBody))
 	if err != nil {
-		c.stderr("POST failed: %s", err.Error())
+		c.stderr("POST failed: %v", err)
 	} else if resp.StatusCode != 200 {
 		c.stderr("received response: %s", resp.Status)
 	}
