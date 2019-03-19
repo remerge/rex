@@ -41,7 +41,7 @@ type BackoffDuration struct {
 	Min, Max time.Duration
 }
 
-// Returns the current value of the counter and then
+// Duration returns the current value of the counter and then
 // multiplies it Factor
 func (b *BackoffDuration) Duration() time.Duration {
 	// Zero-values are nonsensical, so we use

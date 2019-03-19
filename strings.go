@@ -105,7 +105,7 @@ func (rcv Strings) IsSortedBy(less func(string, string) bool) bool {
 	return true
 }
 
-// IsSortedDesc reports whether an instance of Strings is sorted in descending order, using the pass func to define ‘less’. See: http://clipperhouse.github.io/gen/#SortBy
+// IsSortedByDesc reports whether an instance of Strings is sorted in descending order, using the pass func to define ‘less’. See: http://clipperhouse.github.io/gen/#SortBy
 func (rcv Strings) IsSortedByDesc(less func(string, string) bool) bool {
 	greater := func(a, b string) bool {
 		return a != b && !less(a, b)
@@ -392,7 +392,7 @@ func NewStringSetFromSlice(s []string) StringSet {
 	return a
 }
 
-// Adds an item to the current set if it doesn't already exist in the set.
+// Add adds an item to the current set if it doesn't already exist in the set.
 func (set StringSet) Add(i string) bool {
 	_, found := set[i]
 	set[i] = struct{}{}
@@ -429,7 +429,7 @@ func (set StringSet) IsSuperset(other StringSet) bool {
 	return other.IsSubset(set)
 }
 
-// Returns a new set with all items in both sets.
+// Union returns a new set with all items in both sets.
 func (set StringSet) Union(other StringSet) StringSet {
 	unionedSet := NewStringSet()
 
@@ -442,7 +442,7 @@ func (set StringSet) Union(other StringSet) StringSet {
 	return unionedSet
 }
 
-// Returns a new set with items that exist only in both sets.
+// Intersect returns a new set with items that exist only in both sets.
 func (set StringSet) Intersect(other StringSet) StringSet {
 	intersection := NewStringSet()
 	// loop over smaller set
@@ -462,7 +462,7 @@ func (set StringSet) Intersect(other StringSet) StringSet {
 	return intersection
 }
 
-// Returns a new set with items in the current set but not in the other set
+// Difference returns a new set with items in the current set but not in the other set
 func (set StringSet) Difference(other StringSet) StringSet {
 	differencedSet := NewStringSet()
 	for elem := range set {
@@ -473,14 +473,14 @@ func (set StringSet) Difference(other StringSet) StringSet {
 	return differencedSet
 }
 
-// Returns a new set with items in the current set or the other set but not in both.
+// SymmetricDifference returns a new set with items in the current set or the other set but not in both.
 func (set StringSet) SymmetricDifference(other StringSet) StringSet {
 	aDiff := set.Difference(other)
 	bDiff := other.Difference(set)
 	return aDiff.Union(bDiff)
 }
 
-// Clears the entire set to be the empty set.
+// Clear clears the entire set to be the empty set.
 func (set *StringSet) Clear() {
 	*set = make(StringSet)
 }
@@ -523,7 +523,7 @@ func (set StringSet) Equal(other StringSet) bool {
 	return true
 }
 
-// Returns a clone of the set.
+// Clone returns a clone of the set.
 // Does NOT clone the underlying elements.
 func (set StringSet) Clone() StringSet {
 	clonedSet := NewStringSet()
