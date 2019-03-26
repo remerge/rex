@@ -72,6 +72,8 @@ func (client *Client) NewFastProducer(cb ProducerErrorCallback) (*Producer, erro
 func (client *Client) NewSafeProducer() (*Producer, error) {
 	config := sarama.NewConfig()
 	config.Producer.Compression = sarama.CompressionSnappy
+	config.Producer.Retry.Max = 10
+	config.Producer.Retry.Backoff = 200 * time.Millisecond
 	config.Producer.Return.Successes = true
 	config.Producer.Return.Errors = true
 	config.Producer.RequiredAcks = sarama.WaitForLocal
