@@ -4,7 +4,7 @@ import "bytes"
 
 // from - https://github.com/kennygrant/sanitize/blob/master/sanitize.go
 
-// Replace a set of accented characters with ascii equivalents.
+// RemoveAccents replaces a set of accented characters with ascii equivalents.
 func RemoveAccents(text string) string {
 	// Replace some common accent characters
 	b := bytes.NewBufferString("")
