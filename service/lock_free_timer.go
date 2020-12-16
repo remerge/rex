@@ -6,7 +6,7 @@ import (
 	"time"
 
 	metrics "github.com/rcrowley/go-metrics"
-	"github.com/remerge/rand"
+	rand "github.com/remerge/go-xorshift"
 )
 
 func GetOrRegisterLockFreeTimer(name string, r metrics.Registry) metrics.Timer {
