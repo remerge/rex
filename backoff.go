@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/remerge/rand"
+	rand "github.com/remerge/go-xorshift"
 )
 
 type BackoffCallback struct {

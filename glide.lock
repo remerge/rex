@@ -1,5 +1,5 @@
-hash: f38f7e672327d9341f49de752cb31110ba6e4f87d3c9dec69818b60e5f59c699
-updated: 2017-04-23T06:46:02.1560166Z
+hash: d590742a92311bdda84e990be9f3209e549ea2ed655358de0d0a5dac867b47f0
+updated: 2020-12-16T14:47:19.012943775+01:00
 imports:
 - name: github.com/cheekybits/genny
   version: 9127e812e1e9e501ce899a18121d316ecb52e4ba
@@ -10,7 +10,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/eapache/go-resiliency
-  version: b86b1ec0dd4209a588dc1285cdd471e73525c0b3
+  version: 5efd2ed019fd331ec2defc6f3bd98882f1e3e636
   subpackages:
   - breaker
 - name: github.com/eapache/go-xerial-snappy
@@ -40,8 +40,6 @@ imports:
   - tabwriter
 - name: github.com/juju/loggo
   version: 21bc4c63e8b435779a080e39e592969b7b90b889
-- name: github.com/klauspost/crc32
-  version: 1bab8b35b6bb565f92cbc97939610af9369f942a
 - name: github.com/lunixbochs/vtclean
   version: 4428d67a89b36ecae7998e983e5814d0d9c45a04
 - name: github.com/mailru/easyjson
@@ -56,7 +54,7 @@ imports:
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/pierrec/lz4
-  version: f5b77fd73d83122495309c0f459b810f83cc291f
+  version: 2fcda4cb7018ce05a25959d2fe08c83e3329f169
 - name: github.com/pierrec/xxHash
   version: 5a004441f897722c627870a981d02b29924215fa
   subpackages:
@@ -65,10 +63,10 @@ imports:
   version: e2704e165165ec55d062f5919b4b29494e9fa790
   subpackages:
   - exp
+- name: github.com/remerge/go-xorshift
+  version: 0fb6a1cb9a40956d3d17343f3d27c647ecd3e6a9
 - name: github.com/remerge/gobi
   version: 443b88220b0471433f47e47f76fd71ea70280e1e
-- name: github.com/remerge/rand
-  version: 64a39085c6739b997da1f5d17210b005e17f5e4e
 - name: github.com/Shopify/sarama
   version: d7de19a9cb61cc9eee8e8baae5f8902ee9783837
   repo: https://github.com/remerge/sarama

@@ -20,10 +20,10 @@ import:
   subpackages:
   - exp
 - package: github.com/remerge/gobi
-- package: github.com/remerge/rand
 - package: github.com/spf13/cobra
 - package: github.com/tylerb/graceful
 - package: github.com/google/uuid
+- package: github.com/remerge/go-xorshift
 testImport:
 - package: github.com/smartystreets/goconvey
   subpackages:
