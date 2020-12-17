@@ -9,8 +9,6 @@ GOFMT=gofmt -w -s
 GOSRCDIR=$(GOPATH)/src/$(PACKAGE)
 GOPATHS=$(shell glide novendor | grep -v /main/)
 GOFILES=$(shell git ls-files | grep '\.go$$')
-MAINGO=$(wildcard main/*.go)
-MAIN=$(patsubst main/%.go,%,$(MAINGO))
 
 CODE_VERSION=$(TRAVIS_COMMIT)
 ifeq ($(CODE_VERSION),)
@@ -24,21 +22,12 @@ endif
 
 LDFLAGS=-X github.com/remerge/rex.CodeVersion=$(CODE_VERSION) -X github.com/remerge/rex.CodeBuild=$(CODE_BUILD)@$(shell date -u +%FT%TZ)
 
-.PHONY: build run clean lint test bench fmt dep init up gen release deploy
+.PHONY: build clean lint test bench fmt dep init up gen release deploy
 
-all: build
-
-build: fmt
-	cd $(GOSRCDIR) && \
-		CGO_ENABLED=0 \
-		go build -v -i -ldflags "$(LDFLAGS)" $(MAINGO)
-
-run: build
-	./$(MAIN)
+all: fmt
 
 clean:
 	go clean
-	rm -f $(MAIN)
 	rm -rf $(TOP)/vendor/
 
 lint:
