@@ -1,5 +1,5 @@
-hash: f38f7e672327d9341f49de752cb31110ba6e4f87d3c9dec69818b60e5f59c699
-updated: 2017-04-23T06:46:02.1560166Z
+hash: ae5859666d705629e55b20a044188555691c2d12ec37731008a12651c9ea2317
+updated: 2021-02-28T11:44:50.699897136+01:00
 imports:
 - name: github.com/cheekybits/genny
   version: 9127e812e1e9e501ce899a18121d316ecb52e4ba
@@ -10,7 +10,7 @@ imports:
   subpackages:
   - spew
 - name: github.com/eapache/go-resiliency
-  version: b86b1ec0dd4209a588dc1285cdd471e73525c0b3
+  version: 5efd2ed019fd331ec2defc6f3bd98882f1e3e636
   subpackages:
   - breaker
 - name: github.com/eapache/go-xerial-snappy
@@ -30,8 +30,6 @@ imports:
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/google/uuid
   version: 6a5e28554805e78ea6141142aba763936c4761c0
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/jinzhu/now
   version: d939ba741945c047cac69c329c5fb0d6b4a06520
 - name: github.com/juju/ansiterm
@@ -40,8 +38,6 @@ imports:
   - tabwriter
 - name: github.com/juju/loggo
   version: 21bc4c63e8b435779a080e39e592969b7b90b889
-- name: github.com/klauspost/crc32
-  version: 1bab8b35b6bb565f92cbc97939610af9369f942a
 - name: github.com/lunixbochs/vtclean
   version: 4428d67a89b36ecae7998e983e5814d0d9c45a04
 - name: github.com/mailru/easyjson
@@ -56,7 +52,7 @@ imports:
 - name: github.com/mattn/go-isatty
   version: fc9e8d8ef48496124e79ae0df75490096eccf6fe
 - name: github.com/pierrec/lz4
-  version: f5b77fd73d83122495309c0f459b810f83cc291f
+  version: 2fcda4cb7018ce05a25959d2fe08c83e3329f169
 - name: github.com/pierrec/xxHash
   version: 5a004441f897722c627870a981d02b29924215fa
   subpackages:
@@ -74,8 +70,6 @@ imports:
   repo: https://github.com/remerge/sarama
 - name: github.com/spf13/cobra
   version: 10f6b9d7e1631a54ad07c5c0fb71c28a1abfd3c2
-- name: github.com/spf13/pflag
-  version: 2300d0f8576fe575f71aaa5b9bbe4e1b0dc2eb51
 - name: github.com/tylerb/graceful
   version: d72b0151351a13d0421b763b88f791469c4f5dc7
 - name: golang.org/x/net
@@ -98,8 +92,9 @@ testImports:
 - name: github.com/jtolds/gls
   version: 77f18212c9c7edc9bd6a33d383a7b545ce62f064
 - name: github.com/smartystreets/assertions
-  version: c9ee7d9e9a2aeec0bee7c4a516f3e0ad7cb7e558
+  version: f44b269b51f6f75a2452c14c4ee76c114ad92528
   subpackages:
+  - internal/go-diff/diffmatchpatch
   - internal/go-render/render
   - internal/oglematchers
 - name: github.com/smartystreets/goconvey

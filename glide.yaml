@@ -28,3 +28,5 @@ testImport:
 - package: github.com/smartystreets/goconvey
   subpackages:
   - convey
+- package: github.com/smartystreets/assertions
+  version: f44b269b51f6f75a2452c14c4ee76c114ad92528
